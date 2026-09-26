@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AyGorunumu, GunGorunumu, HaftaGorunumu } from "@/components/CalendarViews";
@@ -36,10 +36,17 @@ export const Route = createFileRoute("/")({
 
 type Gorunum = "gun" | "hafta" | "ay";
 
+// Sayfalar arasında gezerken son bakılan tarih/görünüm korunur; uygulama yeniden açılınca bugüne döner.
+const sonDurum: { imlec: Date | null; gorunum: Gorunum } = { imlec: null, gorunum: "hafta" };
+
 function Takvim() {
   const [bugun] = useState(() => new Date());
-  const [imlec, setImlec] = useState(() => new Date());
-  const [gorunum, setGorunum] = useState<Gorunum>("hafta");
+  const [imlec, setImlec] = useState(() => sonDurum.imlec ?? new Date());
+  const [gorunum, setGorunum] = useState<Gorunum>(() => sonDurum.gorunum);
+  useEffect(() => {
+    sonDurum.imlec = imlec;
+    sonDurum.gorunum = gorunum;
+  }, [imlec, gorunum]);
   const [secili, setSecili] = useState<DersOlayi | null>(null);
 
   const { secili: secmeliler } = useSecmeliler();
@@ -101,7 +108,7 @@ function Takvim() {
               onClick={() => setImlec(new Date())}
               className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent"
             >
-              Bugün
+              {gorunum === "gun" ? "Bugün" : gorunum === "hafta" ? "Bu hafta" : "Bu ay"}
             </button>
             <div className="flex rounded-lg border border-border p-0.5">
               {(

@@ -1,5 +1,5 @@
 import type { Ders, DersTuru, HaftalikAmfiKaydi, SecmeliOlay } from "./schedule-data";
-import { isoDate, startOfWeek } from "./date-utils";
+import { addDays, isoDate, startOfWeek } from "./date-utils";
 
 export const normalize = (s: string) =>
   s
@@ -297,7 +297,17 @@ export async function haftalikAmfiOku(
   const secmeliler: SecmeliOlay[] = [];
   const amfiAdlari: Record<string, string[]> = {};
   const izgara = await amfiIzgarasiOku(file, secmeliler, amfiAdlari);
-  if (izgara.length || secmeliler.length) return { kayitlar: izgara, secmeliler, amfiAdlari };
+  if (izgara.length || secmeliler.length) {
+    // Dosyada başka haftalara ait eski/ek sayfalar olabilir: yalnızca dosyanın asıl haftasını al
+    const hafta = anaHafta(izgara.map((k) => k.week));
+    if (!hafta) return { kayitlar: izgara, secmeliler, amfiAdlari };
+    const sonu = isoDate(addDays(new Date(`${hafta}T00:00:00`), 6));
+    return {
+      kayitlar: izgara.filter((k) => k.week === hafta),
+      secmeliler: secmeliler.filter((o) => o.date >= hafta && o.date <= sonu),
+      amfiAdlari: amfiAdlari[hafta] ? { [hafta]: amfiAdlari[hafta]! } : {},
+    };
+  }
   const satirlar = await satirlariOku(file);
   const kayitlar: HaftalikAmfiKaydi[] = [];
   satirlar.forEach((s, i) => {
@@ -326,4 +336,11 @@ export async function haftalikAmfiOku(
     if (k.amphitheater) adlar[k.week] = [...new Set([...(adlar[k.week] ?? []), k.amphitheater])];
   });
   return { kayitlar, secmeliler, amfiAdlari: adlar };
+}
+
+/** En çok kayıt içeren hafta = dosyanın asıl haftası */
+export function anaHafta(haftalar: string[]): string | undefined {
+  const say = new Map<string, number>();
+  haftalar.forEach((h) => say.set(h, (say.get(h) ?? 0) + 1));
+  return [...say.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
 }
