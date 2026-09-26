@@ -62,13 +62,22 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
     const i = a.indexOf(":");
     if (i > 0 && !a.endsWith(":")) yerler.push([a.slice(0, i).trim(), a.slice(i + 1).trim()]);
   }
+  const GENEL = new Set(["temel", "tibbi", "genel", "beceri", "uygulamasi", "uygulama"]);
+  const kel = (x: string) => normalize(x).split(/[^a-z]+/).filter((w) => w.length >= 4 && !GENEL.has(w));
   const yerBul = (ad: string) => {
-    const n = normalize(ad);
-    const e = yerler.find(([k]) => {
-      const w = normalize(k).split(/[^a-z]+/).find((x) => x.length >= 4);
-      return w && n.includes(w);
-    });
-    return e ? e[1].replace(/^\(|\)$/g, "") : "";
+    const a = kel(ad);
+    let en = "";
+    let skor = 0;
+    for (const [k, v] of yerler) {
+      const kw = kel(k);
+      const ortak = kw.filter((w) => a.some((x) => x.startsWith(w.slice(0, 5)) || w.startsWith(x.slice(0, 5)))).length;
+      const s2 = kw.length ? ortak / kw.length + ortak : 0;
+      if (ortak && s2 > skor) {
+        skor = s2;
+        en = v;
+      }
+    }
+    return en.replace(/^\(|\)$/g, "");
   };
 
   const out: UygulamaOlayi[] = [];
