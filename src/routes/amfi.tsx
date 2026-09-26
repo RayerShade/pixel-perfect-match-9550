@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { haftalikAmfiKayitlari } from "@/lib/schedule-data";
 import { addDays, formatShort, isoDate, startOfWeek, weekLabel } from "@/lib/date-utils";
-import { useManuelAmfiler } from "@/lib/store";
+import { useManuelAmfiler, useYuklenenVeri } from "@/lib/store";
+import { VeriYukleme } from "@/components/VeriYukleme";
 
 export const Route = createFileRoute("/amfi")({
   head: () => ({
@@ -32,8 +33,9 @@ function Amfi() {
   const monday = useMemo(() => startOfWeek(imlec), [imlec]);
   const mondayIso = isoDate(monday);
   const { manuel, ata } = useManuelAmfiler();
+  const { veri } = useYuklenenVeri();
 
-  const kayitlar = useMemo(() => haftalikAmfiKayitlari(mondayIso), [mondayIso]);
+  const kayitlar = useMemo(() => haftalikAmfiKayitlari(mondayIso, veri), [mondayIso, veri]);
   const bekleyen = kayitlar.filter(
     (k) => k.status === "bekliyor" && !manuel[k.id],
   ).length;
@@ -67,22 +69,17 @@ function Amfi() {
           </button>
         </div>
 
-        <div className="rounded-2xl border border-dashed border-border bg-surface p-6 text-center">
-          <Upload className="mx-auto h-6 w-6 text-muted-foreground" />
-          <p className="mt-2 text-sm font-semibold">Haftalık Excel dosyasını yükle</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Okulun yayımladığı haftalık amfi dosyası yalnızca sınıf, amfi ve grup
-            bilgisini günceller. Yıllık program değişmez. (Dosya yükleme bir sonraki
-            sürümde etkinleşecek.)
-          </p>
-          <p className="mt-3 text-[11px] text-muted-foreground">
-            Kaynak dosya: haftalik_amfi_{mondayIso}.xlsx
-          </p>
-        </div>
+        <VeriYukleme />
 
         {bekleyen > 0 ? (
           <p className="rounded-xl bg-secmeli-soft px-3 py-2 text-xs font-medium text-bekliyor">
             ⚠️ Eşleşme bekliyor: {bekleyen} kayıt. Doğru amfiyi aşağıdan seçebilirsin.
+          </p>
+        ) : null}
+
+        {kayitlar.length === 0 ? (
+          <p className="rounded-2xl border border-border bg-surface p-4 text-center text-sm text-muted-foreground">
+            Bu hafta için yüklenmiş amfi kaydı yok.
           </p>
         ) : null}
 

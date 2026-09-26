@@ -39,8 +39,8 @@ function Dersler() {
             d.courseName.toLocaleLowerCase("tr").includes(arama.toLocaleLowerCase("tr")) ||
             d.instructor.toLocaleLowerCase("tr").includes(arama.toLocaleLowerCase("tr")),
         )
-        .sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime)),
-    [filtre, arama, secili],
+        .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? "") || a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime)),
+    [filtre, arama, secili, veri],
   );
 
   return (
