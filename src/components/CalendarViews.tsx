@@ -137,7 +137,7 @@ function Izgara({
                       className="absolute inset-x-1"
                       style={{ top, height: Math.max(h - 2, 26) }}
                     >
-                      <Blok olay={o} onSec={onSec} kompakt={h < 50 || gunler.length > 3} />
+                      <Blok olay={o} onSec={onSec} kompakt={h < 56} />
                     </div>
                   );
                 })}
