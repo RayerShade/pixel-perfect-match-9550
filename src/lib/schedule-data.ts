@@ -385,6 +385,45 @@ export interface YuklenenVeri {
 const normAd = (s: string) =>
   s.toLocaleLowerCase("tr-TR").replace(/[^a-zçğıöşü0-9]+/g, "");
 
+const ONEMSIZ = new Set(["dönem", "türkçe", "ingilizce", "dilimi", "dilim", "oturum", "ders", "dersi", "grubu"]);
+const kelimeler = (s: string) =>
+  new Set(
+    s
+      .toLocaleLowerCase("tr-TR")
+      .split(/[^a-zçğıöşü]+/)
+      .filter((w) => w.length >= 4 && !ONEMSIZ.has(w)),
+  );
+const dk = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return (h ?? 0) * 60 + (m ?? 0);
+};
+const kesisir = (d: Ders, k: HaftalikAmfiKaydi) =>
+  dk(d.startTime) < dk(k.endTime || k.startTime) + (k.endTime ? 0 : 1) && dk(k.startTime) < dk(d.endTime);
+/** Yıllık programdaki ders ile amfi kaydı arasındaki isim benzerliği (0..1). */
+function benzerlik(d: Ders, k: HaftalikAmfiKaydi) {
+  const a = kelimeler(`${d.courseName} ${d.notes} ${d.instructor}`);
+  const b = kelimeler(k.courseName);
+  if (!b.size) return 0;
+  let ortak = 0;
+  b.forEach((w) => {
+    if ([...a].some((x) => x.startsWith(w.slice(0, 5)) || w.startsWith(x.slice(0, 5)))) ortak++;
+  });
+  return ortak / b.size;
+}
+function enIyiKayit(d: Ders, tarih: string, kayitlar: HaftalikAmfiKaydi[]) {
+  const aday = kayitlar.filter((k) => k.date === tarih && kesisir(d, k));
+  let en: HaftalikAmfiKaydi | undefined;
+  let skor = -1;
+  for (const k of aday) {
+    const s = benzerlik(d, k);
+    if (s > skor) {
+      skor = s;
+      en = k;
+    }
+  }
+  return en ? { kayit: en, skor } : undefined;
+}
+
 export function aktifDersler(veri?: YuklenenVeri): Ders[] {
   return veri?.dersler ?? DERSLER;
 }
@@ -397,10 +436,10 @@ export function haftalikAmfiKayitlari(mondayIso: string, veri?: YuklenenVeri): H
       .map((k) => {
         const dow = ((new Date(`${k.date}T00:00:00`).getDay() + 6) % 7) + 1;
         const ayni = dersler.filter(
-          (d) => (d.date ? d.date === k.date : d.dayOfWeek === dow) && d.startTime === k.startTime,
+          (d) => (d.date ? d.date === k.date : d.dayOfWeek === dow) && kesisir(d, k),
         );
-        const adli = ayni.find((d) => normAd(d.courseName) === normAd(k.courseName));
-        const confidence = adli ? 1 : ayni.length ? 0.7 : 0.4;
+        const skor = Math.max(0, ...ayni.map((d) => benzerlik(d, k)));
+        const confidence = ayni.length ? 0.6 + 0.4 * skor : 0.3;
         return {
           ...k,
           confidence,
@@ -453,11 +492,7 @@ export function haftaninOlaylari(
   const pazar = isoDate(addDays(monday, 6));
   const kayitlar = haftalikAmfiKayitlari(mondayIso, veri);
   const tarihOf = (d: Ders) => d.date ?? isoDate(addDays(monday, d.dayOfWeek - 1));
-  const bul = (d: Ders) => {
-    const t = tarihOf(d);
-    const ayni = kayitlar.filter((k) => k.date === t && k.startTime === d.startTime);
-    return ayni.find((k) => normAd(k.courseName) === normAd(d.courseName)) ?? ayni[0];
-  };
+  const bul = (d: Ders) => enIyiKayit(d, tarihOf(d), kayitlar)?.kayit;
 
   return aktifDersler(veri).filter(
     (d) =>
@@ -468,10 +503,10 @@ export function haftaninOlaylari(
     const kayit = bul(d);
     const manuel = manuelAmfiler[key];
     let amfi: string | null;
-    if (d.courseType === "secmeli" && !kayit) amfi = d.defaultClassroom || null;
-    else if (manuel) amfi = manuel;
+    if (manuel) amfi = manuel;
+    else if (d.courseType === "secmeli" && d.electiveId) amfi = d.defaultClassroom || null;
     else if (kayit && kayit.status === "eslesti") amfi = kayit.amphitheater;
-    else amfi = null;
+    else amfi = d.defaultClassroom || null;
 
     return {
       key,
