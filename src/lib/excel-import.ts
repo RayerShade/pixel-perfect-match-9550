@@ -22,6 +22,7 @@ const ALANLAR: Record<string, string[]> = {
   grup: ["grup", "sube", "group"],
   amfi: ["amfi", "derslik", "sinif", "salon", "yer", "mekan", "classroom", "amfi derslik"],
   not: ["not", "notlar", "aciklama", "notes"],
+  bolum: ["dilim adi anabilim dali", "dilim", "anabilim dali", "bolum"],
 };
 
 const GUNLER = ["pazartesi", "sali", "carsamba", "persembe", "cuma", "cumartesi", "pazar"];
@@ -60,13 +61,28 @@ function tarihNorm(v: unknown): string {
   const m = String(v ?? "").match(/(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
   if (m) return `${m[3]}-${m[2]!.padStart(2, "0")}-${m[1]!.padStart(2, "0")}`;
   const iso = String(v ?? "").match(/(\d{4})-(\d{2})-(\d{2})/);
-  return iso ? iso[0] : "";
+  if (iso) return iso[0];
+  return turkceTarih(String(v ?? ""));
+}
+
+const AYLAR_N = ["ocak", "subat", "mart", "nisan", "mayis", "haziran", "temmuz", "agustos", "eylul", "ekim", "kasim", "aralik"];
+
+/** "28 EYLÜL 2026 / Pazartesi" → 2026-09-28 */
+export function turkceTarih(t: string): string {
+  const m = normalize(t).match(/^(\d{1,2}) ([a-z]+) (\d{4})/);
+  if (!m) return "";
+  const ay = AYLAR_N.indexOf(m[2]!);
+  if (ay < 0) return "";
+  return `${m[3]}-${String(ay + 1).padStart(2, "0")}-${m[1]!.padStart(2, "0")}`;
 }
 
 function gunNorm(v: unknown): number {
-  const n = normalize(String(v ?? ""));
-  const i = GUNLER.findIndex((g) => n.startsWith(g.slice(0, 3)));
-  return i + 1;
+  const kelimeler = normalize(String(v ?? "")).split(" ");
+  for (const g of ["cumartesi", ...GUNLER]) {
+    if (kelimeler.some((k) => k === g || (k.length >= 3 && g.startsWith(k) && k === kelimeler[0])))
+      return GUNLER.indexOf(g) + 1;
+  }
+  return 0;
 }
 
 function turNorm(v: unknown, ad: string): DersTuru {
@@ -82,7 +98,7 @@ type Satir = Record<string, unknown>;
 
 async function satirlariOku(file: File): Promise<Satir[]> {
   const XLSX = await import("xlsx");
-  const wb = XLSX.read(await file.arrayBuffer(), { cellDates: true });
+  const wb = XLSX.read(await file.arrayBuffer());
   const out: Satir[] = [];
   for (const ad of wb.SheetNames) {
     const rows = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[ad]!, { header: 1, defval: "", raw: true });
@@ -120,35 +136,139 @@ function bitisTahmin(bas: string, bit: string) {
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
 
+const ATLA = /^(ogle arasi|serbest calisma|ogle yemegi)$/;
+
+function yerCoz(yer: string): { sinif: string; tur?: DersTuru } {
+  const n = normalize(yer);
+  if (!n) return { sinif: "" };
+  if (n.includes("secmeli")) return { sinif: "Seçmeli amfi programı", tur: "secmeli" };
+  if (n.includes("uygulama programina")) return { sinif: "Uygulama programı", tur: "pratik" };
+  if (n.includes("amfi programina")) return { sinif: "" }; // haftalık amfi dosyasından gelecek
+  if (n === "online") return { sinif: "Online" };
+  return { sinif: yer.trim() };
+}
+
 export async function yillikProgramOku(file: File): Promise<Ders[]> {
   const satirlar = await satirlariOku(file);
   const dersler: Ders[] = [];
   satirlar.forEach((s, i) => {
     const [bas, bit] = saatler(s);
     if (!bas) return;
-    const ad = String(s["ders"]).trim();
+    const konu = String(s["ders"]).replace(/\s+/g, " ").trim();
+    if (ATLA.test(normalize(konu))) return;
     const tarih = tarihNorm(s["tarih"]);
-    const gun = tarih ? ((new Date(`${tarih}T00:00:00`).getDay() + 6) % 7) + 1 : gunNorm(s["gun"]);
+    const gun = tarih
+      ? ((new Date(`${tarih}T00:00:00`).getDay() + 6) % 7) + 1
+      : gunNorm(s["gun"]) || gunNorm(s["tarih"]);
     if (!gun) return;
+    // "1-Konu / Dr. X (Dr. Y)" → ad + öğretim üyesi
+    let ad = konu;
+    let hoca = String(s["hoca"] ?? "").trim();
+    const bol = konu.indexOf(" / ");
+    if (!hoca && bol > 0) {
+      ad = konu.slice(0, bol).trim();
+      hoca = konu.slice(bol + 3).replace(/^\/\s*/, "").trim();
+    }
+    ad = ad.replace(/^\d+\s*-\s*/, "");
+    const bolum = String(s["bolum"] ?? "").replace(/\s+/g, " ").trim();
+    const yer = yerCoz(String(s["amfi"] ?? ""));
+    const notlar = [bolum, String(s["not"] ?? "").trim()].filter(Boolean).join(" · ");
     dersler.push({
       id: `x-${i}`,
       courseName: ad,
-      instructor: String(s["hoca"] ?? "").trim(),
-      courseType: turNorm(s["tur"], ad),
+      instructor: hoca,
+      courseType: yer.tur ?? turNorm(s["tur"], `${ad} ${bolum}`),
       dayOfWeek: gun,
       date: tarih || undefined,
       startTime: bas,
       endTime: bitisTahmin(bas, bit),
-      defaultClassroom: String(s["amfi"] ?? "").trim(),
+      defaultClassroom: yer.sinif,
       group: String(s["grup"] ?? "").trim(),
       semester: "",
-      notes: String(s["not"] ?? "").trim(),
+      notes: notlar,
     });
   });
   return dersler;
 }
 
+const DONEM1 = /d[oö]nem\s*-?\s*(1|i)(?![0-9i])/i;
+
+/** Fakülte amfi programı: her gün için "tarih" satırı, "SAAT" + amfi adları başlığı, saat satırları. */
+async function amfiIzgarasiOku(file: File): Promise<HaftalikAmfiKaydi[]> {
+  const XLSX = await import("xlsx");
+  const wb = XLSX.read(await file.arrayBuffer());
+  const kayitlar: HaftalikAmfiKaydi[] = [];
+  const gorulen = new Set<string>();
+  for (const sayfa of wb.SheetNames) {
+    const ws = wb.Sheets[sayfa]!;
+    if (!ws["!ref"]) continue;
+    const r = XLSX.utils.decode_range(ws["!ref"]);
+    const grid: string[][] = [];
+    for (let y = 0; y <= r.e.r; y++) {
+      const row: string[] = [];
+      for (let x = 0; x <= r.e.c; x++) {
+        const c = ws[XLSX.utils.encode_cell({ r: y, c: x })];
+        row.push(c ? String(c.w ?? c.v ?? "").trim() : "");
+      }
+      grid.push(row);
+    }
+    for (const m of ws["!merges"] ?? []) {
+      const v = grid[m.s.r]?.[m.s.c] ?? "";
+      for (let y = m.s.r; y <= m.e.r; y++)
+        for (let x = m.s.c; x <= m.e.c; x++) if (grid[y]) grid[y]![x] = v;
+    }
+    let tarih = "";
+    let amfiler: string[] = [];
+    for (const row of grid) {
+      const a = row[0] ?? "";
+      const t = turkceTarih(a);
+      if (t) {
+        tarih = t;
+        amfiler = [];
+        continue;
+      }
+      if (normalize(a) === "saat") {
+        amfiler = row.map((h) => h.replace(/\s+/g, " ").trim());
+        continue;
+      }
+      if (!tarih || !amfiler.length) continue;
+      const [sb, se] = saatAraligi(a);
+      if (!sb) continue;
+      row.forEach((hucre, x) => {
+        if (x === 0 || !hucre || !DONEM1.test(hucre)) return;
+        const n = normalize(hucre);
+        if (n.includes("ingilizce") && !n.includes("turkce")) return;
+        const acik = saatAraligi(hucre.replace(/^[^-]*-/, ""));
+        const bas = acik[1] ? acik[0] : sb;
+        const bit = acik[1] ? acik[1] : se;
+        const amfi = amfiler[x] || `Sütun ${x + 1}`;
+        const key = `${tarih}|${sb}|${hucre}`;
+        if (gorulen.has(key)) return;
+        gorulen.add(key);
+        kayitlar.push({
+          id: `u-${tarih}-${sb}-${x}-${kayitlar.length}`,
+          week: isoDate(startOfWeek(new Date(`${tarih}T00:00:00`))),
+          date: tarih,
+          startTime: sb < bas && acik[1] ? bas : sb,
+          endTime: acik[1] && bit > se ? bit : se,
+          courseName: hucre.replace(/\s+/g, " "),
+          group: "",
+          classroom: amfi,
+          amphitheater: amfi,
+          sourceFile: file.name,
+          status: "eslesti",
+          confidence: 0,
+          manuallyConfirmed: false,
+        });
+      });
+    }
+  }
+  return kayitlar;
+}
+
 export async function haftalikAmfiOku(file: File): Promise<HaftalikAmfiKaydi[]> {
+  const izgara = await amfiIzgarasiOku(file);
+  if (izgara.length) return izgara;
   const satirlar = await satirlariOku(file);
   const kayitlar: HaftalikAmfiKaydi[] = [];
   satirlar.forEach((s, i) => {
