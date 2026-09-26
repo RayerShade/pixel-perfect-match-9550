@@ -95,8 +95,8 @@ function Amfi() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{k.courseName}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {formatShort(new Date(`${k.date}T00:00:00`))} · {k.startTime}–{k.endTime} ·
-                    Grup {k.group}
+                    {formatShort(new Date(`${k.date}T00:00:00`))} · {k.startTime}{k.endTime ? `–${k.endTime}` : ""}
+                    {k.group ? ` · Grup ${k.group}` : ""}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
