@@ -100,7 +100,7 @@ export function useAyarlar() {
 }
 
 const VERI_KEY = "ders-takvim:yuklenen-veri";
-export interface VeriMeta { yillikDosya?: string; amfiDosyalari?: string[] }
+export interface VeriMeta { yillikDosya?: string | undefined; amfiDosyalari?: string[] | undefined }
 
 export function useYuklenenVeri() {
   const [veri, setVeri] = useState<YuklenenVeri & VeriMeta>({ dersler: null, amfi: null });

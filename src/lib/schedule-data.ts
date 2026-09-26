@@ -17,7 +17,7 @@ export interface Ders {
   instructor: string;
   courseType: DersTuru;
   dayOfWeek: number; // 1 = Pazartesi ... 7 = Pazar
-  date?: string; // Excel'de belirli tarih varsa (YYYY-MM-DD)
+  date?: string | undefined; // Excel'de belirli tarih varsa (YYYY-MM-DD)
   startTime: string;
   endTime: string;
   defaultClassroom: string;
