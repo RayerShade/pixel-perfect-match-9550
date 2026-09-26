@@ -377,9 +377,55 @@ const AMFILER = ["Amfi I", "Amfi II", "Amfi III", "Amfi IV", "Morfoloji Amfisi"]
  * uploaded Excel file; here it is derived deterministically from the week key so
  * every week looks plausible and a few rows stay unmatched on purpose.
  */
+export interface SecmeliOlay {
+  ad: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  amfi: string;
+}
+
 export interface YuklenenVeri {
   dersler: Ders[] | null;
   amfi: HaftalikAmfiKaydi[] | null;
+  secmeliOlaylari?: SecmeliOlay[] | null | undefined;
+}
+
+export interface SecmeliGrupDersi {
+  id: string;
+  ad: string;
+  grup: number;
+  amfi: string;
+  saat: string;
+}
+
+const SECMELI_SLOT = /^se[çc]meli ders/i;
+const trBaslik = (s: string) =>
+  s
+    .toLocaleLowerCase("tr-TR")
+    .replace(/(^|[\s(/-])(\p{L})/gu, (_, a: string, b: string) => a + b.toLocaleUpperCase("tr-TR"));
+
+/** Yıllık programdaki "Seçmeli Dersler - N" saatleri → grup saatleri (1., 2., 3. seçmeli). */
+export function secmeliSaatleri(veri?: YuklenenVeri): string[] {
+  const set = new Set(
+    (veri?.dersler ?? []).filter((d) => SECMELI_SLOT.test(d.courseName)).map((d) => d.startTime),
+  );
+  const l = [...set].sort();
+  return l.length ? l : ["13:30", "14:20", "15:10"];
+}
+
+export function secmeliGruplari(veri?: YuklenenVeri): SecmeliGrupDersi[] {
+  const saatler = secmeliSaatleri(veri);
+  const map = new Map<string, SecmeliGrupDersi>();
+  const sirali = [...(veri?.secmeliOlaylari ?? [])].sort((a, b) => a.date.localeCompare(b.date));
+  for (const o of sirali) {
+    const grup = saatler.indexOf(o.startTime) + 1;
+    if (!grup) continue;
+    const ad = trBaslik(o.ad);
+    const id = `g${grup}-${ad.toLocaleLowerCase("tr-TR").replace(/[^a-zçğıöşü0-9]+/g, "-")}`;
+    map.set(id, { id, ad, grup, amfi: o.amfi, saat: o.startTime });
+  }
+  return [...map.values()].sort((a, b) => a.grup - b.grup || a.ad.localeCompare(b.ad, "tr"));
 }
 
 
@@ -491,6 +537,8 @@ export function haftaninOlaylari(
   const kayitlar = haftalikAmfiKayitlari(mondayIso, veri);
   const tarihOf = (d: Ders) => d.date ?? isoDate(addDays(monday, d.dayOfWeek - 1));
   const bul = (d: Ders) => enIyiKayit(d, tarihOf(d), kayitlar)?.kayit;
+  const gruplar = veri?.secmeliOlaylari?.length ? secmeliGruplari(veri) : null;
+  const saatler = gruplar ? secmeliSaatleri(veri) : [];
 
   return aktifDersler(veri).filter(
     (d) =>
@@ -498,6 +546,26 @@ export function haftaninOlaylari(
       (!d.date || (d.date >= mondayIso && d.date <= pazar)),
   ).map((d) => {
     const key = `${mondayIso}-${d.id}`;
+    if (gruplar && SECMELI_SLOT.test(d.courseName)) {
+      const grup = saatler.indexOf(d.startTime) + 1;
+      const sec = gruplar.find((g) => g.grup === grup && seciliSecmeliler.includes(g.id));
+      const t = tarihOf(d);
+      const buHafta = sec
+        ? veri?.secmeliOlaylari?.find((o) => o.date === t && trBaslik(o.ad) === sec.ad)
+        : undefined;
+      return {
+        key,
+        ders: {
+          ...d,
+          courseName: sec ? sec.ad : `${grup}. Seçmeli (seçilmedi)`,
+          defaultClassroom: sec ? sec.amfi : "Seçmeliler sayfasından seç",
+          notes: `${grup}. seçmeli grubu${d.notes ? ` · ${d.notes}` : ""}`,
+        },
+        date: new Date(`${t}T00:00:00`),
+        amfi: manuelAmfiler[key] ?? (sec ? (buHafta?.amfi ?? sec.amfi) : "Seçmeliler sayfasından seç"),
+        group: d.group,
+      };
+    }
     const kayit = bul(d);
     const manuel = manuelAmfiler[key];
     let amfi: string | null;
