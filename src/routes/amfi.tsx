@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { haftalikAmfiKayitlari } from "@/lib/schedule-data";
+import { amfiSecenekleri, haftalikAmfiKayitlari } from "@/lib/schedule-data";
 import { addDays, formatShort, isoDate, startOfWeek, weekLabel } from "@/lib/date-utils";
 import { useManuelAmfiler, useYuklenenVeri } from "@/lib/store";
 import { VeriYukleme } from "@/components/VeriYukleme";
@@ -26,7 +26,6 @@ export const Route = createFileRoute("/amfi")({
   component: Amfi,
 });
 
-const AMFI_SECENEKLERI = ["Amfi I", "Amfi II", "Amfi III", "Amfi IV", "Morfoloji Amfisi"];
 
 function Amfi() {
   const [imlec, setImlec] = useState(() => new Date());
@@ -114,7 +113,7 @@ function Amfi() {
                       className="rounded-lg border border-bekliyor/50 bg-secmeli-soft px-2 py-1.5 text-xs font-semibold text-bekliyor"
                     >
                       <option value="">⚠️ Eşleşme bekliyor</option>
-                      {AMFI_SECENEKLERI.map((a) => (
+                      {amfiSecenekleri(veri, mondayIso).map((a) => (
                         <option key={a} value={a}>
                           {a}
                         </option>

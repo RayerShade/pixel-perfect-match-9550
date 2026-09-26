@@ -1,17 +1,10 @@
 import { X, Clock, User, MapPin, CalendarDays, Tag, StickyNote, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { DERS_TURU_ETIKET, type DersOlayi } from "@/lib/schedule-data";
-import { GUN_UZUN, formatLong } from "@/lib/date-utils";
+import { DERS_TURU_ETIKET, amfiSecenekleri, type DersOlayi } from "@/lib/schedule-data";
+import { useYuklenenVeri } from "@/lib/store";
+import { GUN_UZUN, formatLong, isoDate, startOfWeek } from "@/lib/date-utils";
 import { TUR_SINIFI } from "./ders-stil";
 
-const AMFI_SECENEKLERI = [
-  "Amfi I",
-  "Amfi II",
-  "Amfi III",
-  "Amfi IV",
-  "Morfoloji Amfisi",
-  "Derslik 204",
-];
 
 function Satir({
   icon: Icon,
@@ -43,6 +36,8 @@ export function DersDetay({
   onAmfiSec: (key: string, amfi: string) => void;
 }) {
   const [secim, setSecim] = useState("");
+  const { veri } = useYuklenenVeri();
+  const secenekler = olay ? amfiSecenekleri(veri, isoDate(startOfWeek(olay.date))) : [];
 
   useEffect(() => {
     setSecim("");
@@ -113,7 +108,7 @@ export function DersDetay({
                 className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm"
               >
                 <option value="">Amfi seç…</option>
-                {AMFI_SECENEKLERI.map((a) => (
+                {secenekler.map((a) => (
                   <option key={a} value={a}>
                     {a}
                   </option>

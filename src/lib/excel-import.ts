@@ -194,7 +194,11 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
 const DONEM1 = /d[oö]nem\s*-?\s*(1|i)(?![0-9i])/i;
 
 /** Fakülte amfi programı: her gün için "tarih" satırı, "SAAT" + amfi adları başlığı, saat satırları. */
-async function amfiIzgarasiOku(file: File, secmeliler: SecmeliOlay[]): Promise<HaftalikAmfiKaydi[]> {
+async function amfiIzgarasiOku(
+  file: File,
+  secmeliler: SecmeliOlay[],
+  amfiAdlari: Record<string, string[]>,
+): Promise<HaftalikAmfiKaydi[]> {
   const XLSX = await import("xlsx");
   const wb = XLSX.read(await file.arrayBuffer());
   const kayitlar: HaftalikAmfiKaydi[] = [];
@@ -229,6 +233,12 @@ async function amfiIzgarasiOku(file: File, secmeliler: SecmeliOlay[]): Promise<H
       }
       if (normalize(a) === "saat") {
         amfiler = row.map((h) => h.replace(/\s+/g, " ").trim());
+        if (tarih) {
+          const hafta = isoDate(startOfWeek(new Date(`${tarih}T00:00:00`)));
+          const set = new Set(amfiAdlari[hafta] ?? []);
+          amfiler.slice(1).forEach((a) => a && normalize(a) !== "saat" && set.add(a));
+          amfiAdlari[hafta] = [...set];
+        }
         continue;
       }
       if (!tarih || !amfiler.length) continue;
@@ -279,10 +289,15 @@ async function amfiIzgarasiOku(file: File, secmeliler: SecmeliOlay[]): Promise<H
 
 export async function haftalikAmfiOku(
   file: File,
-): Promise<{ kayitlar: HaftalikAmfiKaydi[]; secmeliler: SecmeliOlay[] }> {
+): Promise<{
+  kayitlar: HaftalikAmfiKaydi[];
+  secmeliler: SecmeliOlay[];
+  amfiAdlari: Record<string, string[]>;
+}> {
   const secmeliler: SecmeliOlay[] = [];
-  const izgara = await amfiIzgarasiOku(file, secmeliler);
-  if (izgara.length || secmeliler.length) return { kayitlar: izgara, secmeliler };
+  const amfiAdlari: Record<string, string[]> = {};
+  const izgara = await amfiIzgarasiOku(file, secmeliler, amfiAdlari);
+  if (izgara.length || secmeliler.length) return { kayitlar: izgara, secmeliler, amfiAdlari };
   const satirlar = await satirlariOku(file);
   const kayitlar: HaftalikAmfiKaydi[] = [];
   satirlar.forEach((s, i) => {
@@ -306,5 +321,9 @@ export async function haftalikAmfiOku(
       manuallyConfirmed: false,
     });
   });
-  return { kayitlar, secmeliler };
+  const adlar: Record<string, string[]> = {};
+  kayitlar.forEach((k) => {
+    if (k.amphitheater) adlar[k.week] = [...new Set([...(adlar[k.week] ?? []), k.amphitheater])];
+  });
+  return { kayitlar, secmeliler, amfiAdlari: adlar };
 }
