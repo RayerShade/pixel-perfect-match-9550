@@ -105,14 +105,15 @@ export interface VeriMeta { yillikDosya?: string; amfiDosyalari?: string[] }
 export function useYuklenenVeri() {
   const [veri, setVeri] = useState<YuklenenVeri & VeriMeta>({ dersler: null, amfi: null });
   useEffect(() => {
-    setVeri(read(VERI_KEY, { dersler: null, amfi: null }));
+    const yukle = () => setVeri(read(VERI_KEY, { dersler: null, amfi: null }));
+    yukle();
+    window.addEventListener("ders-takvim:veri", yukle);
+    return () => window.removeEventListener("ders-takvim:veri", yukle);
   }, []);
   const kaydet = useCallback((patch: Partial<YuklenenVeri & VeriMeta>) => {
-    setVeri((prev) => {
-      const next = { ...prev, ...patch };
-      window.localStorage.setItem(VERI_KEY, JSON.stringify(next));
-      return next;
-    });
+    const prev = read<YuklenenVeri & VeriMeta>(VERI_KEY, { dersler: null, amfi: null });
+    window.localStorage.setItem(VERI_KEY, JSON.stringify({ ...prev, ...patch }));
+    window.dispatchEvent(new Event("ders-takvim:veri"));
   }, []);
   return { veri, kaydet };
 }
