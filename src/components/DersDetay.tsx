@@ -26,6 +26,91 @@ function Satir({
   );
 }
 
+function AmfiSecici({
+  olay,
+  secenekler,
+  onSec,
+}: {
+  olay: DersOlayi;
+  secenekler: string[];
+  onSec: (amfi: string) => void;
+}) {
+  const [acik, setAcik] = useState(false);
+  const [ara, setAra] = useState("");
+  useEffect(() => {
+    setAcik(false);
+    setAra("");
+  }, [olay.key]);
+  const secilemez = olay.amfi === "Seçmeliler sayfasından seç";
+  const q = ara.toLocaleLowerCase("tr-TR");
+  const liste = secenekler.filter((a) => a.toLocaleLowerCase("tr-TR").includes(q));
+  const oto = olay.kaynak === "haftalik" && olay.amfi;
+  return (
+    <div className="border-b border-border/60 py-3">
+      <button
+        disabled={secilemez}
+        onClick={() => setAcik((v) => !v)}
+        className="flex w-full items-start gap-3 text-left"
+      >
+        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-muted-foreground">
+            Amfi / Sınıf
+            {oto ? " · ★ otomatik atandı" : olay.kaynak === "manuel" ? " · elle seçildi" : ""}
+            {!secilemez ? " · değiştirmek için dokun" : ""}
+          </p>
+          <p
+            className={`text-sm font-medium break-words ${
+              olay.amfi === null ? "text-bekliyor" : oto ? "text-primary" : ""
+            }`}
+          >
+            {oto ? "★ " : ""}
+            {olay.amfi ?? "⚠️ Eşleşme bekliyor — seçmek için dokun"}
+          </p>
+        </div>
+      </button>
+      {acik ? (
+        <div className="mt-2 rounded-xl border border-border bg-surface p-2">
+          <input
+            autoFocus
+            value={ara}
+            onChange={(e) => setAra(e.target.value)}
+            placeholder="Amfi ara…"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+          <div className="mt-2 max-h-56 overflow-y-auto">
+            {liste.map((a) => (
+              <button
+                key={a}
+                onClick={() => {
+                  onSec(a);
+                  setAcik(false);
+                }}
+                className={`block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-accent ${
+                  a === olay.amfi ? "font-semibold text-primary" : ""
+                }`}
+              >
+                {a}
+              </button>
+            ))}
+            {ara.trim() && !liste.includes(ara.trim()) ? (
+              <button
+                onClick={() => {
+                  onSec(ara.trim());
+                  setAcik(false);
+                }}
+                className="block w-full rounded-lg px-3 py-2 text-left text-sm text-primary hover:bg-accent"
+              >
+                “{ara.trim()}” olarak kaydet
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function DersDetay({
   olay,
   onClose,
@@ -35,13 +120,8 @@ export function DersDetay({
   onClose: () => void;
   onAmfiSec: (key: string, amfi: string) => void;
 }) {
-  const [secim, setSecim] = useState("");
   const { veri } = useYuklenenVeri();
   const secenekler = olay ? amfiSecenekleri(veri, isoDate(startOfWeek(olay.date))) : [];
-
-  useEffect(() => {
-    setSecim("");
-  }, [olay?.key]);
 
   if (!olay) return null;
   const { ders } = olay;
@@ -84,54 +164,16 @@ export function DersDetay({
             etiket="Ders Saati"
             deger={`${ders.startTime} – ${ders.endTime}`}
           />
-          <Satir
-            icon={MapPin}
-            etiket="Amfi / Sınıf"
-            deger={olay.amfi ?? "⚠️ Eşleşme bekliyor"}
+          <AmfiSecici
+            olay={olay}
+            secenekler={secenekler}
+            onSec={(a) => onAmfiSec(olay.key, a)}
           />
           <Satir icon={Users} etiket="Grup" deger={olay.group} />
           <Satir icon={Tag} etiket="Dönem" deger={ders.semester} />
           <Satir icon={StickyNote} etiket="Notlar" deger={ders.notes || "—"} />
         </div>
 
-        {olay.amfi !== "Seçmeliler sayfasından seç" ? (
-          <div
-            className={`mt-4 rounded-2xl border p-4 ${olay.amfi === null ? "border-bekliyor/40 bg-secmeli-soft" : "border-border bg-accent/40"}`}
-          >
-            <p className={`text-sm font-semibold ${olay.amfi === null ? "text-bekliyor" : ""}`}>
-              {olay.amfi === null ? "⚠️ Eşleşme bekliyor" : "Amfiyi değiştir"}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {olay.amfi === null
-                ? "Haftalık amfi programında bu ders güvenle eşleştirilemedi. Doğru amfiyi kendin seçebilirsin."
-                : "Otomatik atanan amfi yanlışsa bu hafta için doğrusunu seçebilirsin."}
-            </p>
-            <div className="mt-3 flex gap-2">
-              <select
-                value={secim}
-                onChange={(e) => setSecim(e.target.value)}
-                className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm"
-              >
-                <option value="">Amfi seç…</option>
-                {secenekler.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
-                ))}
-              </select>
-              <button
-                disabled={!secim}
-                onClick={() => {
-                  onAmfiSec(olay.key, secim);
-                  onClose();
-                }}
-                className="shrink-0 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-40"
-              >
-                Kaydet
-              </button>
-            </div>
-          </div>
-        ) : null}
       </div>
     </div>
   );
