@@ -182,7 +182,10 @@ function Takvim() {
         </div>
       </div>
 
-      <DersDetay olay={secili} onClose={() => setSecili(null)} onAmfiSec={ata} />
+      <DersDetay olay={secili} onClose={() => setSecili(null)} onAmfiSec={(k, a) => {
+          ata(k, a);
+          setSecili((s) => (s ? { ...s, amfi: a, kaynak: "manuel" } : s));
+        }} />
     </AppShell>
   );
 }
