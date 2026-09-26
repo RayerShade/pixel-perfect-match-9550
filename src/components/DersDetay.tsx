@@ -1,6 +1,6 @@
 import { X, Clock, User, MapPin, CalendarDays, Tag, StickyNote, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { DERS_TURU_ETIKET, amfiSecenekleri, haftaninAmfiAdlari, type DersOlayi } from "@/lib/schedule-data";
+import { DERS_TURU_ETIKET, amfiSecenekleri, type DersOlayi } from "@/lib/schedule-data";
 import { useYuklenenVeri } from "@/lib/store";
 import { GUN_UZUN, formatLong, isoDate, startOfWeek } from "@/lib/date-utils";
 import { TUR_SINIFI } from "./ders-stil";
@@ -29,12 +29,10 @@ function Satir({
 function AmfiSecici({
   olay,
   secenekler,
-  otoAdlari,
   onSec,
 }: {
   olay: DersOlayi;
   secenekler: string[];
-  otoAdlari: Set<string>;
   onSec: (amfi: string) => void;
 }) {
   const [acik, setAcik] = useState(false);
@@ -77,24 +75,27 @@ function AmfiSecici({
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
           <p className="mt-2 px-1 text-[11px] text-muted-foreground">
-            <span className="font-semibold text-altin">Altın renkliler</span> o haftanın amfi
-            programından
+            <span className="font-semibold text-altin">Altın renk</span>: bu dersin otomatik
+            atanan amfisi
           </p>
           <div className="mt-1 max-h-56 overflow-y-auto">
-            {liste.map((a) => (
-              <button
-                key={a}
-                onClick={() => {
-                  onSec(a);
-                  setAcik(false);
-                }}
-                className={`block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-accent ${
-                  otoAdlari.has(a) ? "font-semibold text-altin" : ""
-                } ${a === olay.amfi ? "bg-accent font-bold" : ""}`}
-              >
-                {a}
-              </button>
-            ))}
+            {liste.map((a) => {
+              const oto = olay.kaynak === "haftalik" && a === olay.amfi;
+              return (
+                <button
+                  key={a}
+                  onClick={() => {
+                    onSec(a);
+                    setAcik(false);
+                  }}
+                  className={`block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-accent ${
+                    oto ? "font-semibold text-altin" : ""
+                  } ${a === olay.amfi ? "bg-accent font-bold" : ""}`}
+                >
+                  {a}
+                </button>
+              );
+            })}
             {ara.trim() && !liste.includes(ara.trim()) ? (
               <button
                 onClick={() => {
@@ -125,7 +126,6 @@ export function DersDetay({
   const { veri } = useYuklenenVeri();
   const hafta = olay ? isoDate(startOfWeek(olay.date)) : "";
   const secenekler = olay ? amfiSecenekleri(veri, hafta) : [];
-  const otoAdlari = olay ? haftaninAmfiAdlari(veri, hafta) : new Set<string>();
 
   if (!olay) return null;
   const { ders } = olay;
@@ -171,7 +171,6 @@ export function DersDetay({
           <AmfiSecici
             olay={olay}
             secenekler={secenekler}
-            otoAdlari={otoAdlari}
             onSec={(a) => onAmfiSec(olay.key, a)}
           />
           <Satir icon={Users} etiket="Grup" deger={olay.group} />

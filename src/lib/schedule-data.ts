@@ -446,18 +446,6 @@ export function amfiSecenekleri(veri: YuklenenVeri | undefined, mondayIso: strin
   return hepsi.size ? [...hepsi].sort((a, b) => a.localeCompare(b, "tr")) : VARSAYILAN_AMFILER;
 }
 
-/** O haftanın amfi programında yer alan amfi adları (otomatik atanabilenler). */
-export function haftaninAmfiAdlari(
-  veri: YuklenenVeri | undefined,
-  mondayIso: string,
-): Set<string> {
-  const buHafta = new Set(veri?.amfiAdlari?.[mondayIso] ?? []);
-  if (buHafta.size) return buHafta;
-  const hepsi = new Set<string>();
-  (veri?.amfi ?? []).forEach((k) => k.amphitheater && hepsi.add(k.amphitheater));
-  return hepsi;
-}
-
 export interface SecmeliGrupDersi {
   id: string;
   ad: string;
