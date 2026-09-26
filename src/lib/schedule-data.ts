@@ -548,11 +548,16 @@ export const onlineMi = (o: DersOlayi) =>
 export type OnlineGorunum = "goster" | "gizle" | "cakismayan";
 
 /** Online dersleri ayara göre filtreler. "cakismayan": başka bir yüz yüze dersle çakışıyorsa gizle. */
-export function onlineFiltrele(olaylar: DersOlayi[], mod: OnlineGorunum): DersOlayi[] {
-  if (mod === "goster") return olaylar;
+export function onlineFiltrele(
+  olaylar: DersOlayi[],
+  genel: OnlineGorunum,
+  dersBazli: Record<string, OnlineGorunum> = {},
+): DersOlayi[] {
   const yuzyuze = olaylar.filter((o) => !onlineMi(o));
   return olaylar.filter((o) => {
     if (!onlineMi(o)) return true;
+    const mod = dersBazli[o.ders.courseName] ?? genel;
+    if (mod === "goster") return true;
     if (mod === "gizle") return false;
     const t = o.date.getTime();
     return !yuzyuze.some(
@@ -646,4 +651,14 @@ export function ayinOlaylari(
     hafta = addDays(hafta, 7);
   }
   return olaylar;
+}
+
+/** Yıllık programdaki online derslerin adları (ders bazlı ayar için). */
+export function onlineDersAdlari(veri?: YuklenenVeri): string[] {
+  const set = new Set(
+    aktifDersler(veri)
+      .filter((d) => /online|çevrim ?içi|uzaktan/i.test(d.defaultClassroom))
+      .map((d) => d.courseName),
+  );
+  return [...set].sort((a, b) => a.localeCompare(b, "tr"));
 }

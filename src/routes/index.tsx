@@ -62,8 +62,9 @@ function Takvim() {
           ? ayinOlaylari(imlec, secmeliler, manuel, veri)
           : haftaninOlaylari(monday, secmeliler, manuel, veri),
         ayarlar.onlineGorunum ?? "goster",
+        ayarlar.onlineDersAyarlari ?? {},
       ),
-    [gorunum, imlec, monday, secmeliler, manuel, veri, ayarlar.onlineGorunum],
+    [gorunum, imlec, monday, secmeliler, manuel, veri, ayarlar.onlineGorunum, ayarlar.onlineDersAyarlari],
   );
 
   const bekleyen = olaylar.filter((o) => o.amfi === null).length;

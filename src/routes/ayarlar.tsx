@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { useAyarlar, useSecmeliler } from "@/lib/store";
+import { useAyarlar, useSecmeliler, useYuklenenVeri } from "@/lib/store";
+import { onlineDersAdlari } from "@/lib/schedule-data";
 
 export const Route = createFileRoute("/ayarlar")({
   head: () => ({
@@ -23,6 +24,14 @@ export const Route = createFileRoute("/ayarlar")({
 function Ayarlar() {
   const { ayarlar, guncelle } = useAyarlar();
   const { secili } = useSecmeliler();
+  const { veri } = useYuklenenVeri();
+  const onlineDersler = onlineDersAdlari(veri);
+  const dersAyar = ayarlar.onlineDersAyarlari ?? {};
+  const MODLAR = [
+    ["goster", "Göster"],
+    ["cakismayan", "Çakışmıyorsa"],
+    ["gizle", "Gizle"],
+  ] as const;
 
   return (
     <AppShell baslik="Ayarlar" aciklama="Uygulama tercihleri">
@@ -94,6 +103,44 @@ function Ayarlar() {
             <p className="mt-1.5 text-[11px] text-muted-foreground">
               "Çakışmıyorsa göster": aynı saatte yüz yüze bir ders varsa online ders gizlenir.
             </p>
+            {onlineDersler.length ? (
+              <div className="mt-4 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  Ders bazında (seçilmezse yukarıdaki genel ayar geçerli)
+                </p>
+                {onlineDersler.map((ad) => {
+                  const mod = dersAyar[ad];
+                  return (
+                    <div
+                      key={ad}
+                      className="flex flex-col gap-2 rounded-xl border border-border p-2 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <span className="min-w-0 truncate text-sm">{ad}</span>
+                      <div className="flex shrink-0 rounded-lg border border-border p-0.5">
+                        {MODLAR.map(([v, l]) => (
+                          <button
+                            key={v}
+                            onClick={() => {
+                              const next = { ...dersAyar };
+                              if (mod === v) delete next[ad];
+                              else next[ad] = v;
+                              guncelle({ onlineDersAyarlari: next });
+                            }}
+                            className={`rounded-md px-2 py-1 text-[11px] font-semibold ${
+                              mod === v
+                                ? "bg-teorik-soft text-teorik"
+                                : "text-muted-foreground hover:bg-accent"
+                            }`}
+                          >
+                            {l}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <label className="block">

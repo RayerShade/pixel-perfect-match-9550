@@ -13,6 +13,7 @@ export interface Ayarlar {
   gunBaslangic: number;
   gunBitis: number;
   onlineGorunum: "goster" | "gizle" | "cakismayan";
+  onlineDersAyarlari: Record<string, "goster" | "gizle" | "cakismayan">;
 }
 
 export const VARSAYILAN_AYARLAR: Ayarlar = {
@@ -23,6 +24,7 @@ export const VARSAYILAN_AYARLAR: Ayarlar = {
   gunBaslangic: 8,
   gunBitis: 18,
   onlineGorunum: "goster",
+  onlineDersAyarlari: {},
 };
 
 function read<T>(key: string, fallback: T): T {
