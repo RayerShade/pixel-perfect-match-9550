@@ -97,11 +97,11 @@ export function VeriYukleme() {
         ikon={<FileSpreadsheet className="h-4 w-4" />}
         durum={
           veri.amfi?.length
-            ? `${veri.amfiDosyalari?.length ?? 1} dosya · ${veri.amfi.length} kayıt`
+            ? `${veri.amfiDosyalari?.length ?? 1} dosya · ${new Set(veri.amfi.map((k) => k.week)).size} hafta · ${veri.amfi.length} kayıt`
             : null
         }
         onDosya={async (f) => {
-          const { kayitlar: yeni, secmeliler } = await haftalikAmfiOku(f);
+          const { kayitlar: yeni, secmeliler, amfiAdlari } = await haftalikAmfiOku(f);
           if (!yeni.length && !secmeliler.length)
             throw new Error("Kayıt bulunamadı. Başlıkta 'Tarih', 'Saat' ve 'Amfi/Derslik' sütunları olmalı.");
           const haftalar = new Set(yeni.map((k) => k.week));
@@ -111,11 +111,12 @@ export function VeriYukleme() {
           kaydet({
             amfi: [...eski, ...yeni],
             secmeliOlaylari: [...eskiSec, ...secmeliler],
+            amfiAdlari: { ...(veri.amfiAdlari ?? {}), ...amfiAdlari },
             amfiDosyalari: [...(veri.amfiDosyalari ?? []).filter((d) => d !== f.name), f.name],
           });
           return `${yeni.length} kayıt · ${haftalar.size} hafta · ${secmeliler.length} seçmeli ders bulundu.`;
         }}
-        onSil={() => kaydet({ amfi: null, secmeliOlaylari: null, amfiDosyalari: undefined })}
+        onSil={() => kaydet({ amfi: null, secmeliOlaylari: null, amfiAdlari: null, amfiDosyalari: undefined })}
       />
     </div>
   );

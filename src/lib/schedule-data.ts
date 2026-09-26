@@ -557,7 +557,7 @@ export function haftaninOlaylari(
     (d) =>
       (!d.electiveId || seciliSecmeliler.includes(d.electiveId)) &&
       (!d.date || (d.date >= mondayIso && d.date <= pazar)),
-  ).map((d) => {
+  ).map((d): DersOlayi | null => {
     const key = `${mondayIso}-${d.id}`;
     if (gruplar && SECMELI_SLOT.test(d.courseName)) {
       const grup = saatler.indexOf(d.startTime) + 1;
@@ -574,7 +574,7 @@ export function haftaninOlaylari(
         ders: {
           ...d,
           courseName: sec ? sec.ad : `${grup}. Seçmeli (seçilmedi)`,
-          defaultClassroom: sec ? sec.amfi : "Seçmeliler sayfasından seç",
+          defaultClassroom: sec ? (buHafta?.amfi ?? "") : "Seçmeliler sayfasından seç",
           notes: `${grup}. seçmeli grubu${d.notes ? ` · ${d.notes}` : ""}`,
         },
         date: new Date(`${t}T00:00:00`),
@@ -597,7 +597,7 @@ export function haftaninOlaylari(
       amfi,
       group: d.group,
     };
-  });
+  }).filter((o): o is DersOlayi => o !== null);
 }
 
 export function ayinOlaylari(
