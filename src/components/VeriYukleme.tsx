@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { CalendarRange, FileSpreadsheet, Trash2, Upload } from "lucide-react";
+import { CalendarRange, FileSpreadsheet, FlaskConical, Trash2, Upload, Users } from "lucide-react";
+import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
 import { haftalikAmfiOku, yillikProgramOku } from "@/lib/excel-import";
 import { useYuklenenVeri } from "@/lib/store";
 
@@ -117,6 +118,33 @@ export function VeriYukleme() {
           return `${yeni.length} kayıt · ${haftalar.size} hafta · ${secmeliler.length} seçmeli ders bulundu.`;
         }}
         onSil={() => kaydet({ amfi: null, secmeliOlaylari: null, amfiAdlari: null, amfiDosyalari: undefined })}
+      />
+      <YuklemeKarti
+        baslik="Uygulama tablosu"
+        aciklama="Uygulama tarihleri, saatleri ve her uygulamaya giden grupları okur. Öğrenci numaran Ayarlar'da girildiyse sadece senin grubunun uygulamaları takvime eklenir."
+        ikon={<FlaskConical className="h-4 w-4" />}
+        durum={veri.uygulamalar?.length ? `${veri.uygulamaDosya ?? "Uygulama tablosu"} · ${veri.uygulamalar.length} uygulama` : null}
+        onDosya={async (f) => {
+          const uygulamalar = await uygulamaTablosuOku(f);
+          if (!uygulamalar.length) throw new Error("Uygulama bulunamadı. 'Uygulama Tarihi' ve 'Saat' başlıklı tablolar olmalı.");
+          kaydet({ uygulamalar, uygulamaDosya: f.name });
+          return `${uygulamalar.length} uygulama oturumu bulundu.`;
+        }}
+        onSil={() => kaydet({ uygulamalar: null, uygulamaDosya: undefined })}
+      />
+      <YuklemeKarti
+        baslik="Öğrenci listesi"
+        aciklama="Grup, alt grup ve öğrenci numaralarını okur. Ayarlar'a numaranı yazınca adın ve grubun otomatik gelir."
+        ikon={<Users className="h-4 w-4" />}
+        durum={veri.ogrenciler ? `${veri.ogrenciDosya ?? "Öğrenci listesi"} · ${Object.keys(veri.ogrenciler).length} öğrenci` : null}
+        onDosya={async (f) => {
+          const ogrenciler = await ogrenciListesiOku(f);
+          const n = Object.keys(ogrenciler).length;
+          if (!n) throw new Error("Öğrenci bulunamadı. Sütunlar: Grup, Alt Grup, Öğrenci No, Ad, Soyad.");
+          kaydet({ ogrenciler, ogrenciDosya: f.name });
+          return `${n} öğrenci içe aktarıldı.`;
+        }}
+        onSil={() => kaydet({ ogrenciler: null, ogrenciDosya: undefined })}
       />
     </div>
   );

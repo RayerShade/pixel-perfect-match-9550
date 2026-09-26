@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useAyarlar, useSecmeliler, useYuklenenVeri } from "@/lib/store";
-import { onlineDersAdlari } from "@/lib/schedule-data";
+import { ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
 
 export const Route = createFileRoute("/ayarlar")({
   head: () => ({
@@ -26,6 +26,7 @@ function Ayarlar() {
   const { secili } = useSecmeliler();
   const { veri } = useYuklenenVeri();
   const onlineDersler = onlineDersAdlari(veri);
+  const ogrenci = ogrenciBul(veri, ayarlar.ogrenciNo ?? "");
   const dersAyar = ayarlar.onlineDersAyarlari ?? {};
   const MODLAR = [
     ["goster", "Göster"],
@@ -39,6 +40,33 @@ function Ayarlar() {
         <section className="rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-bold">Öğrenci Bilgileri</h2>
           <div className="mt-3 space-y-3">
+            <label className="block">
+              <span className="text-xs text-muted-foreground">Öğrenci numarası</span>
+              <input
+                inputMode="numeric"
+                placeholder="örn. 0101260001"
+                value={ayarlar.ogrenciNo ?? ""}
+                onChange={(e) => {
+                  const no = e.target.value;
+                  const o = ogrenciBul(veri, no);
+                  guncelle(
+                    o
+                      ? { ogrenciNo: no, ogrenciAdi: `${o.ad} ${o.soyad}`, grup: `${o.grup} / ${o.altGrup}` }
+                      : { ogrenciNo: no },
+                  );
+                }}
+                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+              />
+              <span className="mt-1 block text-[11px] text-muted-foreground">
+                {!veri.ogrenciler
+                  ? "Önce Haftalık Amfi sayfasından öğrenci listesini yükle."
+                  : ogrenci
+                    ? `✓ ${ogrenci.ad} ${ogrenci.soyad} · Grup ${ogrenci.grup} · Alt grup ${ogrenci.altGrup || "—"}`
+                    : ayarlar.ogrenciNo
+                      ? "Bu numara listede bulunamadı."
+                      : "Numaranı yazınca bilgilerin ve uygulama grubun otomatik gelir."}
+              </span>
+            </label>
             <label className="block">
               <span className="text-xs text-muted-foreground">Ad</span>
               <input

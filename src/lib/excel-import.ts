@@ -52,7 +52,7 @@ function saatAraligi(v: unknown): [string, string] {
   return [saatNorm(v), ""];
 }
 
-function tarihNorm(v: unknown): string {
+export function tarihNorm(v: unknown): string {
   if (v instanceof Date && !isNaN(v.getTime())) return isoDate(new Date(v.getFullYear(), v.getMonth(), v.getDate(), 12));
   if (typeof v === "number" && v > 20000) {
     const d = new Date(Math.round((v - 25569) * 86400000));

@@ -6,6 +6,7 @@ const AMFI_KEY = "ders-takvim:manuel-amfi";
 const AYAR_KEY = "ders-takvim:ayarlar";
 
 export interface Ayarlar {
+  ogrenciNo: string;
   ogrenciAdi: string;
   donem: string;
   grup: string;
@@ -17,6 +18,7 @@ export interface Ayarlar {
 }
 
 export const VARSAYILAN_AYARLAR: Ayarlar = {
+  ogrenciNo: "",
   ogrenciAdi: "Tıp Fakültesi Öğrencisi",
   donem: "2026 Güz — Dönem I",
   grup: "A / A-1",
@@ -114,7 +116,12 @@ export function useAyarlar() {
 }
 
 const VERI_KEY = "ders-takvim:yuklenen-veri";
-export interface VeriMeta { yillikDosya?: string | undefined; amfiDosyalari?: string[] | undefined }
+export interface VeriMeta {
+  yillikDosya?: string | undefined;
+  amfiDosyalari?: string[] | undefined;
+  uygulamaDosya?: string | undefined;
+  ogrenciDosya?: string | undefined;
+}
 
 export function useYuklenenVeri() {
   const [veri, setVeri] = useState<YuklenenVeri & VeriMeta>({ dersler: null, amfi: null });
