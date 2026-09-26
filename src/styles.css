@@ -59,12 +59,45 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-teorik: var(--teorik);
+  --color-teorik-soft: var(--teorik-soft);
+  --color-pratik: var(--pratik);
+  --color-pratik-soft: var(--pratik-soft);
+  --color-pbl: var(--pbl);
+  --color-pbl-soft: var(--pbl-soft);
+  --color-secmeli: var(--secmeli);
+  --color-secmeli-soft: var(--secmeli-soft);
+  --color-sinav: var(--sinav);
+  --color-sinav-soft: var(--sinav-soft);
+  --color-bekliyor: var(--bekliyor);
+  --color-bugun: var(--bugun);
+  --color-surface: var(--surface);
+
+  --shadow-card: 0 1px 2px oklch(0.2 0.03 250 / 0.06), 0 8px 24px oklch(0.2 0.03 250 / 0.06);
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --radius: 0.875rem;
+  --background: oklch(0.985 0.004 250);
+  --surface: oklch(1 0 0);
+  --foreground: oklch(0.21 0.03 258);
+
+  --teorik: oklch(0.52 0.13 245);
+  --teorik-soft: oklch(0.95 0.03 245);
+  --pratik: oklch(0.52 0.11 175);
+  --pratik-soft: oklch(0.95 0.035 175);
+  --pbl: oklch(0.52 0.12 300);
+  --pbl-soft: oklch(0.955 0.03 300);
+  --secmeli: oklch(0.55 0.12 60);
+  --secmeli-soft: oklch(0.96 0.04 75);
+  --sinav: oklch(0.55 0.18 20);
+  --sinav-soft: oklch(0.955 0.03 20);
+  --bekliyor: oklch(0.6 0.15 65);
+  --bugun: oklch(0.52 0.13 245);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
@@ -140,5 +173,47 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+}
+
+@utility ders-teorik {
+  background-color: var(--teorik-soft);
+  border-left: 3px solid var(--teorik);
+  color: oklch(0.32 0.09 245);
+}
+@utility ders-pratik {
+  background-color: var(--pratik-soft);
+  border-left: 3px solid var(--pratik);
+  color: oklch(0.32 0.07 175);
+}
+@utility ders-pbl {
+  background-color: var(--pbl-soft);
+  border-left: 3px solid var(--pbl);
+  color: oklch(0.34 0.08 300);
+}
+@utility ders-secmeli {
+  background-color: var(--secmeli-soft);
+  border-left: 3px solid var(--secmeli);
+  color: oklch(0.36 0.08 60);
+}
+@utility ders-sinav {
+  background-color: var(--sinav-soft);
+  border-left: 3px solid var(--sinav);
+  color: oklch(0.36 0.12 20);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

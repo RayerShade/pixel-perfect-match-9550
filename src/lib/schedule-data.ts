@@ -1,0 +1,459 @@
+import { addDays, hashString, isoDate, startOfWeek } from "./date-utils";
+
+export type DersTuru = "teorik" | "pratik" | "pbl" | "secmeli" | "sinav";
+
+export const DERS_TURU_ETIKET: Record<DersTuru, string> = {
+  teorik: "Teorik Ders",
+  pratik: "Laboratuvar / Pratik",
+  pbl: "PDÖ Oturumu",
+  secmeli: "Seçmeli Ders",
+  sinav: "Sınav",
+};
+
+/** Fixed yearly schedule entry (repeats weekly across the semester). */
+export interface Ders {
+  id: string;
+  courseName: string;
+  instructor: string;
+  courseType: DersTuru;
+  dayOfWeek: number; // 1 = Pazartesi ... 7 = Pazar
+  startTime: string;
+  endTime: string;
+  defaultClassroom: string;
+  group: string;
+  semester: string;
+  notes: string;
+  electiveId?: string;
+}
+
+export interface Secmeli {
+  id: string;
+  electiveName: string;
+  instructor: string;
+  courseCode: string;
+  description: string;
+  semester: string;
+  quota: number;
+}
+
+export interface HaftalikAmfiKaydi {
+  id: string;
+  week: string; // monday iso
+  date: string;
+  startTime: string;
+  endTime: string;
+  courseName: string;
+  group: string;
+  classroom: string;
+  amphitheater: string;
+  sourceFile: string;
+  status: "eslesti" | "bekliyor";
+  confidence: number;
+  manuallyConfirmed: boolean;
+}
+
+export const SECMELILER: Secmeli[] = [
+  {
+    id: "sec-etik",
+    electiveName: "Tıp Etiği",
+    instructor: "Doç. Dr. Elif Korkmaz",
+    courseCode: "TIP-S101",
+    description: "Klinik karar süreçlerinde etik ilkeler, olgu tartışmaları.",
+    semester: "2026 Güz",
+    quota: 40,
+  },
+  {
+    id: "sec-sosyoloji",
+    electiveName: "Tıp Sosyolojisi",
+    instructor: "Dr. Öğr. Üyesi Murat Aslan",
+    courseCode: "TIP-S102",
+    description: "Sağlık, hastalık ve toplum ilişkisine giriş.",
+    semester: "2026 Güz",
+    quota: 35,
+  },
+  {
+    id: "sec-tarih",
+    electiveName: "Tıp Tarihi",
+    instructor: "Prof. Dr. Nihal Demir",
+    courseCode: "TIP-S103",
+    description: "Antik çağdan modern tıbba hekimliğin gelişimi.",
+    semester: "2026 Güz",
+    quota: 50,
+  },
+  {
+    id: "sec-bilisim",
+    electiveName: "Tıp Bilişimi",
+    instructor: "Dr. Öğr. Üyesi Can Erdoğan",
+    courseCode: "TIP-S104",
+    description: "Elektronik sağlık kayıtları ve klinik veri okuryazarlığı.",
+    semester: "2026 Güz",
+    quota: 30,
+  },
+  {
+    id: "sec-isaret",
+    electiveName: "İşaret Dili",
+    instructor: "Öğr. Gör. Selin Yalçın",
+    courseCode: "TIP-S105",
+    description: "Hasta iletişiminde temel işaret dili becerileri.",
+    semester: "2026 Güz",
+    quota: 25,
+  },
+];
+
+export const DERSLER: Ders[] = [
+  {
+    id: "d-anatomi-1",
+    courseName: "Anatomi",
+    instructor: "Prof. Dr. Ahmet Yılmaz",
+    courseType: "teorik",
+    dayOfWeek: 1,
+    startTime: "09:00",
+    endTime: "09:50",
+    defaultClassroom: "Amfi I",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Üst ekstremite kemikleri. Atlas getirilmesi önerilir.",
+  },
+  {
+    id: "d-anatomi-2",
+    courseName: "Anatomi",
+    instructor: "Prof. Dr. Ahmet Yılmaz",
+    courseType: "teorik",
+    dayOfWeek: 1,
+    startTime: "10:10",
+    endTime: "11:00",
+    defaultClassroom: "Amfi I",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Eklemler ve bağlar.",
+  },
+  {
+    id: "d-tibba-merhaba",
+    courseName: "Tıbba Merhaba",
+    instructor: "Prof. Dr. Nihal Demir",
+    courseType: "teorik",
+    dayOfWeek: 1,
+    startTime: "13:00",
+    endTime: "13:50",
+    defaultClassroom: "Amfi III",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Hekimlik mesleğine giriş söyleşisi.",
+  },
+  {
+    id: "d-histoloji-1",
+    courseName: "Histoloji",
+    instructor: "Doç. Dr. Zeynep Kaya",
+    courseType: "teorik",
+    dayOfWeek: 2,
+    startTime: "09:00",
+    endTime: "09:50",
+    defaultClassroom: "Amfi III",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Epitel doku sınıflandırması.",
+  },
+  {
+    id: "d-histoloji-lab",
+    courseName: "Histoloji Laboratuvarı",
+    instructor: "Doç. Dr. Zeynep Kaya",
+    courseType: "pratik",
+    dayOfWeek: 2,
+    startTime: "10:10",
+    endTime: "12:00",
+    defaultClassroom: "Histoloji Lab. 2",
+    group: "A-1",
+    semester: "2026 Güz",
+    notes: "Önlük zorunludur. Preparat teslimi hafta sonunda.",
+  },
+  {
+    id: "d-biyokimya-1",
+    courseName: "Biyokimya",
+    instructor: "Prof. Dr. Kemal Şahin",
+    courseType: "teorik",
+    dayOfWeek: 2,
+    startTime: "14:00",
+    endTime: "14:50",
+    defaultClassroom: "Amfi II",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Aminoasitler ve peptit bağı.",
+  },
+  {
+    id: "d-fizyoloji-1",
+    courseName: "Fizyoloji",
+    instructor: "Prof. Dr. Ayşe Tunç",
+    courseType: "teorik",
+    dayOfWeek: 3,
+    startTime: "09:00",
+    endTime: "09:50",
+    defaultClassroom: "Amfi II",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Hücre zarı ve taşıma mekanizmaları.",
+  },
+  {
+    id: "d-fizyoloji-2",
+    courseName: "Fizyoloji",
+    instructor: "Prof. Dr. Ayşe Tunç",
+    courseType: "teorik",
+    dayOfWeek: 3,
+    startTime: "10:10",
+    endTime: "11:00",
+    defaultClassroom: "Amfi II",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Membran potansiyeli.",
+  },
+  {
+    id: "d-pdo",
+    courseName: "PDÖ Oturumu",
+    instructor: "Dr. Öğr. Üyesi Murat Aslan",
+    courseType: "pbl",
+    dayOfWeek: 3,
+    startTime: "13:00",
+    endTime: "15:00",
+    defaultClassroom: "PDÖ Odası 5",
+    group: "A-3",
+    semester: "2026 Güz",
+    notes: "Senaryo 2, ikinci oturum. Ön hazırlık gerekli.",
+  },
+  {
+    id: "d-anatomi-lab",
+    courseName: "Anatomi Laboratuvarı",
+    instructor: "Prof. Dr. Ahmet Yılmaz",
+    courseType: "pratik",
+    dayOfWeek: 4,
+    startTime: "09:00",
+    endTime: "11:00",
+    defaultClassroom: "Anatomi Lab.",
+    group: "A-1",
+    semester: "2026 Güz",
+    notes: "Diseksiyon salonu kuralları geçerlidir.",
+  },
+  {
+    id: "d-biyokimya-2",
+    courseName: "Biyokimya",
+    instructor: "Prof. Dr. Kemal Şahin",
+    courseType: "teorik",
+    dayOfWeek: 4,
+    startTime: "11:10",
+    endTime: "12:00",
+    defaultClassroom: "Amfi II",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Protein yapıları.",
+  },
+  {
+    id: "d-histoloji-2",
+    courseName: "Histoloji",
+    instructor: "Doç. Dr. Zeynep Kaya",
+    courseType: "teorik",
+    dayOfWeek: 4,
+    startTime: "14:00",
+    endTime: "14:50",
+    defaultClassroom: "Amfi III",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Bağ dokusu.",
+  },
+  {
+    id: "d-fizyoloji-3",
+    courseName: "Fizyoloji",
+    instructor: "Prof. Dr. Ayşe Tunç",
+    courseType: "teorik",
+    dayOfWeek: 5,
+    startTime: "09:00",
+    endTime: "09:50",
+    defaultClassroom: "Amfi I",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Aksiyon potansiyeli.",
+  },
+  {
+    id: "d-anatomi-3",
+    courseName: "Anatomi",
+    instructor: "Prof. Dr. Ahmet Yılmaz",
+    courseType: "teorik",
+    dayOfWeek: 5,
+    startTime: "10:10",
+    endTime: "11:00",
+    defaultClassroom: "Amfi I",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Alt ekstremite girişi.",
+  },
+  {
+    id: "d-kurul-sinavi",
+    courseName: "Kurul Değerlendirme Sınavı",
+    instructor: "Dekanlık",
+    courseType: "sinav",
+    dayOfWeek: 5,
+    startTime: "15:00",
+    endTime: "16:30",
+    defaultClassroom: "Amfi I",
+    group: "A",
+    semester: "2026 Güz",
+    notes: "Optik form ve kimlik zorunludur.",
+  },
+  // Seçmeli dersler — yalnızca öğrenci seçtiyse takvimde görünür
+  {
+    id: "d-sec-etik",
+    courseName: "Tıp Etiği",
+    instructor: "Doç. Dr. Elif Korkmaz",
+    courseType: "secmeli",
+    dayOfWeek: 3,
+    startTime: "16:00",
+    endTime: "16:50",
+    defaultClassroom: "Derslik 204",
+    group: "Seçmeli",
+    semester: "2026 Güz",
+    notes: "Olgu tartışması, katılım notu var.",
+    electiveId: "sec-etik",
+  },
+  {
+    id: "d-sec-sosyoloji",
+    courseName: "Tıp Sosyolojisi",
+    instructor: "Dr. Öğr. Üyesi Murat Aslan",
+    courseType: "secmeli",
+    dayOfWeek: 2,
+    startTime: "16:00",
+    endTime: "16:50",
+    defaultClassroom: "Derslik 108",
+    group: "Seçmeli",
+    semester: "2026 Güz",
+    notes: "",
+    electiveId: "sec-sosyoloji",
+  },
+  {
+    id: "d-sec-tarih",
+    courseName: "Tıp Tarihi",
+    instructor: "Prof. Dr. Nihal Demir",
+    courseType: "secmeli",
+    dayOfWeek: 4,
+    startTime: "16:00",
+    endTime: "16:50",
+    defaultClassroom: "Derslik 301",
+    group: "Seçmeli",
+    semester: "2026 Güz",
+    notes: "",
+    electiveId: "sec-tarih",
+  },
+  {
+    id: "d-sec-bilisim",
+    courseName: "Tıp Bilişimi",
+    instructor: "Dr. Öğr. Üyesi Can Erdoğan",
+    courseType: "secmeli",
+    dayOfWeek: 1,
+    startTime: "16:00",
+    endTime: "16:50",
+    defaultClassroom: "Bilgisayar Lab.",
+    group: "Seçmeli",
+    semester: "2026 Güz",
+    notes: "",
+    electiveId: "sec-bilisim",
+  },
+  {
+    id: "d-sec-isaret",
+    courseName: "İşaret Dili",
+    instructor: "Öğr. Gör. Selin Yalçın",
+    courseType: "secmeli",
+    dayOfWeek: 5,
+    startTime: "13:00",
+    endTime: "13:50",
+    defaultClassroom: "Derslik 112",
+    group: "Seçmeli",
+    semester: "2026 Güz",
+    notes: "",
+    electiveId: "sec-isaret",
+  },
+];
+
+const AMFILER = ["Amfi I", "Amfi II", "Amfi III", "Amfi IV", "Morfoloji Amfisi"];
+
+/**
+ * Sample "weekly amphitheater file" output. In the real app this comes from the
+ * uploaded Excel file; here it is derived deterministically from the week key so
+ * every week looks plausible and a few rows stay unmatched on purpose.
+ */
+export function haftalikAmfiKayitlari(mondayIso: string): HaftalikAmfiKaydi[] {
+  return DERSLER.filter((d) => d.courseType !== "secmeli").map((d) => {
+    const seed = hashString(`${mondayIso}-${d.id}`);
+    const bekliyor = seed % 11 === 0;
+    const amfi =
+      d.courseType === "pratik" || d.courseType === "pbl"
+        ? d.defaultClassroom
+        : AMFILER[seed % AMFILER.length]!;
+    const date = isoDate(addDays(new Date(`${mondayIso}T00:00:00`), d.dayOfWeek - 1));
+    return {
+      id: `${mondayIso}-${d.id}`,
+      week: mondayIso,
+      date,
+      startTime: d.startTime,
+      endTime: d.endTime,
+      courseName: d.courseName,
+      group: d.group,
+      classroom: bekliyor ? "" : amfi,
+      amphitheater: bekliyor ? "" : amfi,
+      sourceFile: `haftalik_amfi_${mondayIso}.xlsx`,
+      status: bekliyor ? "bekliyor" : "eslesti",
+      confidence: bekliyor ? 0.41 : 0.93 + (seed % 7) / 100,
+      manuallyConfirmed: false,
+    };
+  });
+}
+
+export interface DersOlayi {
+  key: string;
+  ders: Ders;
+  date: Date;
+  amfi: string | null; // null => eşleşme bekliyor
+  group: string;
+}
+
+export function haftaninOlaylari(
+  monday: Date,
+  seciliSecmeliler: string[],
+  manuelAmfiler: Record<string, string>,
+): DersOlayi[] {
+  const mondayIso = isoDate(monday);
+  const kayitlar = haftalikAmfiKayitlari(mondayIso);
+  const byId = new Map(kayitlar.map((k) => [`${mondayIso}-${k.courseName}-${k.startTime}`, k]));
+
+  return DERSLER.filter(
+    (d) => !d.electiveId || seciliSecmeliler.includes(d.electiveId),
+  ).map((d) => {
+    const key = `${mondayIso}-${d.id}`;
+    const kayit = byId.get(`${mondayIso}-${d.courseName}-${d.startTime}`);
+    const manuel = manuelAmfiler[key];
+    let amfi: string | null;
+    if (d.courseType === "secmeli") amfi = d.defaultClassroom;
+    else if (manuel) amfi = manuel;
+    else if (kayit && kayit.status === "eslesti") amfi = kayit.amphitheater;
+    else amfi = null;
+
+    return {
+      key,
+      ders: d,
+      date: addDays(monday, d.dayOfWeek - 1),
+      amfi,
+      group: d.group,
+    };
+  });
+}
+
+export function ayinOlaylari(
+  ayIcindeBirGun: Date,
+  seciliSecmeliler: string[],
+  manuelAmfiler: Record<string, string>,
+): DersOlayi[] {
+  const ilk = new Date(ayIcindeBirGun.getFullYear(), ayIcindeBirGun.getMonth(), 1);
+  const son = new Date(ayIcindeBirGun.getFullYear(), ayIcindeBirGun.getMonth() + 1, 0);
+  const olaylar: DersOlayi[] = [];
+  let hafta = startOfWeek(ilk);
+  while (hafta <= son) {
+    olaylar.push(...haftaninOlaylari(hafta, seciliSecmeliler, manuelAmfiler));
+    hafta = addDays(hafta, 7);
+  }
+  return olaylar;
+}
