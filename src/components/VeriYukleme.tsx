@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
-import { CalendarRange, FileSpreadsheet, FlaskConical, Trash2, Upload, Users } from "lucide-react";
+import { BookMarked, CalendarRange, FileSpreadsheet, FlaskConical, Trash2, Upload, Users } from "lucide-react";
 import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
+import { genelSecmeliOku } from "@/lib/secmeli-import";
 import { haftalikAmfiOku, yillikProgramOku } from "@/lib/excel-import";
 import { useYuklenenVeri } from "@/lib/store";
 
@@ -69,6 +70,19 @@ function YuklemeKarti({
         <Upload className="h-3.5 w-3.5" />
         {yukleniyor ? "Okunuyor…" : "Excel dosyası seç"}
       </button>
+      <YuklemeKarti
+        baslik="Genel seçmeli ders programı"
+        aciklama="Tüm seçmeli derslerin adı, hocası, saati ve amfisi önce buradan alınır; eksik bilgiler haftalık amfi programından tamamlanır."
+        ikon={<BookMarked className="h-4 w-4" />}
+        durum={veri.genelSecmeliler?.length ? `${veri.secmeliDosya ?? "Seçmeli programı"} · ${veri.genelSecmeliler.length} seçmeli` : null}
+        onDosya={async (f) => {
+          const genelSecmeliler = await genelSecmeliOku(f);
+          if (!genelSecmeliler.length) throw new Error("Seçmeli bulunamadı. 'Dersin Adı', 'Saati' ve 'Amfisi' sütunları olmalı.");
+          kaydet({ genelSecmeliler, secmeliDosya: f.name });
+          return `${genelSecmeliler.length} seçmeli ders içe aktarıldı.`;
+        }}
+        onSil={() => kaydet({ genelSecmeliler: null, secmeliDosya: undefined })}
+      />
     </div>
   );
 }
@@ -145,6 +159,19 @@ export function VeriYukleme() {
           return `${n} öğrenci içe aktarıldı.`;
         }}
         onSil={() => kaydet({ ogrenciler: null, ogrenciDosya: undefined })}
+      />
+      <YuklemeKarti
+        baslik="Genel seçmeli ders programı"
+        aciklama="Tüm seçmeli derslerin adı, hocası, saati ve amfisi önce buradan alınır; eksik bilgiler haftalık amfi programından tamamlanır."
+        ikon={<BookMarked className="h-4 w-4" />}
+        durum={veri.genelSecmeliler?.length ? `${veri.secmeliDosya ?? "Seçmeli programı"} · ${veri.genelSecmeliler.length} seçmeli` : null}
+        onDosya={async (f) => {
+          const genelSecmeliler = await genelSecmeliOku(f);
+          if (!genelSecmeliler.length) throw new Error("Seçmeli bulunamadı. 'Dersin Adı', 'Saati' ve 'Amfisi' sütunları olmalı.");
+          kaydet({ genelSecmeliler, secmeliDosya: f.name });
+          return `${genelSecmeliler.length} seçmeli ders içe aktarıldı.`;
+        }}
+        onSil={() => kaydet({ genelSecmeliler: null, secmeliDosya: undefined })}
       />
     </div>
   );

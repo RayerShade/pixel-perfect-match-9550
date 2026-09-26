@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { DERSLER, SECMELILER, secmeliGruplari, secmeliSaatleri } from "@/lib/schedule-data";
+import { DERSLER, SECMELILER, secmeliGruplari, secmeliSaatleri, secmeliVeriVar } from "@/lib/schedule-data";
 import { GUN_UZUN } from "@/lib/date-utils";
 import { useSecmeliler, useYuklenenVeri } from "@/lib/store";
 
@@ -26,14 +26,14 @@ export const Route = createFileRoute("/secmeliler")({
 function Secmeliler() {
   const { secili, toggle, grupSec } = useSecmeliler();
   const { veri } = useYuklenenVeri();
-  const gruplar = veri.secmeliOlaylari?.length ? secmeliGruplari(veri) : null;
+  const gruplar = secmeliVeriVar(veri) ? secmeliGruplari(veri) : null;
 
   if (gruplar) {
     const saatler = secmeliSaatleri(veri);
     return (
       <AppShell baslik="Seçmeli Dersler" aciklama="Her gruptan bir seçmeli seç">
         <p className="mb-4 text-sm text-muted-foreground">
-          Liste haftalık amfi dosyasından alındı. Seçmeliler her hafta aynı saatte 3 grup halinde
+          Liste genel seçmeli programından, eksikler haftalık amfi dosyalarından alındı. Seçmeliler her hafta aynı saatte 3 grup halinde
           yapılır; her gruptan yalnızca bir ders seçebilirsin. Seçimin takvime otomatik eklenir.
         </p>
         <div className="space-y-6">
