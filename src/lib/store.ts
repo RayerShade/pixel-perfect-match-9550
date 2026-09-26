@@ -60,7 +60,17 @@ export function useSecmeliler() {
     });
   }, []);
 
-  return { secili, toggle, hazir };
+  /** Aynı gruptan yalnızca bir seçmeli: grubun diğer derslerini kaldırıp bunu seçer. */
+  const grupSec = useCallback((id: string, grupIdleri: string[]) => {
+    setSecili((prev) => {
+      const secili = prev.includes(id);
+      const next = [...prev.filter((x) => !grupIdleri.includes(x)), ...(secili ? [] : [id])];
+      window.localStorage.setItem(ELECTIVE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  return { secili, toggle, grupSec, hazir };
 }
 
 export function useManuelAmfiler() {

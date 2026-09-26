@@ -101,18 +101,21 @@ export function VeriYukleme() {
             : null
         }
         onDosya={async (f) => {
-          const yeni = await haftalikAmfiOku(f);
-          if (!yeni.length)
+          const { kayitlar: yeni, secmeliler } = await haftalikAmfiOku(f);
+          if (!yeni.length && !secmeliler.length)
             throw new Error("Kayıt bulunamadı. Başlıkta 'Tarih', 'Saat' ve 'Amfi/Derslik' sütunları olmalı.");
           const haftalar = new Set(yeni.map((k) => k.week));
           const eski = (veri.amfi ?? []).filter((k) => !haftalar.has(k.week));
+          const tarihler = new Set(secmeliler.map((o) => o.date));
+          const eskiSec = (veri.secmeliOlaylari ?? []).filter((o) => !tarihler.has(o.date));
           kaydet({
             amfi: [...eski, ...yeni],
+            secmeliOlaylari: [...eskiSec, ...secmeliler],
             amfiDosyalari: [...(veri.amfiDosyalari ?? []).filter((d) => d !== f.name), f.name],
           });
-          return `${yeni.length} kayıt · ${haftalar.size} hafta güncellendi.`;
+          return `${yeni.length} kayıt · ${haftalar.size} hafta · ${secmeliler.length} seçmeli ders bulundu.`;
         }}
-        onSil={() => kaydet({ amfi: null, amfiDosyalari: undefined })}
+        onSil={() => kaydet({ amfi: null, secmeliOlaylari: null, amfiDosyalari: undefined })}
       />
     </div>
   );
