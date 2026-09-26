@@ -1,4 +1,4 @@
-import type { Ders, DersTuru, HaftalikAmfiKaydi } from "./schedule-data";
+import type { Ders, DersTuru, HaftalikAmfiKaydi, SecmeliOlay } from "./schedule-data";
 import { isoDate, startOfWeek } from "./date-utils";
 
 export const normalize = (s: string) =>
@@ -194,7 +194,7 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
 const DONEM1 = /d[oö]nem\s*-?\s*(1|i)(?![0-9i])/i;
 
 /** Fakülte amfi programı: her gün için "tarih" satırı, "SAAT" + amfi adları başlığı, saat satırları. */
-async function amfiIzgarasiOku(file: File): Promise<HaftalikAmfiKaydi[]> {
+async function amfiIzgarasiOku(file: File, secmeliler: SecmeliOlay[]): Promise<HaftalikAmfiKaydi[]> {
   const XLSX = await import("xlsx");
   const wb = XLSX.read(await file.arrayBuffer());
   const kayitlar: HaftalikAmfiKaydi[] = [];
@@ -235,8 +235,18 @@ async function amfiIzgarasiOku(file: File): Promise<HaftalikAmfiKaydi[]> {
       const [sb, se] = saatAraligi(a);
       if (!sb) continue;
       row.forEach((hucre, x) => {
-        if (x === 0 || !hucre || !DONEM1.test(hucre)) return;
+        if (x === 0 || !hucre) return;
         const n = normalize(hucre);
+        if (/^secmeli ?ders/.test(n)) {
+          const ad = hucre.replace(/^\s*SE[ÇC]MEL[İI]\s*DERS\s*-?\s*/i, "").replace(/\s+/g, " ").trim();
+          const key = `s|${tarih}|${sb}|${ad}`;
+          if (ad && !gorulen.has(key)) {
+            gorulen.add(key);
+            secmeliler.push({ ad, date: tarih, startTime: sb, endTime: se, amfi: amfiler[x] || "" });
+          }
+          return;
+        }
+        if (!DONEM1.test(hucre)) return;
         if (n.includes("ingilizce") && !n.includes("turkce")) return;
         if (/\btopl/.test(n)) return; // toplantı satırları öğrenci dersi değil
         const acik = saatAraligi(hucre.replace(/^[^-]*-/, ""));
@@ -267,9 +277,12 @@ async function amfiIzgarasiOku(file: File): Promise<HaftalikAmfiKaydi[]> {
   return kayitlar;
 }
 
-export async function haftalikAmfiOku(file: File): Promise<HaftalikAmfiKaydi[]> {
-  const izgara = await amfiIzgarasiOku(file);
-  if (izgara.length) return izgara;
+export async function haftalikAmfiOku(
+  file: File,
+): Promise<{ kayitlar: HaftalikAmfiKaydi[]; secmeliler: SecmeliOlay[] }> {
+  const secmeliler: SecmeliOlay[] = [];
+  const izgara = await amfiIzgarasiOku(file, secmeliler);
+  if (izgara.length || secmeliler.length) return { kayitlar: izgara, secmeliler };
   const satirlar = await satirlariOku(file);
   const kayitlar: HaftalikAmfiKaydi[] = [];
   satirlar.forEach((s, i) => {
@@ -293,5 +306,5 @@ export async function haftalikAmfiOku(file: File): Promise<HaftalikAmfiKaydi[]> 
       manuallyConfirmed: false,
     });
   });
-  return kayitlar;
+  return { kayitlar, secmeliler };
 }
