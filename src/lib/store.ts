@@ -1,3 +1,4 @@
+import type { YuklenenVeri } from "./schedule-data";
 import { useCallback, useEffect, useState } from "react";
 
 const ELECTIVE_KEY = "ders-takvim:secmeliler";
@@ -99,7 +100,6 @@ export function useAyarlar() {
 }
 
 const VERI_KEY = "ders-takvim:yuklenen-veri";
-import type { YuklenenVeri } from "./schedule-data";
 export interface VeriMeta { yillikDosya?: string; amfiDosyalari?: string[] }
 
 export function useYuklenenVeri() {

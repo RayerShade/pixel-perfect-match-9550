@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { TUR_SINIFI } from "@/components/ders-stil";
 import { aktifDersler, DERS_TURU_ETIKET, type DersTuru } from "@/lib/schedule-data";
 import { GUN_UZUN } from "@/lib/date-utils";
-import { useSecmeliler } from "@/lib/store";
+import { useSecmeliler, useYuklenenVeri } from "@/lib/store";
 
 export const Route = createFileRoute("/dersler")({
   head: () => ({
@@ -28,6 +28,7 @@ function Dersler() {
   const [filtre, setFiltre] = useState<DersTuru | "hepsi">("hepsi");
   const [arama, setArama] = useState("");
   const { secili } = useSecmeliler();
+  const { veri } = useYuklenenVeri();
 
   const liste = useMemo(
     () =>
