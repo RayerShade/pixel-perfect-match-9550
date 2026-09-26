@@ -61,12 +61,12 @@ function Takvim() {
     () =>
       onlineFiltrele(
         gorunum === "ay"
-          ? ayinOlaylari(imlec, secmeliler, manuel, veri, ogrenci)
-          : haftaninOlaylari(monday, secmeliler, manuel, veri, ogrenci),
+          ? ayinOlaylari(imlec, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? [])
+          : haftaninOlaylari(monday, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? []),
         ayarlar.onlineGorunum ?? "goster",
         ayarlar.onlineDersAyarlari ?? {},
       ),
-    [gorunum, imlec, monday, secmeliler, manuel, veri, ogrenci, ayarlar.onlineGorunum, ayarlar.onlineDersAyarlari],
+    [gorunum, imlec, monday, secmeliler, manuel, veri, ogrenci, ayarlar.onlineGorunum, ayarlar.onlineDersAyarlari, ayarlar.gizliSecmeliGruplari],
   );
 
   const bekleyen = olaylar.filter((o) => o.amfi === null).length;

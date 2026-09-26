@@ -16,6 +16,8 @@ export interface Ayarlar {
   gunBitis: number;
   onlineGorunum: "goster" | "gizle" | "cakismayan";
   onlineDersAyarlari: Record<string, "goster" | "gizle" | "cakismayan">;
+  /** Takvimde hiç gösterilmeyecek seçmeli grupları (1-3). */
+  gizliSecmeliGruplari: number[];
 }
 
 export const VARSAYILAN_AYARLAR: Ayarlar = {
@@ -28,6 +30,7 @@ export const VARSAYILAN_AYARLAR: Ayarlar = {
   gunBitis: 18,
   onlineGorunum: "goster",
   onlineDersAyarlari: {},
+  gizliSecmeliGruplari: [],
 };
 
 function read<T>(key: string, fallback: T): T {

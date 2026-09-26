@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { DERSLER, SECMELILER, secmeliGruplari, secmeliSaatleri, secmeliVeriVar } from "@/lib/schedule-data";
 import { GUN_UZUN } from "@/lib/date-utils";
-import { useSecmeliler, useYuklenenVeri } from "@/lib/store";
+import { useAyarlar, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 
 export const Route = createFileRoute("/secmeliler")({
   head: () => ({
@@ -33,67 +33,84 @@ interface Gizlenen {
 function Secmeliler() {
   const { secili, gizli, toggle, grupSec, gizle, goster } = useSecmeliler();
   const { veri } = useYuklenenVeri();
+  const { ayarlar, guncelle } = useAyarlar();
+  const gizliGruplar = ayarlar.gizliSecmeliGruplari ?? [];
+  const grupGizleToggle = (grup: number) =>
+    guncelle({
+      gizliSecmeliGruplari: gizliGruplar.includes(grup)
+        ? gizliGruplar.filter((g) => g !== grup)
+        : [...gizliGruplar, grup],
+    });
   const gruplar = secmeliVeriVar(veri) ? secmeliGruplari(veri) : null;
 
   if (gruplar) {
     const saatler = secmeliSaatleri(veri);
-    const gizlenenler: Gizlenen[] = gruplar
-      .filter((g) => gizli.includes(g.id))
-      .map((g) => ({ id: g.id, ad: g.ad, alt: g.amfi }));
     return (
       <AppShell baslik="Seçmeli Dersler" aciklama="Her gruptan bir seçmeli seç">
         <p className="mb-4 text-sm text-muted-foreground">
           Liste genel seçmeli programından, eksikler haftalık amfi dosyalarından alındı. Seçmeliler her hafta aynı saatte 3 grup halinde
-          yapılır; her gruptan yalnızca bir ders seçebilirsin. Seçimin takvime otomatik eklenir. O dönem almayı düşünmediğin bir dersi göz
-          simgesiyle gizleyebilirsin, listede hiç görünmez.
+          yapılır; her gruptan yalnızca bir ders seçebilirsin. Seçimin takvime otomatik eklenir. Bu dönem seçmeli almayacağın bir grubu
+          göz simgesiyle gizleyebilirsin; o grubun saati takviminde hiç görünmez.
         </p>
         <div className="space-y-6">
           {saatler.map((saat, i) => {
             const grup = i + 1;
             const hepsi = gruplar.filter((g) => g.grup === grup);
-            const dersler = hepsi.filter((d) => !gizli.includes(d.id));
             const ids = hepsi.map((d) => d.id);
             const secilen = hepsi.find((d) => secili.includes(d.id));
+            const grupGizli = gizliGruplar.includes(grup);
             return (
-              <section key={saat}>
-                <div className="mb-2 flex items-baseline justify-between gap-2">
+              <section key={saat} className={grupGizli ? "opacity-60" : undefined}>
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <h2 className="font-display text-base font-bold">{grup}. Seçmeli · {saat}</h2>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {secilen ? `Seçildi: ${secilen.ad}` : "Henüz seçilmedi"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-xs text-muted-foreground">
+                      {grupGizli ? "Takvimde gizli" : secilen ? `Seçildi: ${secilen.ad}` : "Henüz seçilmedi"}
+                    </span>
+                    <button
+                      onClick={() => grupGizleToggle(grup)}
+                      title={grupGizli ? "Bu grubu takvimde göster" : "Bu grubu takvimde gizle"}
+                      aria-label={`${grup}. seçmeli grubunu takvimde ${grupGizli ? "göster" : "gizle"}`}
+                      className={`rounded-lg border p-1.5 transition-colors ${
+                        grupGizli
+                          ? "border-foreground/30 bg-accent text-foreground"
+                          : "border-border/70 bg-surface text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                      }`}
+                    >
+                      {grupGizli ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                 </div>
-                {dersler.length === 0 ? (
+                {hepsi.length === 0 ? (
                   <p className="rounded-xl border border-border bg-surface p-3 text-xs text-muted-foreground">
-                    {hepsi.length ? "Bu gruptaki tüm seçmeliler gizlenmiş." : "Bu saatte seçmeli ders bulunamadı."}
+                    Bu saatte seçmeli ders bulunamadı.
                   </p>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2">
-                    {dersler.map((d) => {
+                    {hepsi.map((d) => {
                       const aktif = secili.includes(d.id);
                       return (
-                        <div key={d.id} className="relative">
-                          <button
-                            role="radio"
-                            aria-checked={aktif}
-                            onClick={() => grupSec(d.id, ids)}
-                            className={`grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-2xl border p-3 pr-11 text-left transition-colors ${
-                              aktif ? "border-secmeli/60 bg-secmeli-soft" : "border-border bg-surface hover:bg-accent/40"
+                        <button
+                          key={d.id}
+                          role="radio"
+                          aria-checked={aktif}
+                          onClick={() => grupSec(d.id, ids)}
+                          className={`grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${
+                            aktif ? "border-secmeli/60 bg-secmeli-soft" : "border-border bg-surface hover:bg-accent/40"
+                          }`}
+                        >
+                          <span
+                            className={`grid h-5 w-5 place-items-center rounded-full border ${
+                              aktif ? "border-secmeli bg-secmeli text-primary-foreground" : "border-border"
                             }`}
                           >
-                            <span
-                              className={`grid h-5 w-5 place-items-center rounded-full border ${
-                                aktif ? "border-secmeli bg-secmeli text-primary-foreground" : "border-border"
-                              }`}
-                            >
-                              {aktif ? <Check className="h-3 w-3" /> : null}
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block text-sm font-semibold">{d.ad}</span>
-                              <span className="block truncate text-xs text-muted-foreground">{d.amfi}</span>
-                            </span>
-                          </button>
-                          <GizleDugmesi ad={d.ad} onClick={() => gizle(d.id)} />
-                        </div>
+                            {aktif ? <Check className="h-3 w-3" /> : null}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold">{d.ad}</span>
+                            <span className="block truncate text-xs text-muted-foreground">{d.amfi}</span>
+                          </span>
+                        </button>
                       );
                     })}
                   </div>
@@ -101,7 +118,6 @@ function Secmeliler() {
               </section>
             );
           })}
-          <Gizlenenler gizlenenler={gizlenenler} goster={goster} />
         </div>
       </AppShell>
     );

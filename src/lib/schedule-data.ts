@@ -673,6 +673,7 @@ export function haftaninOlaylari(
   manuelAmfiler: Record<string, string>,
   veri?: YuklenenVeri,
   ogrenci?: Ogrenci,
+  gizliGruplar: number[] = [],
 ): DersOlayi[] {
   const mondayIso = isoDate(monday);
   const uyg = ogrenci && veri?.uygulamalar?.length ? veri.uygulamalar : null;
@@ -724,6 +725,8 @@ export function haftaninOlaylari(
     const key = `${mondayIso}-${d.id}`;
     if (gruplar && SECMELI_SLOT.test(d.courseName)) {
       const grup = saatler.indexOf(d.startTime) + 1;
+      // Gizlenen seçmeli grubu takvimde hiç görünmez
+      if (gizliGruplar.includes(grup)) return null;
       const sec = gruplar.find((g) => g.grup === grup && seciliSecmeliler.includes(g.id));
       const t = tarihOf(d);
       const buHafta = sec
@@ -781,13 +784,14 @@ export function ayinOlaylari(
   manuelAmfiler: Record<string, string>,
   veri?: YuklenenVeri,
   ogrenci?: Ogrenci,
+  gizliGruplar: number[] = [],
 ): DersOlayi[] {
   const ilk = new Date(ayIcindeBirGun.getFullYear(), ayIcindeBirGun.getMonth(), 1);
   const son = new Date(ayIcindeBirGun.getFullYear(), ayIcindeBirGun.getMonth() + 1, 0);
   const olaylar: DersOlayi[] = [];
   let hafta = startOfWeek(ilk);
   while (hafta <= son) {
-    olaylar.push(...haftaninOlaylari(hafta, seciliSecmeliler, manuelAmfiler, veri, ogrenci));
+    olaylar.push(...haftaninOlaylari(hafta, seciliSecmeliler, manuelAmfiler, veri, ogrenci, gizliGruplar));
     hafta = addDays(hafta, 7);
   }
   return olaylar;
