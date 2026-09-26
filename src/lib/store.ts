@@ -97,3 +97,22 @@ export function useAyarlar() {
 
   return { ayarlar, guncelle };
 }
+
+const VERI_KEY = "ders-takvim:yuklenen-veri";
+import type { YuklenenVeri } from "./schedule-data";
+export interface VeriMeta { yillikDosya?: string; amfiDosyalari?: string[] }
+
+export function useYuklenenVeri() {
+  const [veri, setVeri] = useState<YuklenenVeri & VeriMeta>({ dersler: null, amfi: null });
+  useEffect(() => {
+    setVeri(read(VERI_KEY, { dersler: null, amfi: null }));
+  }, []);
+  const kaydet = useCallback((patch: Partial<YuklenenVeri & VeriMeta>) => {
+    setVeri((prev) => {
+      const next = { ...prev, ...patch };
+      window.localStorage.setItem(VERI_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+  return { veri, kaydet };
+}

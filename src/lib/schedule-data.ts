@@ -17,6 +17,7 @@ export interface Ders {
   instructor: string;
   courseType: DersTuru;
   dayOfWeek: number; // 1 = Pazartesi ... 7 = Pazar
+  date?: string; // Excel'de belirli tarih varsa (YYYY-MM-DD)
   startTime: string;
   endTime: string;
   defaultClassroom: string;
@@ -376,7 +377,38 @@ const AMFILER = ["Amfi I", "Amfi II", "Amfi III", "Amfi IV", "Morfoloji Amfisi"]
  * uploaded Excel file; here it is derived deterministically from the week key so
  * every week looks plausible and a few rows stay unmatched on purpose.
  */
-export function haftalikAmfiKayitlari(mondayIso: string): HaftalikAmfiKaydi[] {
+export interface YuklenenVeri {
+  dersler: Ders[] | null;
+  amfi: HaftalikAmfiKaydi[] | null;
+}
+
+const normAd = (s: string) =>
+  s.toLocaleLowerCase("tr-TR").replace(/[^a-zçğıöşü0-9]+/g, "");
+
+export function aktifDersler(veri?: YuklenenVeri): Ders[] {
+  return veri?.dersler ?? DERSLER;
+}
+
+export function haftalikAmfiKayitlari(mondayIso: string, veri?: YuklenenVeri): HaftalikAmfiKaydi[] {
+  if (veri?.amfi || veri?.dersler) {
+    const dersler = aktifDersler(veri);
+    return (veri.amfi ?? [])
+      .filter((k) => k.week === mondayIso)
+      .map((k) => {
+        const dow = ((new Date(`${k.date}T00:00:00`).getDay() + 6) % 7) + 1;
+        const ayni = dersler.filter(
+          (d) => (d.date ? d.date === k.date : d.dayOfWeek === dow) && d.startTime === k.startTime,
+        );
+        const adli = ayni.find((d) => normAd(d.courseName) === normAd(k.courseName));
+        const confidence = adli ? 1 : ayni.length ? 0.7 : 0.4;
+        return {
+          ...k,
+          confidence,
+          status: k.amphitheater && ayni.length ? ("eslesti" as const) : ("bekliyor" as const),
+        };
+      })
+      .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
+  }
   return DERSLER.filter((d) => d.courseType !== "secmeli").map((d) => {
     const seed = hashString(`${mondayIso}-${d.id}`);
     const bekliyor = seed % 11 === 0;
@@ -415,19 +447,28 @@ export function haftaninOlaylari(
   monday: Date,
   seciliSecmeliler: string[],
   manuelAmfiler: Record<string, string>,
+  veri?: YuklenenVeri,
 ): DersOlayi[] {
   const mondayIso = isoDate(monday);
-  const kayitlar = haftalikAmfiKayitlari(mondayIso);
-  const byId = new Map(kayitlar.map((k) => [`${mondayIso}-${k.courseName}-${k.startTime}`, k]));
+  const pazar = isoDate(addDays(monday, 6));
+  const kayitlar = haftalikAmfiKayitlari(mondayIso, veri);
+  const tarihOf = (d: Ders) => d.date ?? isoDate(addDays(monday, d.dayOfWeek - 1));
+  const bul = (d: Ders) => {
+    const t = tarihOf(d);
+    const ayni = kayitlar.filter((k) => k.date === t && k.startTime === d.startTime);
+    return ayni.find((k) => normAd(k.courseName) === normAd(d.courseName)) ?? ayni[0];
+  };
 
-  return DERSLER.filter(
-    (d) => !d.electiveId || seciliSecmeliler.includes(d.electiveId),
+  return aktifDersler(veri).filter(
+    (d) =>
+      (!d.electiveId || seciliSecmeliler.includes(d.electiveId)) &&
+      (!d.date || (d.date >= mondayIso && d.date <= pazar)),
   ).map((d) => {
     const key = `${mondayIso}-${d.id}`;
-    const kayit = byId.get(`${mondayIso}-${d.courseName}-${d.startTime}`);
+    const kayit = bul(d);
     const manuel = manuelAmfiler[key];
     let amfi: string | null;
-    if (d.courseType === "secmeli") amfi = d.defaultClassroom;
+    if (d.courseType === "secmeli" && !kayit) amfi = d.defaultClassroom || null;
     else if (manuel) amfi = manuel;
     else if (kayit && kayit.status === "eslesti") amfi = kayit.amphitheater;
     else amfi = null;
@@ -435,7 +476,7 @@ export function haftaninOlaylari(
     return {
       key,
       ders: d,
-      date: addDays(monday, d.dayOfWeek - 1),
+      date: new Date(`${tarihOf(d)}T00:00:00`),
       amfi,
       group: d.group,
     };
@@ -446,13 +487,14 @@ export function ayinOlaylari(
   ayIcindeBirGun: Date,
   seciliSecmeliler: string[],
   manuelAmfiler: Record<string, string>,
+  veri?: YuklenenVeri,
 ): DersOlayi[] {
   const ilk = new Date(ayIcindeBirGun.getFullYear(), ayIcindeBirGun.getMonth(), 1);
   const son = new Date(ayIcindeBirGun.getFullYear(), ayIcindeBirGun.getMonth() + 1, 0);
   const olaylar: DersOlayi[] = [];
   let hafta = startOfWeek(ilk);
   while (hafta <= son) {
-    olaylar.push(...haftaninOlaylari(hafta, seciliSecmeliler, manuelAmfiler));
+    olaylar.push(...haftaninOlaylari(hafta, seciliSecmeliler, manuelAmfiler, veri));
     hafta = addDays(hafta, 7);
   }
   return olaylar;
