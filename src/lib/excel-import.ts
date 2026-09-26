@@ -238,6 +238,7 @@ async function amfiIzgarasiOku(file: File): Promise<HaftalikAmfiKaydi[]> {
         if (x === 0 || !hucre || !DONEM1.test(hucre)) return;
         const n = normalize(hucre);
         if (n.includes("ingilizce") && !n.includes("turkce")) return;
+        if (/\btopl/.test(n)) return; // toplantı satırları öğrenci dersi değil
         const acik = saatAraligi(hucre.replace(/^[^-]*-/, ""));
         const bas = acik[1] ? acik[0] : sb;
         const bit = acik[1] ? acik[1] : se;
