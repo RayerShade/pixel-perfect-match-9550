@@ -389,6 +389,19 @@ export interface YuklenenVeri {
   dersler: Ders[] | null;
   amfi: HaftalikAmfiKaydi[] | null;
   secmeliOlaylari?: SecmeliOlay[] | null | undefined;
+  /** Hafta (pazartesi iso) → o haftanın amfi programındaki amfi/derslik adları */
+  amfiAdlari?: Record<string, string[]> | null | undefined;
+}
+
+const VARSAYILAN_AMFILER = ["Amfi I", "Amfi II", "Amfi III", "Amfi IV", "Morfoloji Amfisi"];
+
+/** Eşleşme bekleyen dersler için amfi seçenekleri: önce o haftanın dosyası, yoksa tüm yüklenen haftalar. */
+export function amfiSecenekleri(veri: YuklenenVeri | undefined, mondayIso: string): string[] {
+  const adlar = veri?.amfiAdlari;
+  if (adlar?.[mondayIso]?.length) return adlar[mondayIso]!;
+  const hepsi = new Set<string>(Object.values(adlar ?? {}).flat());
+  (veri?.amfi ?? []).forEach((k) => k.amphitheater && hepsi.add(k.amphitheater));
+  return hepsi.size ? [...hepsi].sort((a, b) => a.localeCompare(b, "tr")) : VARSAYILAN_AMFILER;
 }
 
 export interface SecmeliGrupDersi {
@@ -553,6 +566,9 @@ export function haftaninOlaylari(
       const buHafta = sec
         ? veri?.secmeliOlaylari?.find((o) => o.date === t && trBaslik(o.ad) === sec.ad)
         : undefined;
+      const haftaVerisiVar = veri?.secmeliOlaylari?.some((o) => o.date === t);
+      // Seçilen dersin bu hafta dersi yoksa takvime ekleme
+      if (sec && haftaVerisiVar && !buHafta) return null;
       return {
         key,
         ders: {
@@ -562,7 +578,7 @@ export function haftaninOlaylari(
           notes: `${grup}. seçmeli grubu${d.notes ? ` · ${d.notes}` : ""}`,
         },
         date: new Date(`${t}T00:00:00`),
-        amfi: manuelAmfiler[key] ?? (sec ? (buHafta?.amfi ?? sec.amfi) : "Seçmeliler sayfasından seç"),
+        amfi: manuelAmfiler[key] ?? (sec ? (buHafta?.amfi ?? null) : "Seçmeliler sayfasından seç"),
         group: d.group,
       };
     }
