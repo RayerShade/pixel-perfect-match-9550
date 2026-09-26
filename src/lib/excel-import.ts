@@ -1,5 +1,5 @@
 import type { Ders, DersTuru, HaftalikAmfiKaydi, SecmeliOlay } from "./schedule-data";
-import { isoDate, startOfWeek } from "./date-utils";
+import { addDays, isoDate, startOfWeek } from "./date-utils";
 
 export const normalize = (s: string) =>
   s

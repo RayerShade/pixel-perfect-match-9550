@@ -117,7 +117,7 @@ export interface VeriMeta { yillikDosya?: string | undefined; amfiDosyalari?: st
 export function useYuklenenVeri() {
   const [veri, setVeri] = useState<YuklenenVeri & VeriMeta>({ dersler: null, amfi: null });
   useEffect(() => {
-    const yukle = () => setVeri(read(VERI_KEY, { dersler: null, amfi: null }));
+    const yukle = () => setVeri(temizle(read(VERI_KEY, { dersler: null, amfi: null })));
     yukle();
     window.addEventListener("ders-takvim:veri", yukle);
     return () => window.removeEventListener("ders-takvim:veri", yukle);
@@ -128,4 +128,24 @@ export function useYuklenenVeri() {
     window.dispatchEvent(new Event("ders-takvim:veri"));
   }, []);
   return { veri, kaydet };
+}
+
+/** Önceden yüklenmiş dosyalardaki, dosyanın asıl haftası dışındaki (eski/ek sayfa) kayıtları ayıklar. */
+function temizle<T extends YuklenenVeri>(v: T): T {
+  if (!v.amfi?.length) return v;
+  const dosyaHaftalari = new Map<string, Map<string, number>>();
+  v.amfi.forEach((k) => {
+    const m = dosyaHaftalari.get(k.sourceFile) ?? new Map<string, number>();
+    m.set(k.week, (m.get(k.week) ?? 0) + 1);
+    dosyaHaftalari.set(k.sourceFile, m);
+  });
+  const ana = new Map(
+    [...dosyaHaftalari].map(([f, m]) => [f, [...m].sort((a, b) => b[1] - a[1])[0]![0]]),
+  );
+  const amfi = v.amfi.filter((k) => ana.get(k.sourceFile) === k.week);
+  const haftalar = new Set(amfi.map((k) => k.week));
+  const amfiAdlari = v.amfiAdlari
+    ? Object.fromEntries(Object.entries(v.amfiAdlari).filter(([h]) => haftalar.has(h)))
+    : v.amfiAdlari;
+  return { ...v, amfi, amfiAdlari };
 }
