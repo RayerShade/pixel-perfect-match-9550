@@ -37,7 +37,7 @@ function agacKur(dersler: Ders[]): Agac {
   for (const d of dersler) {
     const bolum = d.notes.split(" · ")[0] ?? "";
     const i = bolum.indexOf("/");
-    if (i < 0 || !/dilim/i.test(bolum.slice(0, i))) continue;
+    if (i < 0 || !bolum.slice(0, i).toLocaleLowerCase("tr-TR").includes("dilim")) continue;
     const dilim = baslik(bolum.slice(0, i));
     const dal = baslik(bolum.slice(i + 1).replace(/\s*-\s*$/, "")) || "Diğer";
     const dilimler = agac.get(dal) ?? new Map();
