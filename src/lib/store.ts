@@ -8,7 +8,6 @@ export interface Ayarlar {
   ogrenciAdi: string;
   donem: string;
   grup: string;
-  hafta SonuGoster?: never;
   haftaSonuGoster: boolean;
   gunBaslangic: number;
   gunBitis: number;
