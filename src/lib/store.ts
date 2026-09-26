@@ -79,7 +79,30 @@ export function useSecmeliler() {
     });
   }, []);
 
-  return { secili, toggle, grupSec, hazir };
+  /** Seçmeliyi görmezden gelmek istediğinde listeye hiç getirmemek için gizler. */
+  const gizle = useCallback((id: string) => {
+    setGizli((prev) => {
+      const next = prev.includes(id) ? prev : [...prev, id];
+      window.localStorage.setItem(GIZLI_KEY, JSON.stringify(next));
+      return next;
+    });
+    setSecili((prev) => {
+      if (!prev.includes(id)) return prev;
+      const next = prev.filter((x) => x !== id);
+      window.localStorage.setItem(ELECTIVE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const goster = useCallback((id: string) => {
+    setGizli((prev) => {
+      const next = prev.filter((x) => x !== id);
+      window.localStorage.setItem(GIZLI_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  return { secili, gizli, toggle, grupSec, gizle, goster, hazir };
 }
 
 export function useManuelAmfiler() {
