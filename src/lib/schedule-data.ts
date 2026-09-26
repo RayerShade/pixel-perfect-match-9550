@@ -382,8 +382,6 @@ export interface YuklenenVeri {
   amfi: HaftalikAmfiKaydi[] | null;
 }
 
-const normAd = (s: string) =>
-  s.toLocaleLowerCase("tr-TR").replace(/[^a-zçğıöşü0-9]+/g, "");
 
 const ONEMSIZ = new Set(["dönem", "türkçe", "ingilizce", "dilimi", "dilim", "oturum", "ders", "dersi", "grubu"]);
 const kelimeler = (s: string) =>
@@ -505,7 +503,7 @@ export function haftaninOlaylari(
     let amfi: string | null;
     if (manuel) amfi = manuel;
     else if (d.courseType === "secmeli" && d.electiveId) amfi = d.defaultClassroom || null;
-    else if (kayit && kayit.status === "eslesti") amfi = kayit.amphitheater;
+    else if (kayit) amfi = kayit.status === "eslesti" ? kayit.amphitheater : null;
     else amfi = d.defaultClassroom || null;
 
     return {
