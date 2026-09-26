@@ -13,6 +13,39 @@ import { TUR_NOKTA, TUR_SINIFI } from "./ders-stil";
 
 const SAAT_YUKSEKLIGI = 62; // px per hour
 
+/** Çakışan dersleri yan yana sütunlara yerleştirir (Google Takvim gibi). */
+function yerlesim(olaylar: DersOlayi[]) {
+  const sirali = [...olaylar].sort(
+    (a, b) =>
+      toMinutes(a.ders.startTime) - toMinutes(b.ders.startTime) ||
+      toMinutes(b.ders.endTime) - toMinutes(a.ders.endTime),
+  );
+  const sonuc = new Map<string, { sutun: number; toplam: number }>();
+  let kume: DersOlayi[] = [];
+  let sutunSonlari: number[] = [];
+  let kumeSonu = -1;
+  const kapat = () => {
+    kume.forEach((o) => (sonuc.get(o.key)!.toplam = sutunSonlari.length));
+    kume = [];
+    sutunSonlari = [];
+  };
+  for (const o of sirali) {
+    const bas = toMinutes(o.ders.startTime);
+    const son = toMinutes(o.ders.endTime);
+    if (bas >= kumeSonu) kapat();
+    let sutun = sutunSonlari.findIndex((e) => e <= bas);
+    if (sutun === -1) {
+      sutun = sutunSonlari.length;
+      sutunSonlari.push(son);
+    } else sutunSonlari[sutun] = son;
+    sonuc.set(o.key, { sutun, toplam: 1 });
+    kume.push(o);
+    kumeSonu = Math.max(kumeSonu, son);
+  }
+  kapat();
+  return sonuc;
+}
+
 function Blok({
   olay,
   onSec,
@@ -35,6 +68,7 @@ function Blok({
       ) : null}
       <span className="truncate text-[10px] font-medium opacity-90">
         {olay.amfi ?? "⚠️ Eşleşme bekliyor"}
+        {olay.kaynak === "yillik" && olay.amfi && !/online/i.test(olay.amfi) ? " · yıllık prog." : ""}
       </span>
       {!kompakt ? (
         <span className="mt-auto truncate text-[10px] opacity-70">
@@ -111,6 +145,7 @@ function Izgara({
 
           {gunler.map((g) => {
             const gunOlaylari = olaylar.filter((o) => sameDay(o.date, g));
+            const yer = yerlesim(gunOlaylari);
             return (
               <div
                 key={isoDate(g)}
@@ -131,11 +166,17 @@ function Izgara({
                   const h =
                     ((toMinutes(o.ders.endTime) - toMinutes(o.ders.startTime)) / 60) *
                     SAAT_YUKSEKLIGI;
+                  const { sutun, toplam } = yer.get(o.key) ?? { sutun: 0, toplam: 1 };
                   return (
                     <div
                       key={o.key}
-                      className="absolute inset-x-1"
-                      style={{ top, height: Math.max(h - 2, 26) }}
+                      className="absolute px-0.5"
+                      style={{
+                        top,
+                        height: Math.max(h - 2, 26),
+                        left: `calc(${(sutun / toplam) * 100}% + 2px)`,
+                        width: `calc(${100 / toplam}% - 4px)`,
+                      }}
                     >
                       <Blok olay={o} onSec={onSec} kompakt={h < 56} />
                     </div>

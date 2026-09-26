@@ -68,6 +68,33 @@ function Ayarlar() {
               className="h-5 w-5 accent-[var(--teorik)]"
             />
           </label>
+          <div className="mt-4">
+            <span className="text-sm">Online dersler</span>
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+              {(
+                [
+                  ["goster", "Hepsini göster"],
+                  ["cakismayan", "Çakışmıyorsa göster"],
+                  ["gizle", "Hiç gösterme"],
+                ] as const
+              ).map(([v, l]) => (
+                <button
+                  key={v}
+                  onClick={() => guncelle({ onlineGorunum: v })}
+                  className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
+                    (ayarlar.onlineGorunum ?? "goster") === v
+                      ? "border-teorik bg-teorik-soft text-teorik"
+                      : "border-border hover:bg-accent"
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              "Çakışmıyorsa göster": aynı saatte yüz yüze bir ders varsa online ders gizlenir.
+            </p>
+          </div>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-muted-foreground">Başlangıç saati</span>

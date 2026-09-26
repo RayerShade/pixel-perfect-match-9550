@@ -9,6 +9,7 @@ import {
   DERS_TURU_ETIKET,
   ayinOlaylari,
   haftaninOlaylari,
+  onlineFiltrele,
   type DersOlayi,
 } from "@/lib/schedule-data";
 import { addDays, formatLong, startOfWeek, weekLabel, AYLAR } from "@/lib/date-utils";
@@ -49,10 +50,13 @@ function Takvim() {
   const monday = useMemo(() => startOfWeek(imlec), [imlec]);
   const olaylar = useMemo(
     () =>
-      gorunum === "ay"
-        ? ayinOlaylari(imlec, secmeliler, manuel, veri)
-        : haftaninOlaylari(monday, secmeliler, manuel, veri),
-    [gorunum, imlec, monday, secmeliler, manuel, veri],
+      onlineFiltrele(
+        gorunum === "ay"
+          ? ayinOlaylari(imlec, secmeliler, manuel, veri)
+          : haftaninOlaylari(monday, secmeliler, manuel, veri),
+        ayarlar.onlineGorunum ?? "goster",
+      ),
+    [gorunum, imlec, monday, secmeliler, manuel, veri, ayarlar.onlineGorunum],
   );
 
   const bekleyen = olaylar.filter((o) => o.amfi === null).length;

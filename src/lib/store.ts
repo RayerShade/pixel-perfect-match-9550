@@ -12,6 +12,7 @@ export interface Ayarlar {
   haftaSonuGoster: boolean;
   gunBaslangic: number;
   gunBitis: number;
+  onlineGorunum: "goster" | "gizle" | "cakismayan";
 }
 
 export const VARSAYILAN_AYARLAR: Ayarlar = {
@@ -21,6 +22,7 @@ export const VARSAYILAN_AYARLAR: Ayarlar = {
   haftaSonuGoster: false,
   gunBaslangic: 8,
   gunBitis: 18,
+  onlineGorunum: "goster",
 };
 
 function read<T>(key: string, fallback: T): T {
