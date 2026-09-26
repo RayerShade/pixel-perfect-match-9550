@@ -98,19 +98,19 @@ async function satirlariOku(file: File): Promise<Satir[]> {
         if (alan && s[alan] === undefined) s[alan] = r[i];
       });
       // birleştirilmiş hücreler için tarih/gün devralma
-      if (s.tarih) sonTarih = s.tarih;
-      else s.tarih = sonTarih;
-      if (s.gun) sonGun = s.gun;
-      else s.gun = sonGun;
-      if (String(s.ders ?? "").trim()) out.push(s);
+      if (s["tarih"]) sonTarih = s["tarih"];
+      else s["tarih"] = sonTarih;
+      if (s["gun"]) sonGun = s["gun"];
+      else s["gun"] = sonGun;
+      if (String(s["ders"] ?? "").trim()) out.push(s);
     }
   }
   return out;
 }
 
 function saatler(s: Satir): [string, string] {
-  if (s.baslangic) return [saatNorm(s.baslangic), saatNorm(s.bitis)];
-  return saatAraligi(s.saat);
+  if (s["baslangic"]) return [saatNorm(s["baslangic"]), saatNorm(s["bitis"])];
+  return saatAraligi(s["saat"]);
 }
 
 function bitisTahmin(bas: string, bit: string) {
@@ -126,23 +126,23 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
   satirlar.forEach((s, i) => {
     const [bas, bit] = saatler(s);
     if (!bas) return;
-    const ad = String(s.ders).trim();
-    const tarih = tarihNorm(s.tarih);
-    const gun = tarih ? ((new Date(`${tarih}T00:00:00`).getDay() + 6) % 7) + 1 : gunNorm(s.gun);
+    const ad = String(s["ders"]).trim();
+    const tarih = tarihNorm(s["tarih"]);
+    const gun = tarih ? ((new Date(`${tarih}T00:00:00`).getDay() + 6) % 7) + 1 : gunNorm(s["gun"]);
     if (!gun) return;
     dersler.push({
       id: `x-${i}`,
       courseName: ad,
-      instructor: String(s.hoca ?? "").trim(),
-      courseType: turNorm(s.tur, ad),
+      instructor: String(s["hoca"] ?? "").trim(),
+      courseType: turNorm(s["tur"], ad),
       dayOfWeek: gun,
       date: tarih || undefined,
       startTime: bas,
       endTime: bitisTahmin(bas, bit),
-      defaultClassroom: String(s.amfi ?? "").trim(),
-      group: String(s.grup ?? "").trim(),
+      defaultClassroom: String(s["amfi"] ?? "").trim(),
+      group: String(s["grup"] ?? "").trim(),
       semester: "",
-      notes: String(s.not ?? "").trim(),
+      notes: String(s["not"] ?? "").trim(),
     });
   });
   return dersler;
@@ -153,17 +153,17 @@ export async function haftalikAmfiOku(file: File): Promise<HaftalikAmfiKaydi[]> 
   const kayitlar: HaftalikAmfiKaydi[] = [];
   satirlar.forEach((s, i) => {
     const [bas, bit] = saatler(s);
-    const tarih = tarihNorm(s.tarih);
+    const tarih = tarihNorm(s["tarih"]);
     if (!bas || !tarih) return;
-    const amfi = String(s.amfi ?? "").trim();
+    const amfi = String(s["amfi"] ?? "").trim();
     kayitlar.push({
       id: `u-${tarih}-${bas}-${i}`,
       week: isoDate(startOfWeek(new Date(`${tarih}T00:00:00`))),
       date: tarih,
       startTime: bas,
       endTime: bit,
-      courseName: String(s.ders).trim(),
-      group: String(s.grup ?? "").trim(),
+      courseName: String(s["ders"]).trim(),
+      group: String(s["grup"] ?? "").trim(),
       classroom: amfi,
       amphitheater: amfi,
       sourceFile: file.name,
