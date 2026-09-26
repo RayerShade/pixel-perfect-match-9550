@@ -422,6 +422,17 @@ export interface YuklenenVeri {
   secmeliOlaylari?: SecmeliOlay[] | null | undefined;
   /** Hafta (pazartesi iso) → o haftanın amfi programındaki amfi/derslik adları */
   amfiAdlari?: Record<string, string[]> | null | undefined;
+  /** Genel seçmeli ders amfi programı (öncelikli kaynak) */
+  genelSecmeliler?: GenelSecmeli[] | null | undefined;
+}
+
+export interface GenelSecmeli {
+  ad: string;
+  hoca: string;
+  saat: string;
+  amfi: string;
+  bilgi: string;
+  tarihler: string[];
 }
 
 const VARSAYILAN_AMFILER = ["Amfi I", "Amfi II", "Amfi III", "Amfi IV", "Morfoloji Amfisi"];
@@ -441,6 +452,8 @@ export interface SecmeliGrupDersi {
   grup: number;
   amfi: string;
   saat: string;
+  hoca?: string;
+  bilgi?: string;
 }
 
 const SECMELI_SLOT = /^se[çc]meli ders/i;
@@ -458,20 +471,40 @@ export function secmeliSaatleri(veri?: YuklenenVeri): string[] {
   return l.length ? l : ["13:30", "14:20", "15:10"];
 }
 
+const secAnahtar = (s: string) => s.toLocaleLowerCase("tr-TR").replace(/[^a-zçğıöşü0-9]+/g, "");
+const secId = (grup: number, ad: string) =>
+  `g${grup}-${ad.toLocaleLowerCase("tr-TR").replace(/[^a-zçğıöşü0-9]+/g, "-")}`;
+
+export function secmeliVeriVar(veri?: YuklenenVeri) {
+  return Boolean(veri?.genelSecmeliler?.length || veri?.secmeliOlaylari?.length);
+}
+
+/** Seçmeli listesi: önce genel seçmeli programı, eksikler haftalık amfi dosyalarından tamamlanır. */
 export function secmeliGruplari(veri?: YuklenenVeri): SecmeliGrupDersi[] {
   const saatler = secmeliSaatleri(veri);
   const map = new Map<string, SecmeliGrupDersi>();
+  for (const g of veri?.genelSecmeliler ?? []) {
+    const grup = saatler.indexOf(g.saat) + 1;
+    if (!grup) continue;
+    const ad = trBaslik(g.ad);
+    const id = secId(grup, ad);
+    map.set(id, { id, ad, grup, amfi: g.amfi, saat: g.saat, hoca: g.hoca, bilgi: g.bilgi });
+  }
   const sirali = [...(veri?.secmeliOlaylari ?? [])].sort((a, b) => a.date.localeCompare(b.date));
   for (const o of sirali) {
     const grup = saatler.indexOf(o.startTime) + 1;
     if (!grup) continue;
     const ad = trBaslik(o.ad);
-    const id = `g${grup}-${ad.toLocaleLowerCase("tr-TR").replace(/[^a-zçğıöşü0-9]+/g, "-")}`;
+    const var_ = [...map.values()].find((m) => m.grup === grup && secAnahtar(m.ad) === secAnahtar(ad));
+    if (var_) {
+      if (!var_.amfi) var_.amfi = o.amfi;
+      continue;
+    }
+    const id = secId(grup, ad);
     map.set(id, { id, ad, grup, amfi: o.amfi, saat: o.startTime });
   }
   return [...map.values()].sort((a, b) => a.grup - b.grup || a.ad.localeCompare(b.ad, "tr"));
 }
-
 
 const ONEMSIZ = new Set(["dönem", "türkçe", "ingilizce", "dilimi", "dilim", "oturum", "ders", "dersi", "grubu"]);
 const kelimeler = (s: string) =>
@@ -614,7 +647,7 @@ export function haftaninOlaylari(
   const kayitlar = haftalikAmfiKayitlari(mondayIso, veri);
   const tarihOf = (d: Ders) => d.date ?? isoDate(addDays(monday, d.dayOfWeek - 1));
   const bul = (d: Ders) => enIyiKayit(d, tarihOf(d), kayitlar)?.kayit;
-  const gruplar = veri?.secmeliOlaylari?.length ? secmeliGruplari(veri) : null;
+  const gruplar = secmeliVeriVar(veri) ? secmeliGruplari(veri) : null;
   const saatler = gruplar ? secmeliSaatleri(veri) : [];
 
   const uygOlaylari: DersOlayi[] = (uyg ?? [])
@@ -660,22 +693,26 @@ export function haftaninOlaylari(
       const sec = gruplar.find((g) => g.grup === grup && seciliSecmeliler.includes(g.id));
       const t = tarihOf(d);
       const buHafta = sec
-        ? veri?.secmeliOlaylari?.find((o) => o.date === t && trBaslik(o.ad) === sec.ad)
+        ? veri?.secmeliOlaylari?.find((o) => o.date === t && secAnahtar(trBaslik(o.ad)) === secAnahtar(sec.ad))
         : undefined;
+      const genel = sec ? veri?.genelSecmeliler?.find((g) => secAnahtar(trBaslik(g.ad)) === secAnahtar(sec.ad)) : undefined;
       const haftaVerisiVar = veri?.secmeliOlaylari?.some((o) => o.date === t);
-      // Seçilen dersin bu hafta dersi yoksa takvime ekleme
-      if (sec && haftaVerisiVar && !buHafta) return null;
+      // Seçilen dersin bu hafta dersi yoksa takvime ekleme (genel programda tarih işaretliyse ona bak)
+      if (sec && genel?.tarihler.length ? !genel.tarihler.includes(t) : sec && !genel && haftaVerisiVar && !buHafta) return null;
+      const secAmfi = sec ? sec.amfi || buHafta?.amfi || "" : "";
       return {
         key,
         ders: {
           ...d,
           courseName: sec ? sec.ad : `${grup}. Seçmeli (seçilmedi)`,
-          defaultClassroom: sec ? (buHafta?.amfi ?? "") : "Seçmeliler sayfasından seç",
+          instructor: sec?.hoca || d.instructor,
+          defaultClassroom: sec ? secAmfi : "Seçmeliler sayfasından seç",
           notes: `${grup}. seçmeli grubu${d.notes ? ` · ${d.notes}` : ""}`,
         },
         date: new Date(`${t}T00:00:00`),
-        amfi: manuelAmfiler[key] ?? (sec ? (buHafta?.amfi ?? null) : "Seçmeliler sayfasından seç"),
+        amfi: manuelAmfiler[key] ?? (sec ? secAmfi || null : "Seçmeliler sayfasından seç"),
         group: d.group,
+        kaynak: manuelAmfiler[key] ? "manuel" : "haftalik",
       };
     }
     const kayit = bul(d);

@@ -121,6 +121,7 @@ export interface VeriMeta {
   amfiDosyalari?: string[] | undefined;
   uygulamaDosya?: string | undefined;
   ogrenciDosya?: string | undefined;
+  secmeliDosya?: string | undefined;
 }
 
 export function useYuklenenVeri() {

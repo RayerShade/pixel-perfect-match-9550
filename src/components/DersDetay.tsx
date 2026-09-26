@@ -94,12 +94,17 @@ export function DersDetay({
           <Satir icon={StickyNote} etiket="Notlar" deger={ders.notes || "—"} />
         </div>
 
-        {olay.amfi === null ? (
-          <div className="mt-4 rounded-2xl border border-bekliyor/40 bg-secmeli-soft p-4">
-            <p className="text-sm font-semibold text-bekliyor">⚠️ Eşleşme bekliyor</p>
+        {olay.amfi !== "Seçmeliler sayfasından seç" ? (
+          <div
+            className={`mt-4 rounded-2xl border p-4 ${olay.amfi === null ? "border-bekliyor/40 bg-secmeli-soft" : "border-border bg-accent/40"}`}
+          >
+            <p className={`text-sm font-semibold ${olay.amfi === null ? "text-bekliyor" : ""}`}>
+              {olay.amfi === null ? "⚠️ Eşleşme bekliyor" : "Amfiyi değiştir"}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Haftalık amfi programında bu ders güvenle eşleştirilemedi. Doğru amfiyi
-              kendin seçebilirsin.
+              {olay.amfi === null
+                ? "Haftalık amfi programında bu ders güvenle eşleştirilemedi. Doğru amfiyi kendin seçebilirsin."
+                : "Otomatik atanan amfi yanlışsa bu hafta için doğrusunu seçebilirsin."}
             </p>
             <div className="mt-3 flex gap-2">
               <select

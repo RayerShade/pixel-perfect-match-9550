@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AmfiRouteImport } from './routes/amfi'
 import { Route as AyarlarRouteImport } from './routes/ayarlar'
-import { Route as DerslerRouteImport } from './routes/dersler'
 import { Route as SecmelilerRouteImport } from './routes/secmeliler'
 
 const IndexRoute = IndexRouteImport.update({
@@ -30,11 +29,6 @@ const AyarlarRoute = AyarlarRouteImport.update({
   path: '/ayarlar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DerslerRoute = DerslerRouteImport.update({
-  id: '/dersler',
-  path: '/dersler',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SecmelilerRoute = SecmelilerRouteImport.update({
   id: '/secmeliler',
   path: '/secmeliler',
@@ -45,14 +39,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/amfi': typeof AmfiRoute
   '/ayarlar': typeof AyarlarRoute
-  '/dersler': typeof DerslerRoute
   '/secmeliler': typeof SecmelilerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/amfi': typeof AmfiRoute
   '/ayarlar': typeof AyarlarRoute
-  '/dersler': typeof DerslerRoute
   '/secmeliler': typeof SecmelilerRoute
 }
 export interface FileRoutesById {
@@ -60,22 +52,20 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/amfi': typeof AmfiRoute
   '/ayarlar': typeof AyarlarRoute
-  '/dersler': typeof DerslerRoute
   '/secmeliler': typeof SecmelilerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/amfi' | '/ayarlar' | '/dersler' | '/secmeliler'
+  fullPaths: '/' | '/amfi' | '/ayarlar' | '/secmeliler'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/amfi' | '/ayarlar' | '/dersler' | '/secmeliler'
-  id: '__root__' | '/' | '/amfi' | '/ayarlar' | '/dersler' | '/secmeliler'
+  to: '/' | '/amfi' | '/ayarlar' | '/secmeliler'
+  id: '__root__' | '/' | '/amfi' | '/ayarlar' | '/secmeliler'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AmfiRoute: typeof AmfiRoute
   AyarlarRoute: typeof AyarlarRoute
-  DerslerRoute: typeof DerslerRoute
   SecmelilerRoute: typeof SecmelilerRoute
 }
 
@@ -102,13 +92,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AyarlarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dersler': {
-      id: '/dersler'
-      path: '/dersler'
-      fullPath: '/dersler'
-      preLoaderRoute: typeof DerslerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/secmeliler': {
       id: '/secmeliler'
       path: '/secmeliler'
@@ -123,7 +106,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AmfiRoute: AmfiRoute,
   AyarlarRoute: AyarlarRoute,
-  DerslerRoute: DerslerRoute,
   SecmelilerRoute: SecmelilerRoute,
 }
 export const routeTree = rootRouteImport

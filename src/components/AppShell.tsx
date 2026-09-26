@@ -1,10 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { CalendarDays, BookOpen, ListChecks, Building2, Settings } from "lucide-react";
+import { CalendarDays, ListChecks, Building2, Settings } from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Takvim", icon: CalendarDays },
-  { to: "/dersler", label: "Dersler", icon: BookOpen },
   { to: "/secmeliler", label: "Seçmeliler", icon: ListChecks },
   { to: "/amfi", label: "Haftalık Amfi", icon: Building2 },
   { to: "/ayarlar", label: "Ayarlar", icon: Settings },
