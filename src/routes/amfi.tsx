@@ -100,26 +100,30 @@ function Amfi() {
                 </div>
                 <div className="shrink-0 text-right">
                   {cozuldu ? (
-                    <>
-                      <p className="text-sm font-semibold">{manuelAmfi ?? k.amphitheater}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {manuelAmfi ? "Elle onaylandı" : `Eşleşti · %${Math.round(k.confidence * 100)}`}
-                      </p>
-                    </>
-                  ) : (
-                    <select
-                      defaultValue=""
-                      onChange={(e) => e.target.value && ata(k.id, e.target.value)}
-                      className="rounded-lg border border-bekliyor/50 bg-secmeli-soft px-2 py-1.5 text-xs font-semibold text-bekliyor"
-                    >
-                      <option value="">⚠️ Eşleşme bekliyor</option>
-                      {amfiSecenekleri(veri, mondayIso).map((a) => (
-                        <option key={a} value={a}>
-                          {a}
-                        </option>
-                      ))}
-                    </select>
-                  )}
+                    <p className="text-sm font-semibold">{manuelAmfi ?? k.amphitheater}</p>
+                  ) : null}
+                  <select
+                    value=""
+                    onChange={(e) => e.target.value && ata(k.id, e.target.value)}
+                    className={`mt-0.5 max-w-[11rem] rounded-lg border px-2 py-1 text-[11px] font-semibold ${
+                      cozuldu
+                        ? "border-border bg-surface text-muted-foreground"
+                        : "border-bekliyor/50 bg-secmeli-soft text-bekliyor"
+                    }`}
+                  >
+                    <option value="">
+                      {cozuldu
+                        ? manuelAmfi
+                          ? "Elle seçildi · değiştir"
+                          : `Eşleşti %${Math.round(k.confidence * 100)} · değiştir`
+                        : "⚠️ Eşleşme bekliyor"}
+                    </option>
+                    {amfiSecenekleri(veri, mondayIso).map((a) => (
+                      <option key={a} value={a}>
+                        {a}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             );
