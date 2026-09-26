@@ -10,6 +10,7 @@ import {
   ayinOlaylari,
   haftaninOlaylari,
   onlineFiltrele,
+  ogrenciBul,
   type DersOlayi,
 } from "@/lib/schedule-data";
 import { addDays, formatLong, startOfWeek, weekLabel, AYLAR } from "@/lib/date-utils";
@@ -55,16 +56,17 @@ function Takvim() {
   const { veri } = useYuklenenVeri();
 
   const monday = useMemo(() => startOfWeek(imlec), [imlec]);
+  const ogrenci = useMemo(() => ogrenciBul(veri, ayarlar.ogrenciNo ?? ""), [veri, ayarlar.ogrenciNo]);
   const olaylar = useMemo(
     () =>
       onlineFiltrele(
         gorunum === "ay"
-          ? ayinOlaylari(imlec, secmeliler, manuel, veri)
-          : haftaninOlaylari(monday, secmeliler, manuel, veri),
+          ? ayinOlaylari(imlec, secmeliler, manuel, veri, ogrenci)
+          : haftaninOlaylari(monday, secmeliler, manuel, veri, ogrenci),
         ayarlar.onlineGorunum ?? "goster",
         ayarlar.onlineDersAyarlari ?? {},
       ),
-    [gorunum, imlec, monday, secmeliler, manuel, veri, ayarlar.onlineGorunum, ayarlar.onlineDersAyarlari],
+    [gorunum, imlec, monday, secmeliler, manuel, veri, ogrenci, ayarlar.onlineGorunum, ayarlar.onlineDersAyarlari],
   );
 
   const bekleyen = olaylar.filter((o) => o.amfi === null).length;

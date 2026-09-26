@@ -1,0 +1,121 @@
+import { normalize, tarihNorm } from "./excel-import";
+import type { Ogrenci, UygulamaOlayi } from "./schedule-data";
+
+async function satirlar(file: File): Promise<unknown[][]> {
+  const XLSX = await import("xlsx");
+  const wb = XLSX.read(await file.arrayBuffer());
+  const out: unknown[][] = [];
+  for (const ad of wb.SheetNames)
+    out.push(...XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[ad]!, { header: 1, defval: "", raw: true }));
+  return out;
+}
+
+const metin = (v: unknown) => String(v ?? "").replace(/\s+/g, " ").trim();
+
+/** Öğrenci listesi: Grup | Alt Grup | Öğrenci No | Ad | Soyad (grup hücreleri birleştirilmiş olabilir). */
+export async function ogrenciListesiOku(file: File): Promise<Record<string, Ogrenci>> {
+  const rows = await satirlar(file);
+  const out: Record<string, Ogrenci> = {};
+  let grup = "";
+  let alt = "";
+  for (const r of rows) {
+    const no = metin(r[2]).replace(/\D/g, "");
+    const g = metin(r[0]).toLocaleUpperCase("tr-TR");
+    const a = metin(r[1]).toLocaleLowerCase("tr-TR");
+    if (/^[A-Z]$/.test(g)) grup = g;
+    if (/^[a-z]\d$/.test(a)) alt = a;
+    if (no.length < 6 || !grup) continue;
+    out[no.replace(/^0+/, "")] = {
+      no,
+      ad: metin(r[3]),
+      soyad: metin(r[4]),
+      grup,
+      altGrup: alt.startsWith(grup.toLocaleLowerCase("tr-TR")) ? alt : "",
+    };
+  }
+  return out;
+}
+
+const saatCifti = (v: unknown): [string, string] => {
+  const m = [...metin(v).matchAll(/(\d{1,2})[.:](\d{2})/g)];
+  const f = (x?: RegExpMatchArray) => (x ? `${x[1]!.padStart(2, "0")}:${x[2]}` : "");
+  return [f(m[0]), f(m[1])];
+};
+
+/** Uygulama tablosu: dilim başlıkları altında "Uygulama Tarihi | Saat | <uygulama sütunları>" ızgaraları. */
+export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
+  const rows = await satirlar(file);
+  // Salon bilgileri: "Ad : Yer" satırları ve "Uygulama adı | Uygulama Yeri" tablosu
+  const yerler: [string, string][] = [];
+  let tablo = false;
+  for (const r of rows) {
+    const a = metin(r[0]);
+    if (/uygulama tarihi/i.test(normalize(a))) break;
+    if (/^uygulama adi$/.test(normalize(a))) {
+      tablo = true;
+      continue;
+    }
+    if (tablo && a && metin(r[2])) {
+      yerler.push([a.replace(/^\d+\)\s*/, ""), metin(r[2])]);
+      continue;
+    }
+    const i = a.indexOf(":");
+    if (i > 0 && !a.endsWith(":")) yerler.push([a.slice(0, i).trim(), a.slice(i + 1).trim()]);
+  }
+  const yerBul = (ad: string) => {
+    const n = normalize(ad);
+    const e = yerler.find(([k]) => {
+      const w = normalize(k).split(/[^a-z]+/).find((x) => x.length >= 4);
+      return w && n.includes(w);
+    });
+    return e ? e[1].replace(/^\(|\)$/g, "") : "";
+  };
+
+  const out: UygulamaOlayi[] = [];
+  let sutunlar: { i: number; ad: string; hoca: string }[] | null = null;
+  let dilim = "";
+  rows.forEach((r, ri) => {
+    const a = metin(r[0]);
+    const n = normalize(a);
+    if (/uygulama tarihi/.test(n)) {
+      const ust = rows[ri - 1] ?? [];
+      dilim = metin(ust[0]);
+      sutunlar = [];
+      for (let i = 2; i < r.length; i++) {
+        let h = metin(r[i]);
+        if (!h || /^saat/i.test(normalize(h))) continue;
+        const p = h.match(/\(([^)]*)\)/);
+        let ad = h.replace(/\([^)]*\)/g, "").trim();
+        if (!ad) ad = metin(ust[i]).replace(/\([^)]*\)/g, "").trim();
+        if (!ad) continue;
+        sutunlar.push({ i, ad, hoca: p?.[1]?.trim() ?? "" });
+      }
+      return;
+    }
+    if (!sutunlar) return;
+    if (!a || /uygulama sayisi|not:|konu/.test(n)) {
+      if (/uygulama sayisi/.test(n)) sutunlar = null;
+      return;
+    }
+    const tarih = tarihNorm(r[0]);
+    const [bas, bit] = saatCifti(r[1]);
+    if (!tarih || !bas || tarih < "2025-01-01") return;
+    for (const s of sutunlar) {
+      const g = metin(r[s.i]).toLocaleUpperCase("tr-TR");
+      const gruplar = [...g.matchAll(/([A-H])(\d)?/g)].map((m) => m[0]);
+      if (!gruplar.length) continue;
+      out.push({
+        id: `uy-${tarih}-${bas}-${s.i}-${ri}`,
+        date: tarih,
+        startTime: bas,
+        endTime: bit || bas,
+        ad: s.ad,
+        hoca: s.hoca,
+        yer: yerBul(s.ad),
+        dilim,
+        gruplar,
+      });
+    }
+  });
+  return out;
+}

@@ -385,7 +385,38 @@ export interface SecmeliOlay {
   amfi: string;
 }
 
+export interface Ogrenci {
+  no: string;
+  ad: string;
+  soyad: string;
+  grup: string; // "A"
+  altGrup: string; // "a1"
+}
+
+export interface UygulamaOlayi {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  ad: string;
+  hoca: string;
+  yer: string;
+  dilim: string;
+  gruplar: string[]; // "A", "D1" ...
+}
+
+/** Uygulama hücresindeki grup ("A" tüm grup, "D1" yalnızca d1 alt grubu) öğrenciye uyuyor mu? */
+export const grubaUyar = (gruplar: string[], o: Ogrenci) =>
+  gruplar.some((g) => g[0] === o.grup && (g.length === 1 || o.altGrup.toUpperCase() === g));
+
+export function ogrenciBul(veri: YuklenenVeri | undefined, no: string): Ogrenci | undefined {
+  const k = no.replace(/\D/g, "").replace(/^0+/, "");
+  return k ? veri?.ogrenciler?.[k] : undefined;
+}
+
 export interface YuklenenVeri {
+  ogrenciler?: Record<string, Ogrenci> | null | undefined;
+  uygulamalar?: UygulamaOlayi[] | null | undefined;
   dersler: Ders[] | null;
   amfi: HaftalikAmfiKaydi[] | null;
   secmeliOlaylari?: SecmeliOlay[] | null | undefined;
@@ -574,8 +605,11 @@ export function haftaninOlaylari(
   seciliSecmeliler: string[],
   manuelAmfiler: Record<string, string>,
   veri?: YuklenenVeri,
+  ogrenci?: Ogrenci,
 ): DersOlayi[] {
   const mondayIso = isoDate(monday);
+  const uyg = ogrenci && veri?.uygulamalar?.length ? veri.uygulamalar : null;
+  const uygTarihleri = new Set(uyg?.map((u) => u.date));
   const pazar = isoDate(addDays(monday, 6));
   const kayitlar = haftalikAmfiKayitlari(mondayIso, veri);
   const tarihOf = (d: Ders) => d.date ?? isoDate(addDays(monday, d.dayOfWeek - 1));
@@ -583,10 +617,42 @@ export function haftaninOlaylari(
   const gruplar = veri?.secmeliOlaylari?.length ? secmeliGruplari(veri) : null;
   const saatler = gruplar ? secmeliSaatleri(veri) : [];
 
-  return aktifDersler(veri).filter(
+  const uygOlaylari: DersOlayi[] = (uyg ?? [])
+    .filter((u) => u.date >= mondayIso && u.date <= pazar && grubaUyar(u.gruplar, ogrenci!))
+    .map((u) => {
+      const key = `${mondayIso}-${u.id}`;
+      const amfiyeBak = !u.yer || /amfi program/i.test(normalizeTr(u.yer));
+      const d: Ders = {
+        id: u.id,
+        courseName: `${u.ad} Uygulaması`,
+        instructor: u.hoca,
+        courseType: /pd[oö]/i.test(u.ad) ? "pbl" : "pratik",
+        dayOfWeek: ((new Date(`${u.date}T00:00:00`).getDay() + 6) % 7) + 1,
+        date: u.date,
+        startTime: u.startTime,
+        endTime: u.endTime,
+        defaultClassroom: amfiyeBak ? "" : u.yer,
+        group: u.gruplar.join(", "),
+        semester: "",
+        notes: [u.dilim, `Grup: ${u.gruplar.join(", ")}`].filter(Boolean).join(" · "),
+      };
+      const kayit = amfiyeBak ? enIyiKayit(d, u.date, kayitlar) : undefined;
+      return {
+        key,
+        ders: d,
+        date: new Date(`${u.date}T00:00:00`),
+        amfi: manuelAmfiler[key] ?? (amfiyeBak ? (kayit?.kayit.amphitheater || null) : u.yer),
+        group: d.group,
+        kaynak: manuelAmfiler[key] ? "manuel" : amfiyeBak ? "haftalik" : "yillik",
+      };
+    });
+
+  return [...aktifDersler(veri).filter(
     (d) =>
       (!d.electiveId || seciliSecmeliler.includes(d.electiveId)) &&
-      (!d.date || (d.date >= mondayIso && d.date <= pazar)),
+      (!d.date || (d.date >= mondayIso && d.date <= pazar)) &&
+      // Uygulama tablosu olan günlerde genel "UYGULAMA" satırı yerine öğrencinin kendi uygulaması gösterilir
+      !(uyg && d.date && uygTarihleri.has(d.date) && normalizeTr(d.courseName) === "uygulama"),
   ).map((d): DersOlayi | null => {
     const key = `${mondayIso}-${d.id}`;
     if (gruplar && SECMELI_SLOT.test(d.courseName)) {
@@ -633,21 +699,24 @@ export function haftaninOlaylari(
       group: d.group,
       kaynak,
     };
-  }).filter((o): o is DersOlayi => o !== null);
+  }).filter((o): o is DersOlayi => o !== null), ...uygOlaylari];
 }
+
+const normalizeTr = (s: string) => s.toLocaleLowerCase("tr-TR").trim();
 
 export function ayinOlaylari(
   ayIcindeBirGun: Date,
   seciliSecmeliler: string[],
   manuelAmfiler: Record<string, string>,
   veri?: YuklenenVeri,
+  ogrenci?: Ogrenci,
 ): DersOlayi[] {
   const ilk = new Date(ayIcindeBirGun.getFullYear(), ayIcindeBirGun.getMonth(), 1);
   const son = new Date(ayIcindeBirGun.getFullYear(), ayIcindeBirGun.getMonth() + 1, 0);
   const olaylar: DersOlayi[] = [];
   let hafta = startOfWeek(ilk);
   while (hafta <= son) {
-    olaylar.push(...haftaninOlaylari(hafta, seciliSecmeliler, manuelAmfiler, veri));
+    olaylar.push(...haftaninOlaylari(hafta, seciliSecmeliler, manuelAmfiler, veri, ogrenci));
     hafta = addDays(hafta, 7);
   }
   return olaylar;
