@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DerslerRouteImport } from './routes/dersler'
+import { Route as SecmelilerRouteImport } from './routes/secmeliler'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DerslerRoute = DerslerRouteImport.update({
+  id: '/dersler',
+  path: '/dersler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecmelilerRoute = SecmelilerRouteImport.update({
+  id: '/secmeliler',
+  path: '/secmeliler',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dersler': typeof DerslerRoute
+  '/secmeliler': typeof SecmelilerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dersler': typeof DerslerRoute
+  '/secmeliler': typeof SecmelilerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dersler': typeof DerslerRoute
+  '/secmeliler': typeof SecmelilerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/dersler' | '/secmeliler'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/dersler' | '/secmeliler'
+  id: '__root__' | '/' | '/dersler' | '/secmeliler'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DerslerRoute: typeof DerslerRoute
+  SecmelilerRoute: typeof SecmelilerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dersler': {
+      id: '/dersler'
+      path: '/dersler'
+      fullPath: '/dersler'
+      preLoaderRoute: typeof DerslerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/secmeliler': {
+      id: '/secmeliler'
+      path: '/secmeliler'
+      fullPath: '/secmeliler'
+      preLoaderRoute: typeof SecmelilerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DerslerRoute: DerslerRoute,
+  SecmelilerRoute: SecmelilerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
