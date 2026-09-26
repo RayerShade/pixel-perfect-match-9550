@@ -67,7 +67,6 @@ function Blok({
         <span className="truncate text-[10px] opacity-80">{olay.ders.instructor}</span>
       ) : null}
       <span className="truncate text-[10px] font-medium opacity-90">
-        {olay.kaynak === "haftalik" && olay.amfi ? "★ " : ""}
         {olay.amfi ?? "⚠️ Eşleşme bekliyor"}
         {olay.kaynak === "yillik" && olay.amfi && !/online/i.test(olay.amfi) ? " · yıllık prog." : ""}
       </span>
@@ -266,7 +265,6 @@ export function GunGorunumu({
             <p className="truncate text-sm font-bold">{o.ders.courseName}</p>
             <p className="truncate text-xs opacity-80">{o.ders.instructor}</p>
             <p className="truncate text-xs font-medium">
-              {o.kaynak === "haftalik" && o.amfi ? "★ " : ""}
               {o.amfi ?? "⚠️ Eşleşme bekliyor"}
             </p>
           </div>
