@@ -77,7 +77,9 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
         en = v;
       }
     }
-    return en.replace(/^\(|\)$/g, "");
+    // "Prof.Dr. X (Kütüphane Salon 1)" → yalnızca salon
+    const m = en.match(/^(?:prof|do[çc]|dr)[^(]*\((.*?)\)?\s*$/i);
+    return (m ? m[1]! : en).replace(/^\(|\)$/g, "").trim();
   };
 
   const out: UygulamaOlayi[] = [];
