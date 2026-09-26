@@ -214,3 +214,39 @@ function Ayarlar() {
     </AppShell>
   );
 }
+
+function BilgiAlani({
+  etiket,
+  deger,
+  kaynak,
+  onDegistir,
+}: {
+  etiket: string;
+  deger: string;
+  kaynak: string | null;
+  onDegistir: (v: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs text-muted-foreground">{etiket}</span>
+      {kaynak ? (
+        <div className="mt-1 rounded-xl border border-border bg-background px-3 py-2">
+          <p className="text-sm font-semibold break-words">{deger || "—"}</p>
+          <p className="mt-0.5 text-[11px] font-medium text-teorik">✓ {kaynak}</p>
+        </div>
+      ) : (
+        <>
+          <input
+            value={deger}
+            onChange={(e) => onDegistir(e.target.value)}
+            className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+          />
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Bu bilgiyi yüklediğin dosyalardan otomatik dolduruyoruz — henüz dosya yoksa elle
+            yazabilirsin.
+          </p>
+        </>
+      )}
+    </label>
+  );
+}
