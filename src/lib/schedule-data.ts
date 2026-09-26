@@ -537,6 +537,31 @@ export interface DersOlayi {
   date: Date;
   amfi: string | null; // null => eşleşme bekliyor
   group: string;
+  /** Amfi bilgisinin kaynağı */
+  kaynak?: "haftalik" | "yillik" | "manuel";
+  online?: boolean;
+}
+
+export const onlineMi = (o: DersOlayi) =>
+  /online|çevrim ?içi|uzaktan/i.test(`${o.amfi ?? ""} ${o.ders.defaultClassroom}`);
+
+export type OnlineGorunum = "goster" | "gizle" | "cakismayan";
+
+/** Online dersleri ayara göre filtreler. "cakismayan": başka bir yüz yüze dersle çakışıyorsa gizle. */
+export function onlineFiltrele(olaylar: DersOlayi[], mod: OnlineGorunum): DersOlayi[] {
+  if (mod === "goster") return olaylar;
+  const yuzyuze = olaylar.filter((o) => !onlineMi(o));
+  return olaylar.filter((o) => {
+    if (!onlineMi(o)) return true;
+    if (mod === "gizle") return false;
+    const t = o.date.getTime();
+    return !yuzyuze.some(
+      (y) =>
+        y.date.getTime() === t &&
+        dk(y.ders.startTime) < dk(o.ders.endTime) &&
+        dk(o.ders.startTime) < dk(y.ders.endTime),
+    );
+  });
 }
 
 export function haftaninOlaylari(
@@ -585,10 +610,15 @@ export function haftaninOlaylari(
     const kayit = bul(d);
     const manuel = manuelAmfiler[key];
     let amfi: string | null;
-    if (manuel) amfi = manuel;
-    else if (d.courseType === "secmeli" && d.electiveId) amfi = d.defaultClassroom || null;
-    else if (kayit) amfi = kayit.status === "eslesti" ? kayit.amphitheater : null;
-    else amfi = d.defaultClassroom || null;
+    let kaynak: DersOlayi["kaynak"] = "yillik";
+    if (manuel) {
+      amfi = manuel;
+      kaynak = "manuel";
+    } else if (d.courseType === "secmeli" && d.electiveId) amfi = d.defaultClassroom || null;
+    else if (kayit) {
+      amfi = kayit.status === "eslesti" ? kayit.amphitheater : null;
+      kaynak = "haftalik";
+    } else amfi = d.defaultClassroom || null;
 
     return {
       key,
@@ -596,6 +626,7 @@ export function haftaninOlaylari(
       date: new Date(`${tarihOf(d)}T00:00:00`),
       amfi,
       group: d.group,
+      kaynak,
     };
   }).filter((o): o is DersOlayi => o !== null);
 }
