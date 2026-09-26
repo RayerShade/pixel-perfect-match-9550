@@ -2,6 +2,7 @@ import type { YuklenenVeri } from "./schedule-data";
 import { useCallback, useEffect, useState } from "react";
 
 const ELECTIVE_KEY = "ders-takvim:secmeliler";
+const GIZLI_KEY = "ders-takvim:gizli-secmeliler";
 const AMFI_KEY = "ders-takvim:manuel-amfi";
 const AYAR_KEY = "ders-takvim:ayarlar";
 
@@ -51,10 +52,12 @@ function readArray(key: string, fallback: string[]): string[] {
 
 export function useSecmeliler() {
   const [secili, setSecili] = useState<string[]>([]);
+  const [gizli, setGizli] = useState<string[]>([]);
   const [hazir, setHazir] = useState(false);
 
   useEffect(() => {
     setSecili(readArray(ELECTIVE_KEY, ["sec-etik", "sec-tarih"]));
+    setGizli(readArray(GIZLI_KEY, []));
     setHazir(true);
   }, []);
 
