@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { TUR_SINIFI } from "@/components/ders-stil";
-import { DERSLER, DERS_TURU_ETIKET, type DersTuru } from "@/lib/schedule-data";
+import { aktifDersler, DERS_TURU_ETIKET, type DersTuru } from "@/lib/schedule-data";
 import { GUN_UZUN } from "@/lib/date-utils";
-import { useSecmeliler } from "@/lib/store";
+import { useSecmeliler, useYuklenenVeri } from "@/lib/store";
 
 export const Route = createFileRoute("/dersler")({
   head: () => ({
@@ -28,18 +28,19 @@ function Dersler() {
   const [filtre, setFiltre] = useState<DersTuru | "hepsi">("hepsi");
   const [arama, setArama] = useState("");
   const { secili } = useSecmeliler();
+  const { veri } = useYuklenenVeri();
 
   const liste = useMemo(
     () =>
-      DERSLER.filter((d) => !d.electiveId || secili.includes(d.electiveId))
+      aktifDersler(veri).filter((d) => !d.electiveId || secili.includes(d.electiveId))
         .filter((d) => filtre === "hepsi" || d.courseType === filtre)
         .filter(
           (d) =>
             d.courseName.toLocaleLowerCase("tr").includes(arama.toLocaleLowerCase("tr")) ||
             d.instructor.toLocaleLowerCase("tr").includes(arama.toLocaleLowerCase("tr")),
         )
-        .sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime)),
-    [filtre, arama, secili],
+        .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? "") || a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime)),
+    [filtre, arama, secili, veri],
   );
 
   return (

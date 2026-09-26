@@ -12,7 +12,7 @@ import {
   type DersOlayi,
 } from "@/lib/schedule-data";
 import { addDays, formatLong, startOfWeek, weekLabel, AYLAR } from "@/lib/date-utils";
-import { useAyarlar, useManuelAmfiler, useSecmeliler } from "@/lib/store";
+import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -44,14 +44,15 @@ function Takvim() {
   const { secili: secmeliler } = useSecmeliler();
   const { manuel, ata } = useManuelAmfiler();
   const { ayarlar } = useAyarlar();
+  const { veri } = useYuklenenVeri();
 
   const monday = useMemo(() => startOfWeek(imlec), [imlec]);
   const olaylar = useMemo(
     () =>
       gorunum === "ay"
-        ? ayinOlaylari(imlec, secmeliler, manuel)
-        : haftaninOlaylari(monday, secmeliler, manuel),
-    [gorunum, imlec, monday, secmeliler, manuel],
+        ? ayinOlaylari(imlec, secmeliler, manuel, veri)
+        : haftaninOlaylari(monday, secmeliler, manuel, veri),
+    [gorunum, imlec, monday, secmeliler, manuel, veri],
   );
 
   const bekleyen = olaylar.filter((o) => o.amfi === null).length;

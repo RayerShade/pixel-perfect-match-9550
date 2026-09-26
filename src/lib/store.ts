@@ -1,3 +1,4 @@
+import type { YuklenenVeri } from "./schedule-data";
 import { useCallback, useEffect, useState } from "react";
 
 const ELECTIVE_KEY = "ders-takvim:secmeliler";
@@ -96,4 +97,23 @@ export function useAyarlar() {
   }, []);
 
   return { ayarlar, guncelle };
+}
+
+const VERI_KEY = "ders-takvim:yuklenen-veri";
+export interface VeriMeta { yillikDosya?: string | undefined; amfiDosyalari?: string[] | undefined }
+
+export function useYuklenenVeri() {
+  const [veri, setVeri] = useState<YuklenenVeri & VeriMeta>({ dersler: null, amfi: null });
+  useEffect(() => {
+    const yukle = () => setVeri(read(VERI_KEY, { dersler: null, amfi: null }));
+    yukle();
+    window.addEventListener("ders-takvim:veri", yukle);
+    return () => window.removeEventListener("ders-takvim:veri", yukle);
+  }, []);
+  const kaydet = useCallback((patch: Partial<YuklenenVeri & VeriMeta>) => {
+    const prev = read<YuklenenVeri & VeriMeta>(VERI_KEY, { dersler: null, amfi: null });
+    window.localStorage.setItem(VERI_KEY, JSON.stringify({ ...prev, ...patch }));
+    window.dispatchEvent(new Event("ders-takvim:veri"));
+  }, []);
+  return { veri, kaydet };
 }
