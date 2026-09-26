@@ -23,6 +23,7 @@ const ALANLAR: Record<string, string[]> = {
   amfi: ["amfi", "derslik", "sinif", "salon", "yer", "mekan", "classroom", "amfi derslik"],
   not: ["not", "notlar", "aciklama", "notes"],
   bolum: ["dilim adi anabilim dali", "dilim", "anabilim dali", "bolum"],
+  donem: ["donem", "donem no", "donem adi"],
 };
 
 const GUNLER = ["pazartesi", "sali", "carsamba", "persembe", "cuma", "cumartesi", "pazar"];
@@ -184,7 +185,7 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
       endTime: bitisTahmin(bas, bit),
       defaultClassroom: yer.sinif,
       group: String(s["grup"] ?? "").trim(),
-      semester: "",
+      semester: String(s["donem"] ?? "").replace(/\s+/g, " ").trim(),
       notes: notlar,
     });
   });

@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
-import { useAyarlar, useSecmeliler, useYuklenenVeri } from "@/lib/store";
-import { ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
+import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/store";
+import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
 
 export const Route = createFileRoute("/ayarlar")({
   head: () => ({
@@ -28,6 +29,17 @@ function Ayarlar() {
   const onlineDersler = onlineDersAdlari(veri);
   const ogrenci = ogrenciBul(veri, ayarlar.ogrenciNo ?? "");
   const dersAyar = ayarlar.onlineDersAyarlari ?? {};
+  const ad = ogrenci ? `${ogrenci.ad} ${ogrenci.soyad}` : "";
+  const grup = ogrenci ? [ogrenci.grup, ogrenci.altGrup].filter(Boolean).join(" / ") : "";
+  const donem = donemBilgisi(veri);
+  // Ad, grup ve dönem yüklenen dosyalardan gelir; bulununca tercih olarak da kaydedilir.
+  useEffect(() => {
+    const patch: Partial<Ayarlar> = {};
+    if (ad && ad !== ayarlar.ogrenciAdi) patch.ogrenciAdi = ad;
+    if (grup && grup !== ayarlar.grup) patch.grup = grup;
+    if (donem && donem !== ayarlar.donem) patch.donem = donem;
+    if (Object.keys(patch).length) guncelle(patch);
+  }, [ad, grup, donem]);
   const MODLAR = [
     ["goster", "Göster"],
     ["cakismayan", "Çakışmıyorsa"],
@@ -46,15 +58,7 @@ function Ayarlar() {
                 inputMode="numeric"
                 placeholder="örn. 0101260001"
                 value={ayarlar.ogrenciNo ?? ""}
-                onChange={(e) => {
-                  const no = e.target.value;
-                  const o = ogrenciBul(veri, no);
-                  guncelle(
-                    o
-                      ? { ogrenciNo: no, ogrenciAdi: `${o.ad} ${o.soyad}`, grup: `${o.grup} / ${o.altGrup}` }
-                      : { ogrenciNo: no },
-                  );
-                }}
+                onChange={(e) => guncelle({ ogrenciNo: e.target.value })}
                 className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
               />
               <span className="mt-1 block text-[11px] text-muted-foreground">
@@ -67,30 +71,24 @@ function Ayarlar() {
                       : "Numaranı yazınca bilgilerin ve uygulama grubun otomatik gelir."}
               </span>
             </label>
-            <label className="block">
-              <span className="text-xs text-muted-foreground">Ad</span>
-              <input
-                value={ayarlar.ogrenciAdi}
-                onChange={(e) => guncelle({ ogrenciAdi: e.target.value })}
-                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block">
-              <span className="text-xs text-muted-foreground">Dönem</span>
-              <input
-                value={ayarlar.donem}
-                onChange={(e) => guncelle({ donem: e.target.value })}
-                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block">
-              <span className="text-xs text-muted-foreground">Grup</span>
-              <input
-                value={ayarlar.grup}
-                onChange={(e) => guncelle({ grup: e.target.value })}
-                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-              />
-            </label>
+            <BilgiAlani
+              etiket="Ad"
+              deger={ad || ayarlar.ogrenciAdi}
+              kaynak={ad ? "Öğrenci listesinden çekildi" : null}
+              onDegistir={(v) => guncelle({ ogrenciAdi: v })}
+            />
+            <BilgiAlani
+              etiket="Dönem"
+              deger={donem || ayarlar.donem}
+              kaynak={donem ? "Yüklediğin ders programından çekildi" : null}
+              onDegistir={(v) => guncelle({ donem: v })}
+            />
+            <BilgiAlani
+              etiket="Grup"
+              deger={grup || ayarlar.grup}
+              kaynak={grup ? "Öğrenci listesinden çekildi" : null}
+              onDegistir={(v) => guncelle({ grup: v })}
+            />
           </div>
         </section>
 
