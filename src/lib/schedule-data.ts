@@ -414,6 +414,40 @@ export function ogrenciBul(veri: YuklenenVeri | undefined, no: string): Ogrenci 
   return k ? veri?.ogrenciler?.[k] : undefined;
 }
 
+const YIL_ESLEK = /20\d{2}\s*[-–/]\s*20\d{2}/;
+
+export interface DosyaBilgisi {
+  yillikDosya?: string | null | undefined;
+  secmeliDosya?: string | null | undefined;
+  uygulamaDosya?: string | null | undefined;
+  ogrenciDosya?: string | null | undefined;
+  amfiDosyalari?: string[] | null | undefined;
+}
+
+/** Dönem bilgisi: yüklenen yıllık programdaki "Dönem" sütunu + dosya adlarındaki eğitim yılı/dönem. */
+export function donemBilgisi(veri: (YuklenenVeri & DosyaBilgisi) | undefined): string {
+  const sayac = new Map<string, number>();
+  (veri?.dersler ?? []).forEach((d) => {
+    const s = (d.semester ?? "").replace(/\s+/g, " ").trim();
+    if (s) sayac.set(s, (sayac.get(s) ?? 0) + 1);
+  });
+  const donem = [...sayac].sort((a, b) => b[1]! - a[1]!)[0]?.[0] ?? "";
+  const adlar = [
+    veri?.yillikDosya,
+    veri?.secmeliDosya,
+    veri?.uygulamaDosya,
+    veri?.ogrenciDosya,
+    ...(veri?.amfiDosyalari ?? []),
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const yil = adlar.match(YIL_ESLEK)?.[0]?.replace(/\s+/g, "") ?? "";
+  const terim = /g[üu]z/i.test(adlar) ? "Güz" : /bahar/i.test(adlar) ? "Bahar" : "";
+  const bas = [yil, terim].filter(Boolean).join(" ");
+  if (bas && donem) return `${bas} — ${donem}`;
+  return bas || donem;
+}
+
 export interface YuklenenVeri {
   ogrenciler?: Record<string, Ogrenci> | null | undefined;
   uygulamalar?: UygulamaOlayi[] | null | undefined;

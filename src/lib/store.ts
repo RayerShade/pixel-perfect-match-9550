@@ -2,6 +2,7 @@ import type { YuklenenVeri } from "./schedule-data";
 import { useCallback, useEffect, useState } from "react";
 
 const ELECTIVE_KEY = "ders-takvim:secmeliler";
+const GIZLI_KEY = "ders-takvim:gizli-secmeliler";
 const AMFI_KEY = "ders-takvim:manuel-amfi";
 const AYAR_KEY = "ders-takvim:ayarlar";
 
@@ -51,10 +52,12 @@ function readArray(key: string, fallback: string[]): string[] {
 
 export function useSecmeliler() {
   const [secili, setSecili] = useState<string[]>([]);
+  const [gizli, setGizli] = useState<string[]>([]);
   const [hazir, setHazir] = useState(false);
 
   useEffect(() => {
     setSecili(readArray(ELECTIVE_KEY, ["sec-etik", "sec-tarih"]));
+    setGizli(readArray(GIZLI_KEY, []));
     setHazir(true);
   }, []);
 
@@ -76,7 +79,30 @@ export function useSecmeliler() {
     });
   }, []);
 
-  return { secili, toggle, grupSec, hazir };
+  /** Seçmeliyi görmezden gelmek istediğinde listeye hiç getirmemek için gizler. */
+  const gizle = useCallback((id: string) => {
+    setGizli((prev) => {
+      const next = prev.includes(id) ? prev : [...prev, id];
+      window.localStorage.setItem(GIZLI_KEY, JSON.stringify(next));
+      return next;
+    });
+    setSecili((prev) => {
+      if (!prev.includes(id)) return prev;
+      const next = prev.filter((x) => x !== id);
+      window.localStorage.setItem(ELECTIVE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const goster = useCallback((id: string) => {
+    setGizli((prev) => {
+      const next = prev.filter((x) => x !== id);
+      window.localStorage.setItem(GIZLI_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  return { secili, gizli, toggle, grupSec, gizle, goster, hazir };
 }
 
 export function useManuelAmfiler() {

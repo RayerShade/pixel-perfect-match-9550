@@ -74,6 +74,7 @@
   --color-sinav: var(--sinav);
   --color-sinav-soft: var(--sinav-soft);
   --color-bekliyor: var(--bekliyor);
+  --color-altin: var(--altin);
   --color-bugun: var(--bugun);
   --color-surface: var(--surface);
 
@@ -97,6 +98,7 @@
   --sinav: oklch(0.55 0.18 20);
   --sinav-soft: oklch(0.955 0.03 20);
   --bekliyor: oklch(0.6 0.15 65);
+  --altin: oklch(0.55 0.12 75);
   --bugun: oklch(0.52 0.13 245);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
@@ -131,6 +133,7 @@
 }
 
 .dark {
+  --altin: oklch(0.78 0.13 85);
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);

@@ -44,7 +44,6 @@ function AmfiSecici({
   const secilemez = olay.amfi === "Seçmeliler sayfasından seç";
   const q = ara.toLocaleLowerCase("tr-TR");
   const liste = secenekler.filter((a) => a.toLocaleLowerCase("tr-TR").includes(q));
-  const oto = olay.kaynak === "haftalik" && olay.amfi;
   return (
     <div className="border-b border-border/60 py-3">
       <button
@@ -55,16 +54,13 @@ function AmfiSecici({
         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">
           <p className="text-xs text-muted-foreground">
-            Amfi / Sınıf
-            {oto ? " · ★ otomatik atandı" : olay.kaynak === "manuel" ? " · elle seçildi" : ""}
-            {!secilemez ? " · değiştirmek için dokun" : ""}
+            Amfi / Sınıf{!secilemez ? " · değiştirmek için dokun" : ""}
           </p>
           <p
             className={`text-sm font-medium break-words ${
-              olay.amfi === null ? "text-bekliyor" : oto ? "text-primary" : ""
+              olay.amfi === null ? "text-bekliyor" : ""
             }`}
           >
-            {oto ? "★ " : ""}
             {olay.amfi ?? "⚠️ Eşleşme bekliyor — seçmek için dokun"}
           </p>
         </div>
@@ -78,21 +74,28 @@ function AmfiSecici({
             placeholder="Amfi ara…"
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
-          <div className="mt-2 max-h-56 overflow-y-auto">
-            {liste.map((a) => (
-              <button
-                key={a}
-                onClick={() => {
-                  onSec(a);
-                  setAcik(false);
-                }}
-                className={`block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-accent ${
-                  a === olay.amfi ? "font-semibold text-primary" : ""
-                }`}
-              >
-                {a}
-              </button>
-            ))}
+          <p className="mt-2 px-1 text-[11px] text-muted-foreground">
+            <span className="font-semibold text-altin">Altın renk</span>: bu dersin otomatik
+            atanan amfisi
+          </p>
+          <div className="mt-1 max-h-56 overflow-y-auto">
+            {liste.map((a) => {
+              const oto = olay.kaynak === "haftalik" && a === olay.amfi;
+              return (
+                <button
+                  key={a}
+                  onClick={() => {
+                    onSec(a);
+                    setAcik(false);
+                  }}
+                  className={`block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-accent ${
+                    oto ? "font-semibold text-altin" : ""
+                  } ${a === olay.amfi ? "bg-accent font-bold" : ""}`}
+                >
+                  {a}
+                </button>
+              );
+            })}
             {ara.trim() && !liste.includes(ara.trim()) ? (
               <button
                 onClick={() => {
@@ -121,7 +124,8 @@ export function DersDetay({
   onAmfiSec: (key: string, amfi: string) => void;
 }) {
   const { veri } = useYuklenenVeri();
-  const secenekler = olay ? amfiSecenekleri(veri, isoDate(startOfWeek(olay.date))) : [];
+  const hafta = olay ? isoDate(startOfWeek(olay.date)) : "";
+  const secenekler = olay ? amfiSecenekleri(veri, hafta) : [];
 
   if (!olay) return null;
   const { ders } = olay;
