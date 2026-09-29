@@ -27,7 +27,7 @@ function Ayarlar() {
   const { secili } = useSecmeliler();
   const { veri } = useYuklenenVeri();
   const onlineDersler = onlineDersAdlari(veri);
-  const ogrenci = ogrenciBul(veri, ayarlar.ogrenciNo ?? "");
+  const ogrenci = ogrenciBul(veri, ayarlar.ogrenciNo ?? "", ayarlar.grupElle);
   const dersAyar = ayarlar.onlineDersAyarlari ?? {};
   const ad = ogrenci ? `${ogrenci.ad} ${ogrenci.soyad}` : "";
   const grup = ogrenci ? [ogrenci.grup, ogrenci.altGrup].filter(Boolean).join(" / ") : "";

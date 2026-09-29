@@ -8,6 +8,8 @@ const AMFI_KEY = "ders-takvim:manuel-amfi";
 const AYAR_KEY = "ders-takvim:ayarlar";
 
 export interface Ayarlar {
+  /** Admin tarafından elle atanan grup (öğrenci listesinin önüne geçer). */
+  grupElle?: { grup: string; altGrup: string } | null | undefined;
   ogrenciNo: string;
   ogrenciAdi: string;
   donem: string;

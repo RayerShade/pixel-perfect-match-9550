@@ -56,7 +56,7 @@ function Takvim() {
   const { veri } = useYuklenenVeri();
 
   const monday = useMemo(() => startOfWeek(imlec), [imlec]);
-  const ogrenci = useMemo(() => ogrenciBul(veri, ayarlar.ogrenciNo ?? ""), [veri, ayarlar.ogrenciNo]);
+  const ogrenci = useMemo(() => ogrenciBul(veri, ayarlar.ogrenciNo ?? "", ayarlar.grupElle), [veri, ayarlar.ogrenciNo, ayarlar.grupElle]);
   const olaylar = useMemo(
     () =>
       onlineFiltrele(

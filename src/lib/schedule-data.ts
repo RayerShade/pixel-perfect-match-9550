@@ -94,9 +94,15 @@ export interface UygulamaOlayi {
 export const grubaUyar = (gruplar: string[], o: Ogrenci) =>
   gruplar.some((g) => g[0] === o.grup && (g.length === 1 || o.altGrup.toUpperCase() === g));
 
-export function ogrenciBul(veri: YuklenenVeri | undefined, no: string): Ogrenci | undefined {
+export function ogrenciBul(
+  veri: YuklenenVeri | undefined,
+  no: string,
+  elle?: { grup: string; altGrup: string } | null,
+): Ogrenci | undefined {
   const k = no.replace(/\D/g, "").replace(/^0+/, "");
-  return k ? veri?.ogrenciler?.[k] : undefined;
+  const o = k ? veri?.ogrenciler?.[k] : undefined;
+  if (!elle?.grup) return o;
+  return { no: k, ad: "", soyad: "", ...o, grup: elle.grup, altGrup: elle.altGrup };
 }
 
 const YIL_ESLEK = /20\d{2}\s*[-–/]\s*20\d{2}/;

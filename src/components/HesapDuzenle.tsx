@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { Upload } from "lucide-react";
+import { Download, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { dosyaBulutaKaydet } from "@/lib/dosya-bulut";
+import { dosyaBulutaKaydet, dosyaIndir, type KisiselTur } from "@/lib/dosya-bulut";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { yillikProgramOku } from "@/lib/excel-import";
@@ -17,11 +17,13 @@ interface Secenek {
 export function HesapDuzenle({
   userId,
   secili,
+  dosyalar,
   secenekler,
   onKaydedildi,
 }: {
   userId: string;
   secili: string[];
+  dosyalar: Partial<Record<KisiselTur, string | undefined>>;
   secenekler: Secenek[];
   onKaydedildi: () => void;
 }) {
@@ -121,11 +123,27 @@ export function HesapDuzenle({
         </button>
       ) : null}
 
-      <p className="pt-2 font-semibold">Bu hesaba dosya yükle</p>
-      <div className="flex flex-wrap gap-2">
-        <DosyaDugmesi etiket="Yıllık program" onDosya={(f) => dosyaYukle("yillik", f)} />
-        <DosyaDugmesi etiket="Uygulama tablosu" onDosya={(f) => dosyaYukle("uygulama", f)} />
-        <DosyaDugmesi etiket="Öğrenci listesi" onDosya={(f) => dosyaYukle("ogrenci", f)} />
+      <p className="pt-2 font-semibold">Bu hesabın dosyaları</p>
+      <div className="space-y-2">
+        {([["yillik", "Yıllık program"], ["uygulama", "Uygulama tablosu"], ["ogrenci", "Öğrenci listesi"]] as const).map(([t, e]) => (
+          <div key={t} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background px-2.5 py-2">
+            <div className="min-w-0">
+              <p className="text-muted-foreground">{e}</p>
+              <p className="truncate font-medium">{dosyalar[t] ?? "Boş"}</p>
+            </div>
+            <div className="flex gap-2">
+              {dosyalar[t] ? (
+                <button
+                  onClick={async () => { if (!(await dosyaIndir(userId, t))) toast.error("Dosya bulunamadı."); }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 font-semibold hover:bg-accent"
+                >
+                  <Download className="h-3.5 w-3.5" /> İndir
+                </button>
+              ) : null}
+              <DosyaDugmesi etiket={dosyalar[t] ? "Değiştir" : "Yükle"} onDosya={(f) => dosyaYukle(t, f)} />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
