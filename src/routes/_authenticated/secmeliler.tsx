@@ -61,17 +61,19 @@ function Secmeliler() {
             const grupGizli = gizliGruplar.includes(grup);
             return (
               <section key={saat} className={grupGizli ? "opacity-60" : undefined}>
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <h2 className="font-display text-base font-bold">{grup}. Seçmeli · {saat}</h2>
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-xs text-muted-foreground">
+                <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                  <div className="min-w-0">
+                    <h2 className="font-display text-base font-bold">{grup}. Seçmeli · {saat}</h2>
+                    <p className="truncate text-xs text-muted-foreground">
                       {grupGizli ? "Takvimde gizli" : secilen ? `Seçildi: ${secilen.ad}` : "Henüz seçilmedi"}
-                    </span>
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center">
                     <button
                       onClick={() => grupGizleToggle(grup)}
                       title={grupGizli ? "Bu grubu takvimde göster" : "Bu grubu takvimde gizle"}
                       aria-label={`${grup}. seçmeli grubunu takvimde ${grupGizli ? "göster" : "gizle"}`}
-                      className={`rounded-lg border p-1.5 transition-colors ${
+                      className={`rounded-lg border p-2.5 transition-colors sm:p-1.5 ${
                         grupGizli
                           ? "border-foreground/30 bg-accent text-foreground"
                           : "border-border/70 bg-surface text-muted-foreground hover:border-foreground/30 hover:text-foreground"
