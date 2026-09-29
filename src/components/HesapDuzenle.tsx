@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { yillikProgramOku } from "@/lib/excel-import";
 import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
+import { ogrenciBul } from "@/lib/schedule-data";
 
 interface Secenek {
   id: string;
