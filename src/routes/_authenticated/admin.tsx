@@ -6,6 +6,7 @@ import { ChevronDown, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { VeriYukleme } from "@/components/VeriYukleme";
+import { HesapDuzenle } from "@/components/HesapDuzenle";
 import { supabase } from "@/integrations/supabase/client";
 import { hesapSil } from "@/lib/admin.functions";
 import { useAuth } from "@/lib/auth";
@@ -85,6 +86,18 @@ function Admin() {
     secmeliGruplari(veri).forEach((s) => m.set(s.id, { ad: s.ad, grup: s.grup }));
     return m;
   }, [veri]);
+  const secenekler = useMemo(() => [...secmeliAdi].map(([id, v]) => ({ id, ...v })), [secmeliAdi]);
+  const { data: orijinal = false } = useQuery({
+    queryKey: ["orijinal-admin"],
+    queryFn: async () => (await supabase.rpc("orijinal_admin_mi")).data === true,
+  });
+  const yetki = async (h: Hesap) => {
+    if (!confirm(h.admin ? `${h.ad_soyad || h.email} kişisinin admin yetkisi alınsın mı?` : `${h.ad_soyad || h.email} admin yapılsın mı?`)) return;
+    const { error } = await supabase.rpc("admin_yetki_ayarla", { _user_id: h.id, _ver: !h.admin });
+    if (error) { toast.error(error.message); return; }
+    toast.success(h.admin ? "Admin yetkisi alındı." : "Admin yetkisi verildi.");
+    await qc.invalidateQueries({ queryKey: ["admin-hesaplar"] });
+  };
 
   const liste = hesaplar.filter((h) =>
     `${h.ad_soyad} ${h.ogrenci_no} ${h.email ?? ""}`.toLocaleLowerCase("tr").includes(ara.toLocaleLowerCase("tr")),
@@ -191,12 +204,31 @@ function Admin() {
                         )}
                       </div>
                       {h.id !== user?.id ? (
-                        <button
-                          onClick={() => void hesabiSil(h)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 font-semibold text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" /> Hesabı sil
-                        </button>
+                        <HesapDuzenle
+                          key={h.id + h.secmeliler.join()}
+                          userId={h.id}
+                          secili={h.secmeliler}
+                          secenekler={secenekler}
+                          onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })}
+                        />
+                      ) : null}
+                      {h.id !== user?.id ? (
+                        <div className="flex flex-wrap gap-2">
+                          {orijinal ? (
+                            <button
+                              onClick={() => void yetki(h)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 font-semibold text-altin hover:bg-accent"
+                            >
+                              <ShieldCheck className="h-3.5 w-3.5" /> {h.admin ? "Admin yetkisini al" : "Admin yap"}
+                            </button>
+                          ) : null}
+                          <button
+                            onClick={() => void hesabiSil(h)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 font-semibold text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" /> Hesabı sil
+                          </button>
+                        </div>
                       ) : null}
                     </div>
                   ) : null}

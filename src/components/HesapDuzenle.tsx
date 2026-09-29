@@ -1,0 +1,160 @@
+import { useRef, useState } from "react";
+import { Upload } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+import { yillikProgramOku } from "@/lib/excel-import";
+import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
+
+interface Secenek {
+  id: string;
+  ad: string;
+  grup?: number | undefined;
+}
+
+/** Admin: başka bir hesabın seçmelilerini ve kişisel dosyalarını düzenler. */
+export function HesapDuzenle({
+  userId,
+  secili,
+  secenekler,
+  onKaydedildi,
+}: {
+  userId: string;
+  secili: string[];
+  secenekler: Secenek[];
+  onKaydedildi: () => void;
+}) {
+  const [secim, setSecim] = useState<string[]>(secili);
+  const [kaydediliyor, setKaydediliyor] = useState(false);
+  const gruplar = [1, 2, 3].map((g) => ({ g, liste: secenekler.filter((s) => s.grup === g) })).filter((x) => x.liste.length);
+  const grupsuz = secenekler.filter((s) => !s.grup);
+
+  const grupSec = (g: number, id: string) => {
+    const grubun = new Set(secenekler.filter((s) => s.grup === g).map((s) => s.id));
+    setSecim((p) => [...p.filter((x) => !grubun.has(x)), ...(id ? [id] : [])]);
+  };
+
+  const secmeliKaydet = async () => {
+    setKaydediliyor(true);
+    const { error } = await supabase.from("user_data").update({ secmeliler: secim, updated_at: new Date().toISOString() }).eq("user_id", userId);
+    setKaydediliyor(false);
+    if (error) { toast.error("Seçmeliler kaydedilemedi."); return; }
+    toast.success("Seçmeliler güncellendi.");
+    onKaydedildi();
+  };
+
+  const dosyaYukle = async (tur: "yillik" | "uygulama" | "ogrenci", f: File) => {
+    try {
+      let patch: Record<string, unknown>;
+      let mesaj: string;
+      if (tur === "yillik") {
+        const dersler = await yillikProgramOku(f);
+        if (!dersler.length) throw new Error("Ders bulunamadı.");
+        patch = { dersler, yillikDosya: f.name };
+        mesaj = `${dersler.length} ders yüklendi.`;
+      } else if (tur === "uygulama") {
+        const uygulamalar = await uygulamaTablosuOku(f);
+        if (!uygulamalar.length) throw new Error("Uygulama bulunamadı.");
+        patch = { uygulamalar, uygulamaDosya: f.name };
+        mesaj = `${uygulamalar.length} uygulama yüklendi.`;
+      } else {
+        const ogrenciler = await ogrenciListesiOku(f);
+        const n = Object.keys(ogrenciler).length;
+        if (!n) throw new Error("Öğrenci bulunamadı.");
+        patch = { ogrenciler, ogrenciDosya: f.name };
+        mesaj = `${n} öğrenci yüklendi.`;
+      }
+      const { data, error: e1 } = await supabase.from("user_data").select("veri").eq("user_id", userId).maybeSingle();
+      if (e1) throw e1;
+      const veri = { ...((data?.veri as Record<string, unknown>) ?? {}), ...patch } as Json;
+      const { error } = data
+        ? await supabase.from("user_data").update({ veri, updated_at: new Date().toISOString() }).eq("user_id", userId)
+        : await supabase.from("user_data").insert({ user_id: userId, veri });
+      if (error) throw error;
+      toast.success(mesaj);
+      onKaydedildi();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Dosya yüklenemedi.");
+    }
+  };
+
+  return (
+    <div className="space-y-3 rounded-xl border border-border bg-surface p-3">
+      <p className="font-semibold">Seçmelilerini düzenle</p>
+      {secenekler.length === 0 ? <p className="text-muted-foreground">Seçmeli listesi yüklenmemiş.</p> : null}
+      {gruplar.map(({ g, liste }) => (
+        <label key={g} className="block">
+          <span className="text-muted-foreground">{g}. grup</span>
+          <select
+            value={liste.find((s) => secim.includes(s.id))?.id ?? ""}
+            onChange={(e) => grupSec(g, e.target.value)}
+            className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1.5"
+          >
+            <option value="">Seçim yok</option>
+            {liste.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.ad}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
+      {grupsuz.map((s) => (
+        <label key={s.id} className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={secim.includes(s.id)}
+            onChange={(e) => setSecim((p) => (e.target.checked ? [...p, s.id] : p.filter((x) => x !== s.id)))}
+          />
+          {s.ad}
+        </label>
+      ))}
+      {secenekler.length ? (
+        <button
+          onClick={() => void secmeliKaydet()}
+          disabled={kaydediliyor}
+          className="rounded-lg bg-primary px-3 py-1.5 font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {kaydediliyor ? "Kaydediliyor…" : "Seçmelileri kaydet"}
+        </button>
+      ) : null}
+
+      <p className="pt-2 font-semibold">Bu hesaba dosya yükle</p>
+      <div className="flex flex-wrap gap-2">
+        <DosyaDugmesi etiket="Yıllık program" onDosya={(f) => dosyaYukle("yillik", f)} />
+        <DosyaDugmesi etiket="Uygulama tablosu" onDosya={(f) => dosyaYukle("uygulama", f)} />
+        <DosyaDugmesi etiket="Öğrenci listesi" onDosya={(f) => dosyaYukle("ogrenci", f)} />
+      </div>
+    </div>
+  );
+}
+
+function DosyaDugmesi({ etiket, onDosya }: { etiket: string; onDosya: (f: File) => Promise<void> }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [yuk, setYuk] = useState(false);
+  return (
+    <>
+      <input
+        ref={ref}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        className="hidden"
+        onChange={async (e) => {
+          const f = e.target.files?.[0];
+          if (!f) return;
+          setYuk(true);
+          await onDosya(f);
+          setYuk(false);
+          if (ref.current) ref.current.value = "";
+        }}
+      />
+      <button
+        onClick={() => ref.current?.click()}
+        disabled={yuk}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 font-semibold hover:bg-accent disabled:opacity-60"
+      >
+        <Upload className="h-3.5 w-3.5" /> {yuk ? "Yükleniyor…" : etiket}
+      </button>
+    </>
+  );
+}

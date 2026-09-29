@@ -112,6 +112,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_yetki_ayarla: {
+        Args: { _user_id: string; _ver: boolean }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -123,6 +127,7 @@ export type Database = {
         Args: { _ad_soyad: string; _ogrenci_no: string }
         Returns: boolean
       }
+      orijinal_admin_mi: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
