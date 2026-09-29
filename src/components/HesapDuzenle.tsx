@@ -67,12 +67,23 @@ export function HesapDuzenle({
         patch = { ogrenciler, ogrenciDosya: f.name };
         mesaj = `${n} öğrenci yüklendi.`;
       }
-      const { data, error: e1 } = await supabase.from("user_data").select("veri").eq("user_id", userId).maybeSingle();
+      const { data, error: e1 } = await supabase.from("user_data").select("veri, ayarlar").eq("user_id", userId).maybeSingle();
       if (e1) throw e1;
       const veri = { ...((data?.veri as Record<string, unknown>) ?? {}), ...patch } as Json;
+      // Öğrenci listesi yüklenince numaradan grubu/adı hemen ayarlara yaz.
+      let ayarlar = (data?.ayarlar as Record<string, unknown>) ?? {};
+      if (tur === "ogrenci") {
+        const { data: prof } = await supabase.from("profiles").select("ogrenci_no").eq("id", userId).maybeSingle();
+        const no = String(ayarlar["ogrenciNo"] || prof?.ogrenci_no || "");
+        const o = ogrenciBul(veri as never, no);
+        if (o) {
+          ayarlar = { ...ayarlar, ogrenciNo: no, grup: [o.grup, o.altGrup].filter(Boolean).join(" / "), ogrenciAdi: `${o.ad} ${o.soyad}`.trim() };
+          mesaj += ` Grup: ${ayarlar["grup"]}.`;
+        } else if (no) mesaj += " Bu numara listede bulunamadı, grup değişmedi.";
+      }
       const { error } = data
-        ? await supabase.from("user_data").update({ veri, updated_at: new Date().toISOString() }).eq("user_id", userId)
-        : await supabase.from("user_data").insert({ user_id: userId, veri });
+        ? await supabase.from("user_data").update({ veri, ayarlar: ayarlar as Json, updated_at: new Date().toISOString() }).eq("user_id", userId)
+        : await supabase.from("user_data").insert({ user_id: userId, veri, ayarlar: ayarlar as Json });
       if (error) throw error;
       await dosyaBulutaKaydet(userId, tur, f);
       toast.success(mesaj);
