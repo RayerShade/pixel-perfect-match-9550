@@ -42,12 +42,27 @@ export function yerelTemizle() {
 /** Giriş sonrası: hesabın verilerini ve ortak dosyaları cihaza indirir. */
 export async function buluttanYukle(userId: string, ogrenciNo: string) {
   yukleniyor = true;
+  let tasinacak = false;
+  let genelTasi: ("amfi" | "secmeli")[] = [];
   try {
     const [{ data: kisisel }, { data: genel }] = await Promise.all([
       supabase.from("user_data").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("global_data").select("anahtar, veri"),
     ]);
-    const veri: Record<string, unknown> = { dersler: null, amfi: null, ...((kisisel?.veri as object) ?? {}) };
+    const yerel = oku(ANAHTARLAR.veri, {}) as Record<string, unknown>;
+    const bulutKisisel = (kisisel?.veri as Record<string, unknown>) ?? {};
+    // İlk girişte cihazdaki eski yüklemeleri hesaba taşı
+    tasinacak = !Object.keys(bulutKisisel).length && Boolean(yerel["dersler"] || yerel["uygulamalar"] || yerel["ogrenciler"]);
+    const veri: Record<string, unknown> = {
+      dersler: null,
+      amfi: null,
+      ...(tasinacak ? sec(yerel, GENEL_HEPSI, true) : bulutKisisel),
+    };
+    const genelAnahtarlar = new Set((genel ?? []).map((g) => g.anahtar));
+    genelTasi = (["amfi", "secmeli"] as const).filter(
+      (a) => !genelAnahtarlar.has(a) && GENEL_ALANLAR[a].some((f) => yerel[f]),
+    );
+    for (const a of genelTasi) Object.assign(veri, sec(yerel, GENEL_ALANLAR[a]));
     for (const g of genel ?? []) Object.assign(veri, (g.veri as object) ?? {});
     const ayar = { ...((kisisel?.ayarlar as Record<string, unknown>) ?? {}) };
     const gizli = (ayar["__gizli"] as string[]) ?? [];
@@ -62,6 +77,8 @@ export async function buluttanYukle(userId: string, ogrenciNo: string) {
   } finally {
     yukleniyor = false;
   }
+  if (tasinacak) kisiselKaydet();
+  genelTasi.forEach((a) => genelKaydet(a));
   window.dispatchEvent(new Event("ders-takvim:veri"));
   window.dispatchEvent(new Event(BULUT_OLAY));
 }
