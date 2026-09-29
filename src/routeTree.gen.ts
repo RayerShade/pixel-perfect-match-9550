@@ -9,44 +9,49 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAmfiRouteImport } from './routes/_authenticated/amfi'
 import { Route as AuthenticatedAyarlarRouteImport } from './routes/_authenticated/ayarlar'
 import { Route as AuthenticatedDerslerRouteImport } from './routes/_authenticated/dersler'
 import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authenticated/secmeliler'
 
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/_authenticated/',
-  path: '/',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAmfiRoute = AuthenticatedAmfiRouteImport.update({
-  id: '/_authenticated/amfi',
+  id: '/amfi',
   path: '/amfi',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAyarlarRoute = AuthenticatedAyarlarRouteImport.update({
-  id: '/_authenticated/ayarlar',
+  id: '/ayarlar',
   path: '/ayarlar',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDerslerRoute = AuthenticatedDerslerRouteImport.update({
-  id: '/_authenticated/dersler',
+  id: '/dersler',
   path: '/dersler',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSecmelilerRoute = AuthenticatedSecmelilerRouteImport.update({
-  id: '/_authenticated/secmeliler',
+  id: '/secmeliler',
   path: '/secmeliler',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof AuthenticatedIndexRoute
   '/amfi': typeof AuthenticatedAmfiRoute
   '/ayarlar': typeof AuthenticatedAyarlarRoute
   '/dersler': typeof AuthenticatedDerslerRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
-  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesByTo {
   '/amfi': typeof AuthenticatedAmfiRoute
@@ -57,6 +62,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/amfi': typeof AuthenticatedAmfiRoute
   '/_authenticated/ayarlar': typeof AuthenticatedAyarlarRoute
   '/_authenticated/dersler': typeof AuthenticatedDerslerRoute
@@ -65,11 +71,12 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/amfi' | '/ayarlar' | '/dersler' | '/secmeliler' | '/'
+  fullPaths: '/' | '/amfi' | '/ayarlar' | '/dersler' | '/secmeliler'
   fileRoutesByTo: FileRoutesByTo
   to: '/amfi' | '/ayarlar' | '/dersler' | '/secmeliler' | '/'
   id:
     | '__root__'
+    | '/_authenticated'
     | '/_authenticated/amfi'
     | '/_authenticated/ayarlar'
     | '/_authenticated/dersler'
@@ -78,6 +85,57 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/amfi': {
+      id: '/_authenticated/amfi'
+      path: '/amfi'
+      fullPath: '/amfi'
+      preLoaderRoute: typeof AuthenticatedAmfiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ayarlar': {
+      id: '/_authenticated/ayarlar'
+      path: '/ayarlar'
+      fullPath: '/ayarlar'
+      preLoaderRoute: typeof AuthenticatedAyarlarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dersler': {
+      id: '/_authenticated/dersler'
+      path: '/dersler'
+      fullPath: '/dersler'
+      preLoaderRoute: typeof AuthenticatedDerslerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/secmeliler': {
+      id: '/_authenticated/secmeliler'
+      path: '/secmeliler'
+      fullPath: '/secmeliler'
+      preLoaderRoute: typeof AuthenticatedSecmelilerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+  }
+}
+
+interface AuthenticatedRouteRouteChildren {
   AuthenticatedAmfiRoute: typeof AuthenticatedAmfiRoute
   AuthenticatedAyarlarRoute: typeof AuthenticatedAyarlarRoute
   AuthenticatedDerslerRoute: typeof AuthenticatedDerslerRoute
@@ -85,52 +143,19 @@ export interface RootRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/amfi': {
-      id: '/_authenticated/amfi'
-      path: '/amfi'
-      fullPath: '/amfi'
-      preLoaderRoute: typeof AuthenticatedAmfiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/ayarlar': {
-      id: '/_authenticated/ayarlar'
-      path: '/ayarlar'
-      fullPath: '/ayarlar'
-      preLoaderRoute: typeof AuthenticatedAyarlarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/dersler': {
-      id: '/_authenticated/dersler'
-      path: '/dersler'
-      fullPath: '/dersler'
-      preLoaderRoute: typeof AuthenticatedDerslerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/secmeliler': {
-      id: '/_authenticated/secmeliler'
-      path: '/secmeliler'
-      fullPath: '/secmeliler'
-      preLoaderRoute: typeof AuthenticatedSecmelilerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
-}
-
-const rootRouteChildren: RootRouteChildren = {
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAmfiRoute: AuthenticatedAmfiRoute,
   AuthenticatedAyarlarRoute: AuthenticatedAyarlarRoute,
   AuthenticatedDerslerRoute: AuthenticatedDerslerRoute,
   AuthenticatedSecmelilerRoute: AuthenticatedSecmelilerRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
