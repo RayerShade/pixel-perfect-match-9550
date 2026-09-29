@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AyGorunumu, GunGorunumu, HaftaGorunumu } from "@/components/CalendarViews";
@@ -38,12 +38,17 @@ export const Route = createFileRoute("/_authenticated/")({
 type Gorunum = "gun" | "hafta" | "ay";
 
 // Sayfalar arasında gezerken son bakılan tarih/görünüm korunur; uygulama yeniden açılınca bugüne döner.
-const sonDurum: { imlec: Date | null; gorunum: Gorunum } = { imlec: null, gorunum: "hafta" };
+const sonDurum: { imlec: Date | null; gorunum: Gorunum | null } = { imlec: null, gorunum: null };
 
 function Takvim() {
   const [bugun] = useState(() => new Date());
   const [imlec, setImlec] = useState(() => sonDurum.imlec ?? new Date());
-  const [gorunum, setGorunum] = useState<Gorunum>(() => sonDurum.gorunum);
+  const [gorunum, setGorunum] = useState<Gorunum>(() => sonDurum.gorunum ?? "hafta");
+  // Telefonda ilk açılışta tek gün görünümü (haftalık görünüm dar ekranda sığmıyor).
+  useEffect(() => {
+    if (!sonDurum.gorunum && window.matchMedia("(max-width: 639px)").matches) setGorunum("gun");
+  }, []);
+  const dokunma = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     sonDurum.imlec = imlec;
     sonDurum.gorunum = gorunum;
@@ -87,33 +92,33 @@ function Takvim() {
   return (
     <AppShell baslik="Ders Takvimi" aciklama={ayarlar.donem}>
       <div className="rounded-3xl border border-border bg-surface p-3 shadow-card md:p-5">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-1">
             <button
               onClick={() => kaydir(-1)}
               aria-label="Önceki"
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border hover:bg-accent"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border sm:h-8 sm:w-8 sm:rounded-lg border-border hover:bg-accent"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={() => kaydir(1)}
               aria-label="Sonraki"
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border hover:bg-accent"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border sm:h-8 sm:w-8 sm:rounded-lg border-border hover:bg-accent"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
-            <h2 className="ml-2 truncate text-sm font-bold sm:text-base">{baslik}</h2>
+            <h2 className="ml-2 min-w-0 flex-1 truncate text-base font-bold">{baslik}</h2>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-2">
             <button
               onClick={() => setImlec(new Date())}
-              className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent"
+              className="rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent sm:py-1.5 sm:text-xs"
             >
               {gorunum === "gun" ? "Bugün" : gorunum === "hafta" ? "Bu hafta" : "Bu ay"}
             </button>
-            <div className="flex rounded-lg border border-border p-0.5">
+            <div className="flex flex-1 rounded-lg border border-border p-0.5 sm:flex-none">
               {(
                 [
                   ["gun", "Gün"],
@@ -124,7 +129,7 @@ function Takvim() {
                 <button
                   key={v}
                   onClick={() => setGorunum(v)}
-                  className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  className={`flex-1 rounded-md px-2.5 py-1.5 text-sm font-semibold sm:flex-none sm:py-1 sm:text-xs transition-colors ${
                     gorunum === v
                       ? "bg-teorik-soft text-teorik"
                       : "text-muted-foreground hover:bg-accent"
@@ -144,7 +149,37 @@ function Takvim() {
           </p>
         ) : null}
 
-        <div className="mt-4">
+        {gorunum === "gun" ? (
+          <div className="mt-3 grid grid-cols-7 gap-1">
+            {Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((g, i) => {
+              const sec = sameDay(g, imlec);
+              const bu = sameDay(g, bugun);
+              return (
+                <button
+                  key={i}
+                  onClick={() => setImlec(g)}
+                  className={`flex flex-col items-center rounded-xl py-1.5 text-xs transition-colors ${
+                    sec ? "bg-primary text-primary-foreground" : bu ? "bg-teorik-soft text-teorik" : "text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  <span className="font-medium">{GUN_KISA[i]}</span>
+                  <span className="text-base font-bold">{g.getDate()}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
+        <div
+          className="mt-4"
+          onTouchStart={(e) => { const t = e.touches[0]; if (t) dokunma.current = { x: t.clientX, y: t.clientY }; }}
+          onTouchEnd={(e) => {
+            const b = dokunma.current; const t = e.changedTouches[0]; dokunma.current = null;
+            if (!b || !t || gorunum === "hafta") return;
+            const dx = t.clientX - b.x; const dy = t.clientY - b.y;
+            if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) kaydir(dx < 0 ? 1 : -1);
+          }}
+        >
           {gorunum === "hafta" ? (
             <HaftaGorunumu
               monday={monday}
