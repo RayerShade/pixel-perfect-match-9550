@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/store";
 import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
 
-export const Route = createFileRoute("/ayarlar")({
+export const Route = createFileRoute("/_authenticated/ayarlar")({
   head: () => ({
     meta: [
       { title: "Ayarlar — Tıp Ders Programı" },

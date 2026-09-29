@@ -6,7 +6,7 @@ import { DERSLER, SECMELILER, secmeliGruplari, secmeliSaatleri, secmeliVeriVar }
 import { GUN_UZUN } from "@/lib/date-utils";
 import { useAyarlar, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 
-export const Route = createFileRoute("/secmeliler")({
+export const Route = createFileRoute("/_authenticated/secmeliler")({
   head: () => ({
     meta: [
       { title: "Seçmeli Dersler — Tıp Ders Programı" },

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { CalendarDays, BookOpen, ListChecks, Building2, Settings } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { useAuth } from "@/lib/auth";
+import { CalendarDays, BookOpen, ListChecks, Building2, Settings, LogOut, ShieldCheck, Loader2 } from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Takvim", icon: CalendarDays },
@@ -19,6 +20,8 @@ export function AppShell({
   aciklama?: string;
   children: ReactNode;
 }) {
+  const { user, isAdmin, profil, hazir, cikis } = useAuth();
+  const eksik = hazir && user && profil && (!profil.ad_soyad || !profil.ogrenci_no);
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-surface/90 backdrop-blur">
@@ -47,8 +50,37 @@ export function AppShell({
               </Link>
             ))}
           </nav>
+          <div className="flex items-center gap-1 md:ml-2">
+            {isAdmin ? (
+              <Link
+                to="/admin"
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-altin hover:bg-accent data-[status=active]:bg-accent"
+                title="Admin paneli"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                <span className="hidden lg:inline">Admin</span>
+              </Link>
+            ) : null}
+            <span className="hidden max-w-[10rem] truncate px-1 text-xs text-muted-foreground lg:inline">
+              {profil?.ad_soyad || user?.email}
+            </span>
+            <button
+              onClick={() => void cikis()}
+              title="Çıkış yap"
+              aria-label="Çıkış yap"
+              className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </header>
+      {!hazir ? (
+        <div className="flex items-center justify-center gap-2 bg-accent py-1.5 text-xs text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Hesabındaki veriler yükleniyor…
+        </div>
+      ) : null}
+      {eksik ? <ProfilTamamla /> : null}
 
       <main className="mx-auto max-w-6xl px-3 py-4 md:px-4 md:py-6">{children}</main>
 
@@ -67,6 +99,35 @@ export function AppShell({
           ))}
         </div>
       </nav>
+    </div>
+  );
+}
+
+function ProfilTamamla() {
+  const { profil, profilTamamla } = useAuth();
+  const [ad, setAd] = useState(profil?.ad_soyad ?? "");
+  const [no, setNo] = useState(profil?.ogrenci_no ?? "");
+  const [bekle, setBekle] = useState(false);
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 px-4">
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (!ad.trim() || !no.trim()) return;
+          setBekle(true);
+          await profilTamamla(ad.trim(), no.trim());
+          setBekle(false);
+        }}
+        className="w-full max-w-sm space-y-3 rounded-2xl border border-border bg-surface p-5"
+      >
+        <h2 className="text-base font-bold">Profilini tamamla</h2>
+        <p className="text-xs text-muted-foreground">Devam etmek için ad soyadını ve öğrenci numaranı yaz.</p>
+        <input required value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Ad soyad" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+        <input required value={no} onChange={(e) => setNo(e.target.value)} placeholder="Öğrenci numarası" inputMode="numeric" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+        <button disabled={bekle} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+          {bekle ? "Kaydediliyor…" : "Kaydet"}
+        </button>
+      </form>
     </div>
   );
 }

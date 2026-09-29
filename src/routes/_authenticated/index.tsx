@@ -16,7 +16,7 @@ import {
 import { addDays, formatLong, startOfWeek, weekLabel, AYLAR } from "@/lib/date-utils";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Takvim — Tıp Ders Programı" },

@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { aktifDersler, type Ders } from "@/lib/schedule-data";
 import { useYuklenenVeri } from "@/lib/store";
 
-export const Route = createFileRoute("/dersler")({
+export const Route = createFileRoute("/_authenticated/dersler")({
   head: () => ({
     meta: [
       { title: "Dersler — Tıp Ders Programı" },

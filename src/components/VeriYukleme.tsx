@@ -74,11 +74,14 @@ function YuklemeKarti({
   );
 }
 
-export function VeriYukleme() {
+export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) {
   const { veri, kaydet } = useYuklenenVeri();
+  const k = tur === "kisisel";
+  const g = tur === "genel";
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
+      {k ? (
       <YuklemeKarti
         baslik="Yıllık ders programı"
         aciklama="Ders, saat (başlangıç–bitiş), gün veya tarih, öğretim üyesi sütunlarını otomatik tanır. Yüklenince örnek veriler yerine bu program kullanılır."
@@ -93,6 +96,8 @@ export function VeriYukleme() {
         }}
         onSil={() => kaydet({ dersler: null, yillikDosya: undefined })}
       />
+      ) : null}
+      {g ? (
       <YuklemeKarti
         baslik="Haftalık amfi programı"
         aciklama="Tarih, saat, ders ve amfi/derslik sütunlarını okur; sadece amfi bilgisini günceller. Her hafta yeni dosya ekleyebilirsin, eski haftalar korunur."
@@ -120,6 +125,8 @@ export function VeriYukleme() {
         }}
         onSil={() => kaydet({ amfi: null, secmeliOlaylari: null, amfiAdlari: null, amfiDosyalari: undefined })}
       />
+      ) : null}
+      {k ? (
       <YuklemeKarti
         baslik="Uygulama tablosu"
         aciklama="Uygulama tarihleri, saatleri ve her uygulamaya giden grupları okur. Öğrenci numaran Ayarlar'da girildiyse sadece senin grubunun uygulamaları takvime eklenir."
@@ -133,6 +140,8 @@ export function VeriYukleme() {
         }}
         onSil={() => kaydet({ uygulamalar: null, uygulamaDosya: undefined })}
       />
+      ) : null}
+      {k ? (
       <YuklemeKarti
         baslik="Öğrenci listesi"
         aciklama="Grup, alt grup ve öğrenci numaralarını okur. Ayarlar'a numaranı yazınca adın ve grubun otomatik gelir."
@@ -147,6 +156,8 @@ export function VeriYukleme() {
         }}
         onSil={() => kaydet({ ogrenciler: null, ogrenciDosya: undefined })}
       />
+      ) : null}
+      {g ? (
       <YuklemeKarti
         baslik="Genel seçmeli ders programı"
         aciklama="Tüm seçmeli derslerin adı, hocası, saati ve amfisi önce buradan alınır; eksik bilgiler haftalık amfi programından tamamlanır."
@@ -160,6 +171,7 @@ export function VeriYukleme() {
         }}
         onSil={() => kaydet({ genelSecmeliler: null, secmeliDosya: undefined })}
       />
+      ) : null}
     </div>
   );
 }
