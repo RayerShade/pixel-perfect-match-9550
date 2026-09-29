@@ -173,7 +173,11 @@ function Admin() {
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
                         {h.ad_soyad || "(adsız)"}
-                        {h.admin ? <span className="rounded bg-accent px-1.5 text-[10px] font-bold text-altin">ADMIN</span> : null}
+                        {h.admin ? (
+                          <span className="rounded bg-accent px-1.5 text-[10px] font-bold text-altin">
+                            {h.email?.toLowerCase() === ORIJINAL_ADMIN_EMAIL ? "SÜPER ADMİN" : "ADMİN"}
+                          </span>
+                        ) : null}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
                         {h.ogrenci_no || "no yok"} · {h.email}
