@@ -20,9 +20,33 @@ export async function dosyaBuluttanSil(userId: string, tur: KisiselTur) {
 export async function dosyaIndir(userId: string, tur: KisiselTur): Promise<boolean> {
   const { data } = await supabase.storage.from(KOVA).list(`${userId}/${tur}`);
   const d = data?.[0];
-  if (!d) return false;
+  if (!d) return yedektenIndir(userId, tur);
   const { data: url } = await supabase.storage.from(KOVA).createSignedUrl(`${userId}/${tur}/${d.name}`, 60, { download: d.name });
   if (!url) return false;
   window.location.href = url.signedUrl;
+  return true;
+}
+
+const ALAN: Record<KisiselTur, [string, string]> = {
+  yillik: ["dersler", "yillikDosya"],
+  uygulama: ["uygulamalar", "uygulamaDosya"],
+  ogrenci: ["ogrenciler", "ogrenciDosya"],
+};
+
+/** Orijinali yoksa hesapta kayıtlı verilerden Excel oluşturur. */
+async function yedektenIndir(userId: string, tur: KisiselTur): Promise<boolean> {
+  const [alan, adAlan] = ALAN[tur];
+  const { data } = await supabase.from("user_data").select("veri").eq("user_id", userId).maybeSingle();
+  const v = (data?.veri ?? {}) as Record<string, unknown>;
+  const ham = v[alan];
+  if (!ham) return false;
+  const satirlar = (Array.isArray(ham) ? ham : Object.entries(ham as Record<string, object>).map(([no, o]) => ({ no, ...o }))).map(
+    (r) => Object.fromEntries(Object.entries(r as Record<string, unknown>).map(([k, x]) => [k, typeof x === "object" && x !== null ? JSON.stringify(x) : x])),
+  );
+  const XLSX = await import("xlsx");
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(satirlar), "Veri");
+  const ad = String(v[adAlan] ?? tur).replace(/\.(xlsx|xls|csv)$/i, "");
+  XLSX.writeFile(wb, `${ad} (kayıtlı veri).xlsx`);
   return true;
 }
