@@ -81,7 +81,7 @@ function Admin() {
 
   const secmeliAdi = useMemo(() => {
     const m = new Map<string, { ad: string; grup?: number }>();
-    SECMELILER.forEach((s) => m.set(s.id, { ad: s.name }));
+    SECMELILER.forEach((s) => m.set(s.id, { ad: s.electiveName }));
     secmeliGruplari(veri).forEach((s) => m.set(s.id, { ad: s.ad, grup: s.grup }));
     return m;
   }, [veri]);
