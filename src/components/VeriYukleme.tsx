@@ -5,7 +5,7 @@ import { genelSecmeliOku } from "@/lib/secmeli-import";
 import { haftalikAmfiOku, yillikProgramOku } from "@/lib/excel-import";
 import { useYuklenenVeri } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
-import { dosyaBulutaKaydet, dosyaBuluttanSil } from "@/lib/dosya-bulut";
+import { dosyaBulutaKaydet, dosyaBuluttanSil, dosyaGuvenli } from "@/lib/dosya-bulut";
 
 function YuklemeKarti({
   baslik,
@@ -30,6 +30,7 @@ function YuklemeKarti({
     if (!f) return;
     setYukleniyor(true);
     try {
+      await dosyaGuvenli(f);
       setMesaj({ ok: true, t: await onDosya(f) });
     } catch (e) {
       setMesaj({ ok: false, t: e instanceof Error ? e.message : "Dosya okunamadı." });
