@@ -32,6 +32,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
+const ORIJINAL_ADMIN_EMAIL = "cerandeniz435@gmail.com";
+
 interface Hesap {
   id: string;
   email: string | null;
