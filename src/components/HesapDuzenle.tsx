@@ -38,7 +38,7 @@ export function HesapDuzenle({
     setKaydediliyor(true);
     const { error } = await supabase.from("user_data").update({ secmeliler: secim, updated_at: new Date().toISOString() }).eq("user_id", userId);
     setKaydediliyor(false);
-    if (error) return toast.error("Seçmeliler kaydedilemedi.");
+    if (error) { toast.error("Seçmeliler kaydedilemedi."); return; }
     toast.success("Seçmeliler güncellendi.");
     onKaydedildi();
   };

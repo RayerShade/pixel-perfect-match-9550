@@ -94,7 +94,7 @@ function Admin() {
   const yetki = async (h: Hesap) => {
     if (!confirm(h.admin ? `${h.ad_soyad || h.email} kişisinin admin yetkisi alınsın mı?` : `${h.ad_soyad || h.email} admin yapılsın mı?`)) return;
     const { error } = await supabase.rpc("admin_yetki_ayarla", { _user_id: h.id, _ver: !h.admin });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(h.admin ? "Admin yetkisi alındı." : "Admin yetkisi verildi.");
     await qc.invalidateQueries({ queryKey: ["admin-hesaplar"] });
   };
