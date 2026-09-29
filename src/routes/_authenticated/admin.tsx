@@ -189,7 +189,7 @@ function Admin() {
                   </button>
                   {a ? (
                     <div className="space-y-3 bg-accent/30 px-3 pb-3 pt-1 text-xs">
-                      <Bilgi etiket="Öğrenci no" deger={h.ogrenci_no || "—"} />
+                      <NoDuzenle userId={h.id} no={h.ogrenci_no} onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} />
                       <Bilgi etiket="E-posta" deger={h.email ?? "—"} />
                       <Bilgi etiket="Kayıt tarihi" deger={new Date(h.created_at).toLocaleString("tr-TR")} />
                       {h.guncelleme ? <Bilgi etiket="Son güncelleme" deger={new Date(h.guncelleme).toLocaleString("tr-TR")} /> : null}
@@ -271,6 +271,31 @@ function DosyaSatiri({ etiket, ad, userId, tur }: { etiket: string; ad?: string 
         >
           <Download className="h-3.5 w-3.5" /> İndir
         </button>
+      ) : null}
+    </div>
+  );
+}
+
+function NoDuzenle({ userId, no, onKaydedildi }: { userId: string; no: string; onKaydedildi: () => void }) {
+  const [deger, setDeger] = useState(no);
+  const kaydet = async () => {
+    const yeni = deger.trim();
+    const { error } = await supabase.from("profiles").update({ ogrenci_no: yeni, updated_at: new Date().toISOString() }).eq("id", userId);
+    if (error) { toast.error("Numara kaydedilemedi."); return; }
+    const { data } = await supabase.from("user_data").select("ayarlar").eq("user_id", userId).maybeSingle();
+    if (data) {
+      const ayarlar = { ...((data.ayarlar as Record<string, unknown>) ?? {}), ogrenciNo: yeni };
+      await supabase.from("user_data").update({ ayarlar: ayarlar as never }).eq("user_id", userId);
+    }
+    toast.success("Öğrenci numarası güncellendi.");
+    onKaydedildi();
+  };
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-semibold text-muted-foreground">Öğrenci no:</span>
+      <input value={deger} onChange={(e) => setDeger(e.target.value)} className="w-36 rounded-lg border border-border bg-background px-2 py-1" />
+      {deger.trim() !== no ? (
+        <button onClick={() => void kaydet()} className="rounded-lg bg-primary px-2 py-1 font-semibold text-primary-foreground">Kaydet</button>
       ) : null}
     </div>
   );
