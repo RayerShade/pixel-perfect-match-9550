@@ -288,30 +288,7 @@ export function haftalikAmfiKayitlari(mondayIso: string, veri?: YuklenenVeri): H
       })
       .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
   }
-  return DERSLER.filter((d) => d.courseType !== "secmeli").map((d) => {
-    const seed = hashString(`${mondayIso}-${d.id}`);
-    const bekliyor = seed % 11 === 0;
-    const amfi =
-      d.courseType === "pratik" || d.courseType === "pbl"
-        ? d.defaultClassroom
-        : AMFILER[seed % AMFILER.length]!;
-    const date = isoDate(addDays(new Date(`${mondayIso}T00:00:00`), d.dayOfWeek - 1));
-    return {
-      id: `${mondayIso}-${d.id}`,
-      week: mondayIso,
-      date,
-      startTime: d.startTime,
-      endTime: d.endTime,
-      courseName: d.courseName,
-      group: d.group,
-      classroom: bekliyor ? "" : amfi,
-      amphitheater: bekliyor ? "" : amfi,
-      sourceFile: `haftalik_amfi_${mondayIso}.xlsx`,
-      status: bekliyor ? "bekliyor" : "eslesti",
-      confidence: bekliyor ? 0.41 : 0.93 + (seed % 7) / 100,
-      manuallyConfirmed: false,
-    };
-  });
+  return [];
 }
 
 export interface DersOlayi {
