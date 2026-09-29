@@ -1,5 +1,6 @@
 import type { YuklenenVeri } from "./schedule-data";
 import { useCallback, useEffect, useState } from "react";
+import { BULUT_OLAY, degisenAlanlar, genelKaydet, kisiselKaydet } from "./bulut";
 
 const ELECTIVE_KEY = "ders-takvim:secmeliler";
 const GIZLI_KEY = "ders-takvim:gizli-secmeliler";
@@ -59,15 +60,21 @@ export function useSecmeliler() {
   const [hazir, setHazir] = useState(false);
 
   useEffect(() => {
-    setSecili(readArray(ELECTIVE_KEY, ["sec-etik", "sec-tarih"]));
-    setGizli(readArray(GIZLI_KEY, []));
-    setHazir(true);
+    const yukle = () => {
+      setSecili(readArray(ELECTIVE_KEY, []));
+      setGizli(readArray(GIZLI_KEY, []));
+      setHazir(true);
+    };
+    yukle();
+    window.addEventListener(BULUT_OLAY, yukle);
+    return () => window.removeEventListener(BULUT_OLAY, yukle);
   }, []);
 
   const toggle = useCallback((id: string) => {
     setSecili((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
       window.localStorage.setItem(ELECTIVE_KEY, JSON.stringify(next));
+      kisiselKaydet();
       return next;
     });
   }, []);
@@ -78,6 +85,7 @@ export function useSecmeliler() {
       const secili = prev.includes(id);
       const next = [...prev.filter((x) => !grupIdleri.includes(x)), ...(secili ? [] : [id])];
       window.localStorage.setItem(ELECTIVE_KEY, JSON.stringify(next));
+      kisiselKaydet();
       return next;
     });
   }, []);
@@ -87,12 +95,14 @@ export function useSecmeliler() {
     setGizli((prev) => {
       const next = prev.includes(id) ? prev : [...prev, id];
       window.localStorage.setItem(GIZLI_KEY, JSON.stringify(next));
+      kisiselKaydet();
       return next;
     });
     setSecili((prev) => {
       if (!prev.includes(id)) return prev;
       const next = prev.filter((x) => x !== id);
       window.localStorage.setItem(ELECTIVE_KEY, JSON.stringify(next));
+      kisiselKaydet();
       return next;
     });
   }, []);
@@ -101,6 +111,7 @@ export function useSecmeliler() {
     setGizli((prev) => {
       const next = prev.filter((x) => x !== id);
       window.localStorage.setItem(GIZLI_KEY, JSON.stringify(next));
+      kisiselKaydet();
       return next;
     });
   }, []);
@@ -112,13 +123,17 @@ export function useManuelAmfiler() {
   const [manuel, setManuel] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setManuel(read<Record<string, string>>(AMFI_KEY, {}));
+    const yukle = () => setManuel(read<Record<string, string>>(AMFI_KEY, {}));
+    yukle();
+    window.addEventListener(BULUT_OLAY, yukle);
+    return () => window.removeEventListener(BULUT_OLAY, yukle);
   }, []);
 
   const ata = useCallback((key: string, amfi: string) => {
     setManuel((prev) => {
       const next = { ...prev, [key]: amfi };
       window.localStorage.setItem(AMFI_KEY, JSON.stringify(next));
+      kisiselKaydet();
       return next;
     });
   }, []);
@@ -130,13 +145,17 @@ export function useAyarlar() {
   const [ayarlar, setAyarlar] = useState<Ayarlar>(VARSAYILAN_AYARLAR);
 
   useEffect(() => {
-    setAyarlar(read<Ayarlar>(AYAR_KEY, VARSAYILAN_AYARLAR));
+    const yukle = () => setAyarlar(read<Ayarlar>(AYAR_KEY, VARSAYILAN_AYARLAR));
+    yukle();
+    window.addEventListener(BULUT_OLAY, yukle);
+    return () => window.removeEventListener(BULUT_OLAY, yukle);
   }, []);
 
   const guncelle = useCallback((patch: Partial<Ayarlar>) => {
     setAyarlar((prev) => {
       const next = { ...prev, ...patch };
       window.localStorage.setItem(AYAR_KEY, JSON.stringify(next));
+      kisiselKaydet();
       return next;
     });
   }, []);
@@ -165,6 +184,10 @@ export function useYuklenenVeri() {
     const prev = read<YuklenenVeri & VeriMeta>(VERI_KEY, { dersler: null, amfi: null });
     window.localStorage.setItem(VERI_KEY, JSON.stringify({ ...prev, ...patch }));
     window.dispatchEvent(new Event("ders-takvim:veri"));
+    const d = degisenAlanlar(patch);
+    if (d.kisisel) kisiselKaydet();
+    if (d.amfi) genelKaydet("amfi");
+    if (d.secmeli) genelKaydet("secmeli");
   }, []);
   return { veri, kaydet };
 }
