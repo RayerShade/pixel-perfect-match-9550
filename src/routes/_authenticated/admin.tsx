@@ -2,14 +2,13 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { ChevronDown, Download, Search, ShieldCheck, Trash2 } from "lucide-react";
+import { ChevronDown, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { VeriYukleme } from "@/components/VeriYukleme";
 import { HesapDuzenle } from "@/components/HesapDuzenle";
 import { supabase } from "@/integrations/supabase/client";
 import { hesapSil } from "@/lib/admin.functions";
-import { dosyaIndir, type KisiselTur } from "@/lib/dosya-bulut";
 import { useAuth } from "@/lib/auth";
 import { useYuklenenVeri } from "@/lib/store";
 import { SECMELILER, secmeliGruplari } from "@/lib/schedule-data";
@@ -48,12 +47,19 @@ interface Hesap {
   guncelleme?: string | undefined;
 }
 
+function dosyaAdi(x: unknown): string | undefined {
+  if (!x) return undefined;
+  if (typeof x === "string") return x;
+  if (typeof x === "object" && "ad" in x) return String((x as { ad: unknown }).ad);
+  return undefined;
+}
+
 async function hesaplariGetir(): Promise<Hesap[]> {
   const [p, d, r] = await Promise.all([
     supabase.from("profiles").select("id, email, ad_soyad, ogrenci_no, created_at").order("created_at", { ascending: false }),
     supabase
       .from("user_data")
-      .select("user_id, secmeliler, ayarlar, updated_at, yillik:veri->>yillikDosya, uygulama:veri->>uygulamaDosya, ogrenci:veri->>ogrenciDosya"),
+      .select("user_id, secmeliler, ayarlar, updated_at, yillik:veri->yillikDosya, uygulama:veri->uygulamaDosya, ogrenci:veri->ogrenciDosya"),
     supabase.from("user_roles").select("user_id, role").eq("role", "admin"),
   ]);
   if (p.error) throw p.error;
@@ -61,14 +67,14 @@ async function hesaplariGetir(): Promise<Hesap[]> {
   const adminler = new Set((r.data ?? []).map((x) => x.user_id));
   return (p.data ?? []).map((h) => {
     const v = veri.get(h.id) as
-      | { secmeliler: unknown; ayarlar: unknown; updated_at: string; yillik: string | null; uygulama: string | null; ogrenci: string | null }
+      | { secmeliler: unknown; ayarlar: unknown; updated_at: string; yillik: unknown; uygulama: unknown; ogrenci: unknown }
       | undefined;
     return {
       ...h,
       admin: adminler.has(h.id),
       secmeliler: (v?.secmeliler as string[]) ?? [],
       ayarlar: (v?.ayarlar as Record<string, unknown>) ?? {},
-      dosyalar: { yillik: v?.yillik ?? undefined, uygulama: v?.uygulama ?? undefined, ogrenci: v?.ogrenci ?? undefined },
+      dosyalar: { yillik: dosyaAdi(v?.yillik), uygulama: dosyaAdi(v?.uygulama), ogrenci: dosyaAdi(v?.ogrenci) },
       guncelleme: v?.updated_at,
     };
   });
@@ -193,10 +199,7 @@ function Admin() {
                       <Bilgi etiket="E-posta" deger={h.email ?? "—"} />
                       <Bilgi etiket="Kayıt tarihi" deger={new Date(h.created_at).toLocaleString("tr-TR")} />
                       {h.guncelleme ? <Bilgi etiket="Son güncelleme" deger={new Date(h.guncelleme).toLocaleString("tr-TR")} /> : null}
-                      <Bilgi etiket="Grup" deger={String(h.ayarlar["grup"] ?? "—")} />
-                      <DosyaSatiri etiket="Yıllık program" ad={h.dosyalar.yillik} userId={h.id} tur="yillik" />
-                      <DosyaSatiri etiket="Uygulama tablosu" ad={h.dosyalar.uygulama} userId={h.id} tur="uygulama" />
-                      <DosyaSatiri etiket="Öğrenci listesi" ad={h.dosyalar.ogrenci} userId={h.id} tur="ogrenci" />
+                      <GrupDuzenle userId={h.id} ayarlar={h.ayarlar} onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} />
                       <div>
                         <p className="font-semibold text-muted-foreground">Seçtiği seçmeliler</p>
                         {h.secmeliler.length ? (
@@ -217,6 +220,7 @@ function Admin() {
                           key={h.id + h.secmeliler.join()}
                           userId={h.id}
                           secili={h.secmeliler}
+                          dosyalar={h.dosyalar}
                           secenekler={secenekler}
                           onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })}
                         />
@@ -260,22 +264,6 @@ function Bilgi({ etiket, deger }: { etiket: string; deger: string }) {
   );
 }
 
-function DosyaSatiri({ etiket, ad, userId, tur }: { etiket: string; ad?: string | undefined; userId: string; tur: KisiselTur }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <Bilgi etiket={etiket} deger={ad ?? "yüklenmedi"} />
-      {ad ? (
-        <button
-          onClick={async () => { if (!(await dosyaIndir(userId, tur))) toast.error("Bu dosyanın orijinali bulutta yok (eski yükleme)."); }}
-          className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-2 py-1 font-semibold hover:bg-accent"
-        >
-          <Download className="h-3.5 w-3.5" /> İndir
-        </button>
-      ) : null}
-    </div>
-  );
-}
-
 function NoDuzenle({ userId, no, onKaydedildi }: { userId: string; no: string; onKaydedildi: () => void }) {
   const [deger, setDeger] = useState(no);
   const kaydet = async () => {
@@ -297,6 +285,37 @@ function NoDuzenle({ userId, no, onKaydedildi }: { userId: string; no: string; o
       {deger.trim() !== no ? (
         <button onClick={() => void kaydet()} className="rounded-lg bg-primary px-2 py-1 font-semibold text-primary-foreground">Kaydet</button>
       ) : null}
+    </div>
+  );
+}
+
+function GrupDuzenle({ userId, ayarlar, onKaydedildi }: { userId: string; ayarlar: Record<string, unknown>; onKaydedildi: () => void }) {
+  const elle = ayarlar["grupElle"] as { grup: string; altGrup: string } | null | undefined;
+  const [grup, setGrup] = useState(elle?.grup ?? "");
+  const [alt, setAlt] = useState(elle?.altGrup ?? "");
+  const kaydet = async (sifirla = false) => {
+    const g = sifirla ? "" : grup.trim().toLocaleUpperCase("tr-TR");
+    const a = sifirla ? "" : alt.trim().toLocaleLowerCase("tr-TR");
+    const yeni = { ...ayarlar, grupElle: g ? { grup: g, altGrup: a } : null, ...(g ? { grup: [g, a].filter(Boolean).join(" / ") } : {}) };
+    const { error } = await supabase.from("user_data").update({ ayarlar: yeni as never, updated_at: new Date().toISOString() }).eq("user_id", userId);
+    if (error) { toast.error("Grup kaydedilemedi."); return; }
+    if (sifirla) { setGrup(""); setAlt(""); }
+    toast.success(sifirla ? "Grup öğrenci listesine bırakıldı." : "Grup güncellendi.");
+    onKaydedildi();
+  };
+  return (
+    <div className="space-y-1">
+      <p>
+        <span className="font-semibold text-muted-foreground">Grup: </span>
+        {String(ayarlar["grup"] ?? "—")}
+        {elle?.grup ? <span className="ml-1 text-altin">(admin atadı)</span> : null}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <input value={grup} onChange={(e) => setGrup(e.target.value)} placeholder="Grup (A, İ1)" className="w-28 rounded-lg border border-border bg-background px-2 py-1" />
+        <input value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="Alt grup (a1, i2)" className="w-32 rounded-lg border border-border bg-background px-2 py-1" />
+        <button onClick={() => void kaydet()} disabled={!grup.trim()} className="rounded-lg bg-primary px-2 py-1 font-semibold text-primary-foreground disabled:opacity-50">Grubu kaydet</button>
+        {elle?.grup ? <button onClick={() => void kaydet(true)} className="rounded-lg border border-border px-2 py-1 font-semibold hover:bg-accent">Listeye bırak</button> : null}
+      </div>
     </div>
   );
 }
