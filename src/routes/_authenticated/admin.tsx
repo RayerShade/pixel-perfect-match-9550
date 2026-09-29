@@ -2,13 +2,14 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { ChevronDown, Search, ShieldCheck, Trash2 } from "lucide-react";
+import { ChevronDown, Download, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { VeriYukleme } from "@/components/VeriYukleme";
 import { HesapDuzenle } from "@/components/HesapDuzenle";
 import { supabase } from "@/integrations/supabase/client";
 import { hesapSil } from "@/lib/admin.functions";
+import { dosyaIndir, type KisiselTur } from "@/lib/dosya-bulut";
 import { useAuth } from "@/lib/auth";
 import { useYuklenenVeri } from "@/lib/store";
 import { SECMELILER, secmeliGruplari } from "@/lib/schedule-data";
@@ -188,12 +189,14 @@ function Admin() {
                   </button>
                   {a ? (
                     <div className="space-y-3 bg-accent/30 px-3 pb-3 pt-1 text-xs">
+                      <Bilgi etiket="Öğrenci no" deger={h.ogrenci_no || "—"} />
+                      <Bilgi etiket="E-posta" deger={h.email ?? "—"} />
                       <Bilgi etiket="Kayıt tarihi" deger={new Date(h.created_at).toLocaleString("tr-TR")} />
                       {h.guncelleme ? <Bilgi etiket="Son güncelleme" deger={new Date(h.guncelleme).toLocaleString("tr-TR")} /> : null}
                       <Bilgi etiket="Grup" deger={String(h.ayarlar["grup"] ?? "—")} />
-                      <Bilgi etiket="Yıllık program" deger={h.dosyalar.yillik ?? "yüklenmedi"} />
-                      <Bilgi etiket="Uygulama tablosu" deger={h.dosyalar.uygulama ?? "yüklenmedi"} />
-                      <Bilgi etiket="Öğrenci listesi" deger={h.dosyalar.ogrenci ?? "yüklenmedi"} />
+                      <DosyaSatiri etiket="Yıllık program" ad={h.dosyalar.yillik} userId={h.id} tur="yillik" />
+                      <DosyaSatiri etiket="Uygulama tablosu" ad={h.dosyalar.uygulama} userId={h.id} tur="uygulama" />
+                      <DosyaSatiri etiket="Öğrenci listesi" ad={h.dosyalar.ogrenci} userId={h.id} tur="ogrenci" />
                       <div>
                         <p className="font-semibold text-muted-foreground">Seçtiği seçmeliler</p>
                         {h.secmeliler.length ? (
@@ -254,5 +257,21 @@ function Bilgi({ etiket, deger }: { etiket: string; deger: string }) {
       <span className="font-semibold text-muted-foreground">{etiket}: </span>
       {deger}
     </p>
+  );
+}
+
+function DosyaSatiri({ etiket, ad, userId, tur }: { etiket: string; ad?: string | undefined; userId: string; tur: KisiselTur }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <Bilgi etiket={etiket} deger={ad ?? "yüklenmedi"} />
+      {ad ? (
+        <button
+          onClick={async () => { if (!(await dosyaIndir(userId, tur))) toast.error("Bu dosyanın orijinali bulutta yok (eski yükleme)."); }}
+          className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-2 py-1 font-semibold hover:bg-accent"
+        >
+          <Download className="h-3.5 w-3.5" /> İndir
+        </button>
+      ) : null}
+    </div>
   );
 }

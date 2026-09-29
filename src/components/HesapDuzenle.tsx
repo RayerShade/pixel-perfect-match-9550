@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
+import { dosyaBulutaKaydet } from "@/lib/dosya-bulut";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { yillikProgramOku } from "@/lib/excel-import";
@@ -71,6 +72,7 @@ export function HesapDuzenle({
         ? await supabase.from("user_data").update({ veri, updated_at: new Date().toISOString() }).eq("user_id", userId)
         : await supabase.from("user_data").insert({ user_id: userId, veri });
       if (error) throw error;
+      await dosyaBulutaKaydet(userId, tur, f);
       toast.success(mesaj);
       onKaydedildi();
     } catch (e) {
