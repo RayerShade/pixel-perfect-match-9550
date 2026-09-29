@@ -4,6 +4,8 @@ import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
 import { genelSecmeliOku } from "@/lib/secmeli-import";
 import { haftalikAmfiOku, yillikProgramOku } from "@/lib/excel-import";
 import { useYuklenenVeri } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
+import { dosyaBulutaKaydet, dosyaBuluttanSil } from "@/lib/dosya-bulut";
 
 function YuklemeKarti({
   baslik,
@@ -76,6 +78,11 @@ function YuklemeKarti({
 
 export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) {
   const { veri, kaydet } = useYuklenenVeri();
+  const { user } = useAuth();
+  const bulut = (t: "yillik" | "uygulama" | "ogrenci", f?: File) => {
+    if (!user) return;
+    void (f ? dosyaBulutaKaydet(user.id, t, f) : dosyaBuluttanSil(user.id, t));
+  };
   const k = tur === "kisisel";
   const g = tur === "genel";
 
@@ -92,9 +99,10 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
           if (!dersler.length)
             throw new Error("Ders bulunamadı. Başlık satırında 'Ders' ve 'Saat' (veya Başlangıç/Bitiş) sütunları olmalı.");
           kaydet({ dersler, yillikDosya: f.name });
+          bulut("yillik", f);
           return `${dersler.length} ders içe aktarıldı.`;
         }}
-        onSil={() => kaydet({ dersler: null, yillikDosya: undefined })}
+        onSil={() => { kaydet({ dersler: null, yillikDosya: undefined }); bulut("yillik"); }}
       />
       ) : null}
       {g ? (
@@ -136,9 +144,10 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
           const uygulamalar = await uygulamaTablosuOku(f);
           if (!uygulamalar.length) throw new Error("Uygulama bulunamadı. 'Uygulama Tarihi' ve 'Saat' başlıklı tablolar olmalı.");
           kaydet({ uygulamalar, uygulamaDosya: f.name });
+          bulut("uygulama", f);
           return `${uygulamalar.length} uygulama oturumu bulundu.`;
         }}
-        onSil={() => kaydet({ uygulamalar: null, uygulamaDosya: undefined })}
+        onSil={() => { kaydet({ uygulamalar: null, uygulamaDosya: undefined }); bulut("uygulama"); }}
       />
       ) : null}
       {k ? (
@@ -152,9 +161,10 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
           const n = Object.keys(ogrenciler).length;
           if (!n) throw new Error("Öğrenci bulunamadı. Sütunlar: Grup, Alt Grup, Öğrenci No, Ad, Soyad.");
           kaydet({ ogrenciler, ogrenciDosya: f.name });
+          bulut("ogrenci", f);
           return `${n} öğrenci içe aktarıldı.`;
         }}
-        onSil={() => kaydet({ ogrenciler: null, ogrenciDosya: undefined })}
+        onSil={() => { kaydet({ ogrenciler: null, ogrenciDosya: undefined }); bulut("ogrenci"); }}
       />
       ) : null}
       {g ? (
