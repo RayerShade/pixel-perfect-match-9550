@@ -7,7 +7,7 @@ import { addDays, formatShort, isoDate, startOfWeek, weekLabel } from "@/lib/dat
 import { useManuelAmfiler, useYuklenenVeri } from "@/lib/store";
 import { VeriYukleme } from "@/components/VeriYukleme";
 
-export const Route = createFileRoute("/amfi")({
+export const Route = createFileRoute("/_authenticated/amfi")({
   head: () => ({
     meta: [
       { title: "Haftalık Amfi Programı — Tıp Ders Programı" },
