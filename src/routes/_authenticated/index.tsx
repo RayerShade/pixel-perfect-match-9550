@@ -13,7 +13,7 @@ import {
   ogrenciBul,
   type DersOlayi,
 } from "@/lib/schedule-data";
-import { addDays, formatLong, startOfWeek, weekLabel, AYLAR } from "@/lib/date-utils";
+import { addDays, formatLong, sameDay, startOfWeek, weekLabel, AYLAR, GUN_KISA } from "@/lib/date-utils";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/")({
