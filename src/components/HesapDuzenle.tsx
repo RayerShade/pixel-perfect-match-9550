@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { Download, Upload } from "lucide-react";
+import { Download, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { dosyaBulutaKaydet, dosyaIndir, type KisiselTur } from "@/lib/dosya-bulut";
+import { dosyaBulutaKaydet, dosyaBuluttanSil, dosyaGuvenli, dosyaIndir, type KisiselTur } from "@/lib/dosya-bulut";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { yillikProgramOku } from "@/lib/excel-import";
@@ -49,6 +49,7 @@ export function HesapDuzenle({
 
   const dosyaYukle = async (tur: "yillik" | "uygulama" | "ogrenci", f: File) => {
     try {
+      await dosyaGuvenli(f);
       let patch: Record<string, unknown>;
       let mesaj: string;
       if (tur === "yillik") {
@@ -80,7 +81,10 @@ export function HesapDuzenle({
         if (o) {
           ayarlar = { ...ayarlar, ogrenciNo: no, grup: [o.grup, o.altGrup].filter(Boolean).join(" / "), ogrenciAdi: `${o.ad} ${o.soyad}`.trim() };
           mesaj += ` Grup: ${ayarlar["grup"]}.`;
-        } else if (no) mesaj += " Bu numara listede bulunamadı, grup değişmedi.";
+        } else if (no) {
+          ayarlar = { ...ayarlar, grup: "" };
+          mesaj += ` ${no} numarası bu listede yok, grubu elle atayabilirsin.`;
+        }
       }
       const { error } = data
         ? await supabase.from("user_data").update({ veri, ayarlar: ayarlar as Json, updated_at: new Date().toISOString() }).eq("user_id", userId)
@@ -92,6 +96,19 @@ export function HesapDuzenle({
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Dosya yüklenemedi.");
     }
+  };
+
+  const dosyaSil = async (tur: KisiselTur, etiket: string) => {
+    if (!confirm(`${etiket} bu hesaptan silinsin mi?`)) return;
+    const alan = { yillik: ["dersler", "yillikDosya"], uygulama: ["uygulamalar", "uygulamaDosya"], ogrenci: ["ogrenciler", "ogrenciDosya"] }[tur];
+    const { data } = await supabase.from("user_data").select("veri").eq("user_id", userId).maybeSingle();
+    const veri = { ...((data?.veri as Record<string, unknown>) ?? {}) };
+    for (const k of alan) delete veri[k];
+    const { error } = await supabase.from("user_data").update({ veri: veri as Json, updated_at: new Date().toISOString() }).eq("user_id", userId);
+    if (error) { toast.error("Silinemedi."); return; }
+    await dosyaBuluttanSil(userId, tur);
+    toast.success(`${etiket} silindi.`);
+    onKaydedildi();
   };
 
   return (
@@ -150,6 +167,14 @@ export function HesapDuzenle({
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 font-semibold hover:bg-accent"
                 >
                   <Download className="h-3.5 w-3.5" /> İndir
+                </button>
+              ) : null}
+              {dosyalar[t] ? (
+                <button
+                  onClick={() => void dosyaSil(t, e)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 font-semibold text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Sil
                 </button>
               ) : null}
               <DosyaDugmesi etiket={dosyalar[t] ? "Değiştir" : "Yükle"} onDosya={(f) => dosyaYukle(t, f)} />
