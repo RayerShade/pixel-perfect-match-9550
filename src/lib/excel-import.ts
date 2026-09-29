@@ -11,17 +11,17 @@ export const normalize = (s: string) =>
     .trim();
 
 const ALANLAR: Record<string, string[]> = {
-  ders: ["ders", "ders adi", "dersin adi", "konu", "course", "ders konu"],
+  ders: ["ders", "ders adi", "dersin adi", "konu", "course", "ders konu", "subject"],
   hoca: ["ogretim uyesi", "ogretim elemani", "hoca", "egitici", "instructor", "sorumlu"],
   tur: ["tur", "ders turu", "tip", "type"],
   gun: ["gun", "day"],
-  tarih: ["tarih", "date"],
+  tarih: ["tarih", "date", "start date"],
   saat: ["saat", "zaman", "time"],
-  baslangic: ["baslangic", "baslama", "baslangic saati", "start"],
-  bitis: ["bitis", "bitis saati", "end"],
+  baslangic: ["baslangic", "baslama", "baslangic saati", "start", "start time"],
+  bitis: ["bitis", "bitis saati", "end", "end time"],
   grup: ["grup", "sube", "group"],
-  amfi: ["amfi", "derslik", "sinif", "salon", "yer", "mekan", "classroom", "amfi derslik"],
-  not: ["not", "notlar", "aciklama", "notes"],
+  amfi: ["amfi", "derslik", "sinif", "salon", "yer", "mekan", "classroom", "amfi derslik", "location"],
+  not: ["not", "notlar", "aciklama", "notes", "description"],
   bolum: ["dilim adi anabilim dali", "dilim", "anabilim dali", "bolum"],
   donem: ["donem", "donem no", "donem adi"],
 };
