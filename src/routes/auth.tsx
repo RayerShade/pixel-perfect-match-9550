@@ -23,6 +23,11 @@ type Mod = "giris" | "kayit" | "sifre";
 
 function AuthSayfasi() {
   const navigate = useNavigate();
+  const [hatirla, setHatirla] = useState(true);
+  const hatirlamaAyarla = () => {
+    localStorage.setItem("ders-takvim:hatirla", hatirla ? "1" : "0");
+    sessionStorage.setItem("ders-takvim:oturum", "1");
+  };
   const { user, hazir } = useAuth();
   const [mod, setMod] = useState<Mod>("giris");
   const [email, setEmail] = useState("");
@@ -42,6 +47,7 @@ function AuthSayfasi() {
     setMesaj(null);
     try {
       if (mod === "giris") {
+        hatirlamaAyarla();
         const { error } = await supabase.auth.signInWithPassword({ email, password: sifre });
         if (error) throw new Error(error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı." : error.message);
       } else if (mod === "kayit") {
@@ -69,6 +75,7 @@ function AuthSayfasi() {
 
   const google = async () => {
     setMesaj(null);
+    hatirlamaAyarla();
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
     if (r.error) setMesaj({ ok: false, t: "Google ile giriş yapılamadı." });
   };
@@ -114,6 +121,12 @@ function AuthSayfasi() {
           <input className={girdi} type="email" placeholder="E-posta" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           {mod !== "sifre" ? (
             <input className={girdi} type="password" placeholder="Şifre" minLength={6} autoComplete={mod === "giris" ? "current-password" : "new-password"} value={sifre} onChange={(e) => setSifre(e.target.value)} required />
+          ) : null}
+          {mod === "giris" ? (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={hatirla} onChange={(e) => setHatirla(e.target.checked)} className="h-4 w-4 accent-primary" />
+              Beni hatırla
+            </label>
           ) : null}
           <button disabled={bekle} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">
             {bekle ? "Bekle…" : mod === "giris" ? "Giriş yap" : mod === "kayit" ? "Kayıt ol" : "Bağlantı gönder"}
