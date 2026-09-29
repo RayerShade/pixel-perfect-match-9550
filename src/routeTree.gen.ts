@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAmfiRouteImport } from './routes/_authenticated/amfi'
 import { Route as AuthenticatedAyarlarRouteImport } from './routes/_authenticated/ayarlar'
@@ -18,6 +20,16 @@ import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authentic
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -48,12 +60,16 @@ const AuthenticatedSecmelilerRoute = AuthenticatedSecmelilerRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/amfi': typeof AuthenticatedAmfiRoute
   '/ayarlar': typeof AuthenticatedAyarlarRoute
   '/dersler': typeof AuthenticatedDerslerRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
 }
 export interface FileRoutesByTo {
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/amfi': typeof AuthenticatedAmfiRoute
   '/ayarlar': typeof AuthenticatedAyarlarRoute
   '/dersler': typeof AuthenticatedDerslerRoute
@@ -63,6 +79,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/amfi': typeof AuthenticatedAmfiRoute
   '/_authenticated/ayarlar': typeof AuthenticatedAyarlarRoute
   '/_authenticated/dersler': typeof AuthenticatedDerslerRoute
@@ -71,12 +89,28 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/amfi' | '/ayarlar' | '/dersler' | '/secmeliler'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/amfi'
+    | '/ayarlar'
+    | '/dersler'
+    | '/secmeliler'
   fileRoutesByTo: FileRoutesByTo
-  to: '/amfi' | '/ayarlar' | '/dersler' | '/secmeliler' | '/'
+  to:
+    | '/auth'
+    | '/reset-password'
+    | '/amfi'
+    | '/ayarlar'
+    | '/dersler'
+    | '/secmeliler'
+    | '/'
   id:
     | '__root__'
     | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
     | '/_authenticated/amfi'
     | '/_authenticated/ayarlar'
     | '/_authenticated/dersler'
@@ -86,6 +120,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -95,6 +131,20 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -156,6 +206,8 @@ const AuthenticatedRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
