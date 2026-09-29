@@ -22,15 +22,15 @@ export async function ogrenciListesiOku(file: File): Promise<Record<string, Ogre
     const no = metin(r[2]).replace(/\D/g, "");
     const g = metin(r[0]).toLocaleUpperCase("tr-TR");
     const a = metin(r[1]).toLocaleLowerCase("tr-TR");
-    if (/^[A-Z]$/.test(g)) grup = g;
-    if (/^[a-z]\d$/.test(a)) alt = a;
+    if (/^[A-ZÇĞİÖŞÜ]\d?$/.test(g)) grup = g;
+    if (/^[a-zçğıöşü]\d$/.test(a)) alt = a;
     if (no.length < 6 || !grup) continue;
     out[no.replace(/^0+/, "")] = {
       no,
       ad: metin(r[3]),
       soyad: metin(r[4]),
       grup,
-      altGrup: alt.startsWith(grup.toLocaleLowerCase("tr-TR")) ? alt : "",
+      altGrup: /\d/.test(grup) || alt.startsWith(grup.toLocaleLowerCase("tr-TR")) ? alt : "",
     };
   }
   return out;
