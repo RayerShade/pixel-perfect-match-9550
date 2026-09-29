@@ -1,0 +1,116 @@
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+
+export const ANAHTARLAR = {
+  veri: "ders-takvim:yuklenen-veri",
+  secmeliler: "ders-takvim:secmeliler",
+  gizli: "ders-takvim:gizli-secmeliler",
+  amfi: "ders-takvim:manuel-amfi",
+  ayarlar: "ders-takvim:ayarlar",
+} as const;
+
+/** Herkes için ortak, sadece adminin yüklediği alanlar. */
+export const GENEL_ALANLAR = {
+  amfi: ["amfi", "secmeliOlaylari", "amfiAdlari", "amfiDosyalari"],
+  secmeli: ["genelSecmeliler", "secmeliDosya"],
+} as const;
+const GENEL_HEPSI: string[] = [...GENEL_ALANLAR.amfi, ...GENEL_ALANLAR.secmeli];
+
+export const BULUT_OLAY = "ders-takvim:bulut";
+
+let yukleniyor = false;
+let aktifKullanici: string | null = null;
+
+const oku = (k: string, v: unknown) => {
+  try {
+    const r = localStorage.getItem(k);
+    return r ? JSON.parse(r) : v;
+  } catch {
+    return v;
+  }
+};
+const sec = (o: Record<string, unknown>, alanlar: readonly string[], haric = false) =>
+  Object.fromEntries(Object.entries(o).filter(([k]) => alanlar.includes(k) !== haric));
+
+export function yerelTemizle() {
+  aktifKullanici = null;
+  Object.values(ANAHTARLAR).forEach((k) => localStorage.removeItem(k));
+  window.dispatchEvent(new Event("ders-takvim:veri"));
+  window.dispatchEvent(new Event(BULUT_OLAY));
+}
+
+/** Giriş sonrası: hesabın verilerini ve ortak dosyaları cihaza indirir. */
+export async function buluttanYukle(userId: string, ogrenciNo: string) {
+  yukleniyor = true;
+  try {
+    const [{ data: kisisel }, { data: genel }] = await Promise.all([
+      supabase.from("user_data").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("global_data").select("anahtar, veri"),
+    ]);
+    const veri: Record<string, unknown> = { dersler: null, amfi: null, ...((kisisel?.veri as object) ?? {}) };
+    for (const g of genel ?? []) Object.assign(veri, (g.veri as object) ?? {});
+    const ayar = { ...((kisisel?.ayarlar as Record<string, unknown>) ?? {}) };
+    const gizli = (ayar["__gizli"] as string[]) ?? [];
+    delete ayar["__gizli"];
+    if (!ayar["ogrenciNo"] && ogrenciNo) ayar["ogrenciNo"] = ogrenciNo;
+    localStorage.setItem(ANAHTARLAR.veri, JSON.stringify(veri));
+    localStorage.setItem(ANAHTARLAR.ayarlar, JSON.stringify(ayar));
+    localStorage.setItem(ANAHTARLAR.secmeliler, JSON.stringify(kisisel?.secmeliler ?? []));
+    localStorage.setItem(ANAHTARLAR.gizli, JSON.stringify(gizli));
+    localStorage.setItem(ANAHTARLAR.amfi, JSON.stringify(kisisel?.manuel_amfi ?? {}));
+    aktifKullanici = userId;
+  } finally {
+    yukleniyor = false;
+  }
+  window.dispatchEvent(new Event("ders-takvim:veri"));
+  window.dispatchEvent(new Event(BULUT_OLAY));
+}
+
+const zaman: Record<string, ReturnType<typeof setTimeout>> = {};
+function ertele(k: string, fn: () => Promise<void>) {
+  clearTimeout(zaman[k]);
+  zaman[k] = setTimeout(() => void fn().catch((e) => console.error("Buluta kaydedilemedi", e)), 500);
+}
+
+/** Öğrencinin kendi verilerini hesaba kaydeder. */
+export function kisiselKaydet() {
+  if (yukleniyor || !aktifKullanici) return;
+  const uid = aktifKullanici;
+  ertele("kisisel", async () => {
+    const veri = sec(oku(ANAHTARLAR.veri, {}), GENEL_HEPSI, true);
+    const ayarlar = { ...oku(ANAHTARLAR.ayarlar, {}), __gizli: oku(ANAHTARLAR.gizli, []) };
+    const { error } = await supabase.from("user_data").upsert({
+      user_id: uid,
+      veri: veri as Json,
+      ayarlar: ayarlar as Json,
+      secmeliler: oku(ANAHTARLAR.secmeliler, []) as Json,
+      manuel_amfi: oku(ANAHTARLAR.amfi, {}) as Json,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    const no = String(ayarlar.ogrenciNo ?? "").trim();
+    if (no) await supabase.from("profiles").update({ ogrenci_no: no }).eq("id", uid);
+  });
+}
+
+/** Ortak dosyaları (amfi / seçmeli) kaydeder — veritabanı yalnızca admine izin verir. */
+export function genelKaydet(anahtar: keyof typeof GENEL_ALANLAR) {
+  if (yukleniyor || !aktifKullanici) return;
+  const uid = aktifKullanici;
+  ertele(`genel-${anahtar}`, async () => {
+    const veri = sec(oku(ANAHTARLAR.veri, {}), GENEL_ALANLAR[anahtar]);
+    const { error } = await supabase
+      .from("global_data")
+      .upsert({ anahtar, veri: veri as Json, updated_by: uid, updated_at: new Date().toISOString() });
+    if (error) throw error;
+  });
+}
+
+export function degisenAlanlar(patch: object) {
+  const k = Object.keys(patch);
+  return {
+    kisisel: k.some((a) => !GENEL_HEPSI.includes(a)),
+    amfi: k.some((a) => (GENEL_ALANLAR.amfi as readonly string[]).includes(a)),
+    secmeli: k.some((a) => (GENEL_ALANLAR.secmeli as readonly string[]).includes(a)),
+  };
+}
