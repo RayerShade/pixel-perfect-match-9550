@@ -53,10 +53,9 @@ export interface HaftalikAmfiKaydi {
   manuallyConfirmed: boolean;
 }
 
-export const SECMELILER: Secmeli[] = [
-];
+export const SECMELILER: Secmeli[] = [];
 
-const AMFILER = ["Amfi I", "Amfi II", "Amfi III", "Amfi IV", "Morfoloji Amfisi"];
+export const DERSLER: Ders[] = [];
 
 /**
  * Sample "weekly amphitheater file" output. In the real app this comes from the
