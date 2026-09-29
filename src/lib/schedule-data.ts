@@ -209,18 +209,15 @@ export function secmeliGruplari(veri?: YuklenenVeri): SecmeliGrupDersi[] {
     const id = secId(grup, ad);
     map.set(id, { id, ad, grup, amfi: g.amfi, saat: g.saat, hoca: g.hoca, bilgi: g.bilgi });
   }
-  const sirali = [...(veri?.secmeliOlaylari ?? [])].sort((a, b) => a.date.localeCompare(b.date));
-  for (const o of sirali) {
+  // İsimler yalnızca genel seçmeli listesinden; haftalık amfi dosyası yalnız konum için kullanılır.
+  // Konum iki kaynakta farklıysa haftalık amfi programındaki tercih edilir.
+  for (const o of veri?.secmeliOlaylari ?? []) {
     const grup = saatler.indexOf(o.startTime) + 1;
     if (!grup) continue;
-    const ad = trBaslik(o.ad);
-    const var_ = [...map.values()].find((m) => m.grup === grup && secAnahtar(m.ad) === secAnahtar(ad));
-    if (var_) {
-      if (!var_.amfi) var_.amfi = o.amfi;
-      continue;
-    }
-    const id = secId(grup, ad);
-    map.set(id, { id, ad, grup, amfi: o.amfi, saat: o.startTime });
+    const var_ = [...map.values()].find(
+      (m) => m.grup === grup && secAnahtar(m.ad) === secAnahtar(trBaslik(o.ad)),
+    );
+    if (var_ && o.amfi && o.amfi !== var_.amfi) var_.amfi = o.amfi;
   }
   return [...map.values()].sort((a, b) => a.grup - b.grup || a.ad.localeCompare(b.ad, "tr"));
 }
