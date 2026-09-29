@@ -40,8 +40,8 @@ interface Hesap {
   admin: boolean;
   secmeliler: string[];
   ayarlar: Record<string, unknown>;
-  dosyalar: { yillik?: string; uygulama?: string; ogrenci?: string };
-  guncelleme?: string;
+  dosyalar: { yillik?: string | undefined; uygulama?: string | undefined; ogrenci?: string | undefined };
+  guncelleme?: string | undefined;
 }
 
 async function hesaplariGetir(): Promise<Hesap[]> {
