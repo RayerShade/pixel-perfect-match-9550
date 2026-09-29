@@ -45,6 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // "Beni hatırla" kapalıysa tarayıcı kapatılıp açıldığında oturumu kapat.
+    if (localStorage.getItem("ders-takvim:hatirla") === "0" && !sessionStorage.getItem("ders-takvim:oturum")) {
+      void supabase.auth.signOut();
+    }
     const kur = async (u: User | null) => {
       if (!u) {
         if (yuklenen.current) yerelTemizle();
