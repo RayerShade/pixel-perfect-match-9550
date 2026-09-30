@@ -4,7 +4,7 @@ import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { buluttanYukle, genelYenile, yerelTemizle } from "./bulut";
+import { buluttanYukle, genelYenile, listedenOgrenciAdi, yerelTemizle } from "./bulut";
 
 export interface Profil {
   id: string;
@@ -70,6 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const p = await hazirla(u);
         await buluttanYukle(u.id, p?.ogrenci_no ?? "", u.user_metadata ?? {});
+        // Ad soyad boşsa öğrenci listesinden otomatik doldur.
+        if (p && !p.ad_soyad && p.ogrenci_no) {
+          const ad = listedenOgrenciAdi(p.ogrenci_no);
+          if (ad) await hazirla(u, ad, p.ogrenci_no);
+        }
       } catch (e) {
         console.error(e);
       } finally {
