@@ -87,8 +87,10 @@ export function AppShell({
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Hesabındaki veriler yükleniyor…
         </div>
       ) : null}
-      {eksik ? <ProfilTamamla /> : null}
-      <DuyuruBandi />
+  const uyariGoster = hazir && user && profil && !eksik && !ayarlar.bilgilendirmeGordu;
+  {eksik ? <ProfilTamamla /> : null}
+  {uyariGoster ? <Bilgilendirme /> : null}
+  <DuyuruBandi />
 
       <main className="mx-auto max-w-6xl px-3 py-4 md:px-4 md:py-6">{children}</main>
 
