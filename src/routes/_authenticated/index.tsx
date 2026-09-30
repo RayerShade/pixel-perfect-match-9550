@@ -120,14 +120,6 @@ function Takvim() {
 
           <div className="flex shrink-0 items-center gap-2">
             <button
-              onClick={() => setEkle(true)}
-              aria-label="Ders ekle"
-              title="Ders ekle"
-              className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground sm:py-1.5 sm:text-xs"
-            >
-              <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Ekle</span>
-            </button>
-            <button
               onClick={() => setImlec(new Date())}
               className="rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent sm:py-1.5 sm:text-xs"
             >
@@ -232,6 +224,14 @@ function Takvim() {
         </div>
       </div>
 
+      <button
+        onClick={() => setEkle(true)}
+        aria-label="Ders ekle"
+        title="Kendi dersini ekle"
+        className="fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 md:bottom-8 md:right-8"
+      >
+        <Plus className="h-7 w-7" />
+      </button>
       {ekle ? <OzelDersFormu varsayilanTarih={isoDate(imlec)} onClose={() => setEkle(false)} /> : null}
       <DersDetay olay={secili} onClose={() => setSecili(null)} onAmfiSec={(k, a) => {
           ata(k, a);

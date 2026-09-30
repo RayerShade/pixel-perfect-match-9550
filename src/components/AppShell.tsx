@@ -5,13 +5,12 @@ import { DuyuruBandi } from "@/components/DuyuruBandi";
 import { DonemSecici, useDonemler } from "@/components/DonemSecici";
 import { useAyarlar } from "@/lib/store";
 import type { Dil } from "@/lib/program";
-import { CalendarDays, BookOpen, ListChecks, Building2, Settings, LogOut, ShieldCheck, Loader2 } from "lucide-react";
+import { CalendarDays, BookOpen, ListChecks, Settings, LogOut, ShieldCheck, Loader2 } from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Takvim", icon: CalendarDays },
   { to: "/dersler", label: "Dersler", icon: BookOpen },
   { to: "/secmeliler", label: "Seçmeliler", icon: ListChecks },
-  { to: "/amfi", label: "Haftalık Amfi", icon: Building2 },
   { to: "/ayarlar", label: "Ayarlar", icon: Settings },
 ] as const;
 

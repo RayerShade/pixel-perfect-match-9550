@@ -1,3 +1,4 @@
+import { SheetsTusu } from "@/components/SheetsTusu";
 import { useRef, useState } from "react";
 import { BookMarked, CalendarRange, FileSpreadsheet, FlaskConical, Trash2, Upload, Users } from "lucide-react";
 import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
@@ -73,6 +74,7 @@ function YuklemeKarti({
         <Upload className="h-3.5 w-3.5" />
         {yukleniyor ? "Okunuyor…" : "Excel dosyası seç"}
       </button>
+      <SheetsTusu className="mt-2" onDosya={async (f) => setMesaj({ ok: true, t: await onDosya(f) })} />
     </div>
   );
 }

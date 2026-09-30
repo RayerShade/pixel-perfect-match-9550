@@ -297,9 +297,6 @@ export function KisiselDegisiklikler() {
     <section className="rounded-2xl border border-border bg-surface p-4">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-bold">Kendi derslerim ve değişikliklerim</h2>
-        <button onClick={() => setEkle(true)} className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground">
-          <Plus className="h-3.5 w-3.5" /> Ders ekle
-        </button>
       </div>
       {!ozel.length && !duzen.length ? (
         <p className="mt-2 text-xs text-muted-foreground">Takvimdeki bir derse dokunarak saatini değiştirebilir ya da silebilirsin.</p>
