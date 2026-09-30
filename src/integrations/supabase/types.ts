@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      destek_mesajlari: {
+        Row: {
+          created_at: string
+          id: string
+          metin: string
+          talep_id: string
+          user_id: string
+          yonetici: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metin: string
+          talep_id: string
+          user_id?: string
+          yonetici?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metin?: string
+          talep_id?: string
+          user_id?: string
+          yonetici?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "destek_mesajlari_talep_id_fkey"
+            columns: ["talep_id"]
+            isOneToOne: false
+            referencedRelation: "destek_talepleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      destek_talepleri: {
+        Row: {
+          created_at: string
+          durum: string
+          id: string
+          konu: string
+          tur: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          durum?: string
+          id?: string
+          konu: string
+          tur?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          durum?: string
+          id?: string
+          konu?: string
+          tur?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       global_data: {
         Row: {
           anahtar: string
