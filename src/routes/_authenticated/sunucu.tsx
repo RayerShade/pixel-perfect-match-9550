@@ -129,18 +129,57 @@ function Kullanicilar() {
   const oku = useServerFn(tabloOku);
   const islem = useServerFn(kullaniciIslem);
   const ek = useServerFn(kullaniciEkIslem);
+  const olustur = useServerFn(kullaniciOlustur);
+  const duzenle = useServerFn(kullaniciDuzenle);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["sunucu-kul"], queryFn: () => getir() });
   const prof = useQuery({ queryKey: ["sunucu-tablo", "profiles"], queryFn: async () => JSON.parse(await oku({ data: { tablo: "profiles" } })) as { id: string; ad_soyad: string; ogrenci_no: string }[] });
   const rol = useQuery({ queryKey: ["sunucu-tablo", "user_roles"], queryFn: async () => JSON.parse(await oku({ data: { tablo: "user_roles" } })) as { user_id: string; role: string }[] });
+  const ud = useQuery({ queryKey: ["sunucu-tablo", "user_data"], queryFn: async () => JSON.parse(await oku({ data: { tablo: "user_data" } })) as { user_id: string; ayarlar: Record<string, unknown> }[] });
   const [ara, setAra] = useState("");
   const [filtre, setFiltre] = useState<"hepsi" | "onaysiz" | "yasakli" | "admin" | "hic">("hepsi");
   const [sira, setSira] = useState<"olusturma" | "sonGiris" | "email">("olusturma");
   const [link, setLink] = useState<{ ad: string; url: string } | null>(null);
+  const [yeni, setYeni] = useState(false);
+  const [duz, setDuz] = useState<string | null>(null);
 
   const profMap = useMemo(() => new Map((prof.data ?? []).map((p) => [p.id, p])), [prof.data]);
+  const ayarMap = useMemo(() => new Map((ud.data ?? []).map((x) => [x.user_id, x.ayarlar ?? {}])), [ud.data]);
   const adminler = useMemo(() => new Set((rol.data ?? []).filter((r) => r.role === "admin").map((r) => r.user_id)), [rol.data]);
   const yenile = () => { void qc.invalidateQueries({ queryKey: ["sunucu-kul"] }); void qc.invalidateQueries({ queryKey: ["sunucu-tablo"] }); void qc.invalidateQueries({ queryKey: ["sunucu-ozet"] }); };
+
+  const yeniKaydet = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    try {
+      await olustur({ data: { email: String(f.get("email") ?? ""), sifre: String(f.get("sifre") ?? ""), adSoyad: String(f.get("ad") ?? ""), ogrenciNo: String(f.get("no") ?? "") } });
+      toast.success("Hesap oluşturuldu"); setYeni(false); yenile();
+    } catch (err) { hata(err); }
+  };
+  const duzKaydet = async (u: Kul, e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    try {
+      await duzFn(u, f);
+      toast.success("Kaydedildi"); setDuz(null); yenile();
+    } catch (err) { hata(err); }
+  };
+  const duzFn = (u: Kul, f: FormData) => {
+    const p = profMap.get(u.id);
+    const ay = ayarMap.get(u.id) ?? {};
+    const val = (k: string) => String(f.get(k) ?? "").trim();
+    return duzenle({
+      data: {
+        userId: u.id,
+        email: val("email") && val("email") !== u.email ? val("email") : undefined,
+        sifre: val("sifre") || undefined,
+        adSoyad: val("ad") !== (p?.ad_soyad ?? "") ? val("ad") : undefined,
+        ogrenciNo: val("no") !== (p?.ogrenci_no ?? "") ? val("no") : undefined,
+        grup: val("grup") !== String(ay.grup ?? "") ? val("grup") : undefined,
+        altGrup: val("altGrup") !== String(ay.altGrup ?? "") ? val("altGrup") : undefined,
+      },
+    });
+  };
 
   const yap = async (u: Kul, i: "onayla" | "yasakla" | "yasakKaldir" | "cikisYaptir", ad: string) => {
     if (!confirm(`${u.email}: ${ad}?`)) return;
