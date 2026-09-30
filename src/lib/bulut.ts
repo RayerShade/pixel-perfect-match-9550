@@ -40,6 +40,18 @@ export function yerelTemizle() {
   window.dispatchEvent(new Event(BULUT_OLAY));
 }
 
+/** Yüklenen öğrenci listesinden numaraya göre ad soyad bulur (liste yoksa boş döner). */
+export function listedenOgrenciAdi(no: string): string {
+  try {
+    const veri = oku(ANAHTARLAR.veri, {}) as { ogrenciler?: Record<string, { ad?: string; soyad?: string }> };
+    const k = no.replace(/\D/g, "").replace(/^0+/, "");
+    const o = k ? veri.ogrenciler?.[k] : undefined;
+    return o ? `${o.ad ?? ""} ${o.soyad ?? ""}`.trim() : "";
+  } catch {
+    return "";
+  }
+}
+
 /** Giriş sonrası: hesabın verilerini ve ortak dosyaları cihaza indirir. */
 export async function buluttanYukle(userId: string, ogrenciNo: string, meta: Record<string, unknown> = {}) {
   yukleniyor = true;
