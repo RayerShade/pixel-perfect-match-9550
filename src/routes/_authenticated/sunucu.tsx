@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { Activity, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  TABLOLAR, dosyaIslem, dosyaListele, kullaniciEkIslem, kullaniciIslem, satirKaydet, satirSil,
-  sunucuKullanicilar, sunucuOzet, tabloOku, tamYedek, yedekGeriYukle,
+  TABLOLAR, dosyaIslem, dosyaListele, kullaniciDuzenle, kullaniciEkIslem, kullaniciIslem, kullaniciOlustur,
+  satirKaydet, satirSil, sunucuKullanicilar, sunucuOzet, tabloOku, tamYedek, yedekGeriYukle,
 } from "@/lib/sunucu.functions";
 
 export const Route = createFileRoute("/_authenticated/sunucu")({
