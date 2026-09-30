@@ -29,6 +29,7 @@ export function AppShell({
   // Dönem sorulması için admin en az bir dönem eklemiş olmalı
   const donemEksik = donemler.length > 0 && (!ayarlar.donemId || !donemler.some((d) => d.id === ayarlar.donemId) || !ayarlar.dil);
   const eksik = hazir && user && profil && (!profil.ad_soyad || !profil.ogrenci_no || donemEksik);
+  const uyariGoster = hazir && user && profil && !eksik && !ayarlar.bilgilendirmeGordu;
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-surface/90 backdrop-blur">
@@ -87,10 +88,9 @@ export function AppShell({
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Hesabındaki veriler yükleniyor…
         </div>
       ) : null}
-  const uyariGoster = hazir && user && profil && !eksik && !ayarlar.bilgilendirmeGordu;
-  {eksik ? <ProfilTamamla /> : null}
-  {uyariGoster ? <Bilgilendirme /> : null}
-  <DuyuruBandi />
+      {eksik ? <ProfilTamamla /> : null}
+      {uyariGoster ? <Bilgilendirme /> : null}
+      <DuyuruBandi />
 
       <main className="mx-auto max-w-6xl px-3 py-4 md:px-4 md:py-6">{children}</main>
 
