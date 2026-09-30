@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { listedenOgrenciAdi } from "@/lib/bulut";
 import { DuyuruBandi } from "@/components/DuyuruBandi";
