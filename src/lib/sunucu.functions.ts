@@ -80,7 +80,7 @@ export const satirSil = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ tablo: tabloSema, anahtar: z.string().min(1) }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await yetkili(context as never);
-    const { error } = await db.from(data.tablo).delete().eq(TABLOLAR[data.tablo], data.anahtar);
+    const { error } = await db.from(data.tablo).delete().eq(TABLOLAR[data.tablo] as never, data.anahtar as never);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
