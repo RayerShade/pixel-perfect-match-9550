@@ -166,8 +166,9 @@ function Kullanicilar() {
   };
   const duzFn = (u: Kul, f: FormData) => {
     const p = profMap.get(u.id);
-    const ay = ayarMap.get(u.id) ?? {};
+    const elle = (ayarMap.get(u.id) ?? {}).grupElle as { grup?: string; altGrup?: string } | null | undefined;
     const val = (k: string) => String(f.get(k) ?? "").trim();
+    const grupDegisti = val("grup") !== String(elle?.grup ?? "") || val("altGrup") !== String(elle?.altGrup ?? "");
     return duzenle({
       data: {
         userId: u.id,
@@ -175,8 +176,8 @@ function Kullanicilar() {
         sifre: val("sifre") || undefined,
         adSoyad: val("ad") !== (p?.ad_soyad ?? "") ? val("ad") : undefined,
         ogrenciNo: val("no") !== (p?.ogrenci_no ?? "") ? val("no") : undefined,
-        grup: val("grup") !== String(ay.grup ?? "") ? val("grup") : undefined,
-        altGrup: val("altGrup") !== String(ay.altGrup ?? "") ? val("altGrup") : undefined,
+        grup: grupDegisti ? val("grup") : undefined,
+        altGrup: grupDegisti ? val("altGrup") : undefined,
       },
     });
   };

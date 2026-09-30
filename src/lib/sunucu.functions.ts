@@ -237,8 +237,8 @@ export const kullaniciDuzenle = createServerFn({ method: "POST" })
     if (data.grup !== undefined || data.altGrup !== undefined) {
       const { data: mevcut } = await db.from("user_data").select("ayarlar").eq("user_id", data.userId).maybeSingle();
       const ayarlar = { ...((mevcut?.ayarlar ?? {}) as Record<string, unknown>) };
-      if (data.grup !== undefined) ayarlar.grup = data.grup;
-      if (data.altGrup !== undefined) ayarlar.altGrup = data.altGrup;
+      const grup = (data.grup ?? "").trim();
+      ayarlar.grupElle = grup ? { grup, altGrup: (data.altGrup ?? "").trim() } : null;
       const { error } = await db.from("user_data").upsert({ user_id: data.userId, ayarlar }, { onConflict: "user_id" });
       if (error) throw new Error(error.message);
     }
