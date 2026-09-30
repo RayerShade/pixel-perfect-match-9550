@@ -65,9 +65,18 @@ export async function buluttanYukle(userId: string, ogrenciNo: string, meta: Rec
     const gizli = (ayar["__gizli"] as string[]) ?? [];
     delete ayar["__gizli"];
     if (!ayar["ogrenciNo"] && ogrenciNo) ayar["ogrenciNo"] = ogrenciNo;
-    // Kayıtta seçilen dönem/dil
-    if (!ayar["donemId"] && meta["donem_id"]) { ayar["donemId"] = meta["donem_id"]; kaydet = true; }
-    if (!ayar["dil"] && meta["dil"]) { ayar["dil"] = meta["dil"]; kaydet = true; }
+    // Dönem/dil: öğrenci numarası hangi dönemin öğrenci listesinde varsa oraya yerleştir.
+    const noK = String(ayar["ogrenciNo"] ?? ogrenciNo ?? "").replace(/\D/g, "").replace(/^0+/, "");
+    const eslesen = noK
+      ? (genel ?? []).find((g) => g.anahtar.startsWith("program:") && (g.veri as { ogrenciler?: Record<string, unknown> })?.ogrenciler?.[noK])
+      : undefined;
+    if (eslesen) {
+      const [, id, dil] = eslesen.anahtar.split(":");
+      if (ayar["donemId"] !== id || ayar["dil"] !== dil) { ayar["donemId"] = id; ayar["dil"] = dil; kaydet = true; }
+    } else {
+      if (!ayar["donemId"] && meta["donem_id"]) { ayar["donemId"] = meta["donem_id"]; kaydet = true; }
+      if (!ayar["dil"] && meta["dil"]) { ayar["dil"] = meta["dil"]; kaydet = true; }
+    }
     const prog = ayar["donemId"] && ayar["dil"] ? programAnahtari(String(ayar["donemId"]), ayar["dil"] as Dil) : "";
     const veri: Record<string, unknown> = { dersler: null, amfi: null };
     for (const g of genel ?? []) {
