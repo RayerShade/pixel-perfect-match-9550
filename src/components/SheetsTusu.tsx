@@ -11,7 +11,11 @@ export function SheetsTusu({ onDosya, className = "" }: { onDosya: (f: File) => 
     if (!url?.trim()) return;
     setBekle(true);
     try {
-      const { b64 } = await sheetsIndir({ data: { url: url.trim() } });
+      const { b64, hata } = await sheetsIndir({ data: { url: url.trim() } });
+      if (!b64) {
+        toast.error(hata ?? "Sheets dosyası alınamadı.");
+        return;
+      }
       const bin = atob(b64);
       const arr = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
