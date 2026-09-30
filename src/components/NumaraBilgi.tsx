@@ -46,7 +46,7 @@ export function NumaraBilgi({ sonuc, yukleniyor }: { sonuc: NumaraSonuc | null; 
       <p className="text-muted-foreground">
         {[sonuc.donem, sonuc.dil === "en" ? "İngilizce" : sonuc.dil === "tr" ? "Türkçe" : "", sonuc.grup ? `Grup ${sonuc.grup}` : ""].filter(Boolean).join(" · ")}
       </p>
-      <p className="mt-1 text-[11px] text-muted-foreground">Bu sen değilsen numaranı kontrol et. Kayıttan sonra numara değiştirilemez.</p>
+      <p className="mt-1 text-[11px] text-muted-foreground">Bu sen değilsen numaranı kontrol et. Kayıttan sonra numara yetkili izni olmadan değiştirilemez.</p>
     </div>
   );
 }
