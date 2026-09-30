@@ -288,8 +288,8 @@ function Kullanicilar() {
                     <label className="text-xs">Öğrenci no<input name="no" defaultValue={p?.ogrenci_no ?? ""} className={`${giris} mt-0.5 w-full`} /></label>
                     <label className="text-xs">E-posta<input name="email" type="email" defaultValue={u.email} className={`${giris} mt-0.5 w-full`} /></label>
                     <label className="text-xs">Yeni şifre (boş = değişmez)<input name="sifre" minLength={6} placeholder="••••••" className={`${giris} mt-0.5 w-full`} /></label>
-                    <label className="text-xs">Grup<input name="grup" defaultValue={String((ayarMap.get(u.id) ?? {}).grup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
-                    <label className="text-xs">Alt grup<input name="altGrup" defaultValue={String((ayarMap.get(u.id) ?? {}).altGrup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Grup (boş = listeden otomatik)<input name="grup" defaultValue={String(((ayarMap.get(u.id) ?? {}).grupElle as { grup?: string } | null)?.grup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Alt grup<input name="altGrup" defaultValue={String(((ayarMap.get(u.id) ?? {}).grupElle as { altGrup?: string } | null)?.altGrup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
                     <div className="flex items-end sm:col-span-3"><button type="submit" className={ana}>Kaydet</button></div>
                   </form>
                 ) : null}
