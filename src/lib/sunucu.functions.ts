@@ -11,7 +11,8 @@ async function yetkili(ctx: { supabase: { rpc: (f: "orijinal_admin_mi") => Promi
   const { data } = await ctx.supabase.rpc("orijinal_admin_mi");
   if (!data) throw new Error("Yalnızca süper admin.");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return supabaseAdmin as any as typeof supabaseAdmin & { from: (t: string) => any };
 }
 
 export const sunucuKullanicilar = createServerFn({ method: "POST" })
@@ -59,7 +60,7 @@ export const tabloOku = createServerFn({ method: "POST" })
     const db = await yetkili(context as never);
     const { data: rows, error } = await db.from(data.tablo).select("*").limit(1000);
     if (error) throw new Error(error.message);
-    return JSON.parse(JSON.stringify(rows)) as Record<string, unknown>[];
+    return JSON.stringify(rows ?? []);
   });
 
 export const satirKaydet = createServerFn({ method: "POST" })

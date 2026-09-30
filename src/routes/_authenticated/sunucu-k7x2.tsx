@@ -81,7 +81,7 @@ function Tablo({ tablo }: { tablo: keyof typeof TABLOLAR }) {
   const oku = useServerFn(tabloOku);
   const kaydet = useServerFn(satirKaydet);
   const sil = useServerFn(satirSil);
-  const q = useQuery({ queryKey: ["sunucu-tablo", tablo], queryFn: () => oku({ data: { tablo } }) });
+  const q = useQuery({ queryKey: ["sunucu-tablo", tablo], queryFn: async () => JSON.parse(await oku({ data: { tablo } })) as Record<string, unknown>[] });
   const pk = TABLOLAR[tablo];
   const [ara, setAra] = useState("");
   const [duzenle, setDuzenle] = useState<{ metin: string; yeni: boolean } | null>(null);
