@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { TABLOLAR, dosyaIslem, dosyaListele, kullaniciIslem, satirKaydet, satirSil, sunucuKullanicilar, tabloOku } from "@/lib/sunucu.functions";
 
-export const Route = createFileRoute("/_authenticated/sunucu-k7x2")({
+export const Route = createFileRoute("/_authenticated/sunucu")({
   beforeLoad: async () => {
     const { data } = await supabase.rpc("orijinal_admin_mi");
     if (!data) throw redirect({ to: "/" });
