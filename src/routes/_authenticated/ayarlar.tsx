@@ -35,6 +35,10 @@ function Ayarlar() {
   const ad = ogrenci ? `${ogrenci.ad} ${ogrenci.soyad}` : "";
   const grup = ogrenci ? [ogrenci.grup, ogrenci.altGrup].filter(Boolean).join(" / ") : "";
   const donem = donemBilgisi(veri);
+  const { data: donemler = [] } = useDonemler();
+  const donemAdi = donemler.find((d) => d.id === ayarlar.donemId)?.ad ?? "";
+  const dilEtiket = ayarlar.dil ? DIL_ETIKET[ayarlar.dil] : "";
+
   // Ad, grup ve dönem yüklenen dosyalardan gelir; bulununca tercih olarak da kaydedilir.
   useEffect(() => {
     const patch: Partial<Ayarlar> = {};
