@@ -7,6 +7,8 @@ import type { Json } from "@/integrations/supabase/types";
 import { yillikProgramOku } from "@/lib/excel-import";
 import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
 import { ogrenciBul } from "@/lib/schedule-data";
+import { useServerFn } from "@tanstack/react-start";
+import { hesapGuncelle } from "@/lib/admin.functions";
 
 interface Secenek {
   id: string;
@@ -30,6 +32,22 @@ export function HesapDuzenle({
 }) {
   const [secim, setSecim] = useState<string[]>(secili);
   const [kaydediliyor, setKaydediliyor] = useState(false);
+  const guncelle = useServerFn(hesapGuncelle);
+  const [yeniEmail, setYeniEmail] = useState("");
+  const [yeniSifre, setYeniSifre] = useState("");
+  const hesapKaydet = async (alan: "email" | "sifre") => {
+    const deger = alan === "email" ? yeniEmail.trim() : yeniSifre;
+    if (!deger) return;
+    if (!confirm(alan === "email" ? `E-posta "${deger}" olarak değiştirilsin mi?` : "Şifre değiştirilsin mi?")) return;
+    try {
+      await guncelle({ data: { userId, [alan]: deger } });
+      toast.success(alan === "email" ? "E-posta değiştirildi." : "Şifre değiştirildi.");
+      alan === "email" ? setYeniEmail("") : setYeniSifre("");
+      onKaydedildi();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Değiştirilemedi.");
+    }
+  };
   const gruplar = [1, 2, 3].map((g) => ({ g, liste: secenekler.filter((s) => s.grup === g) })).filter((x) => x.liste.length);
   const grupsuz = secenekler.filter((s) => !s.grup);
 
@@ -113,7 +131,16 @@ export function HesapDuzenle({
 
   return (
     <div className="space-y-3 rounded-xl border border-border bg-surface p-3">
-      <p className="font-semibold">Seçmelilerini düzenle</p>
+      <p className="font-semibold">Giriş bilgileri</p>
+      <div className="flex gap-2">
+        <input type="email" placeholder="Yeni e-posta" value={yeniEmail} onChange={(e) => setYeniEmail(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2 py-1.5" />
+        <button onClick={() => void hesapKaydet("email")} className="rounded-lg border border-border px-3 py-1.5 font-semibold hover:bg-accent">E-postayı değiştir</button>
+      </div>
+      <div className="flex gap-2">
+        <input type="text" placeholder="Yeni şifre (en az 6 karakter)" minLength={6} value={yeniSifre} onChange={(e) => setYeniSifre(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2 py-1.5" />
+        <button onClick={() => void hesapKaydet("sifre")} disabled={yeniSifre.length > 0 && yeniSifre.length < 6} className="rounded-lg border border-border px-3 py-1.5 font-semibold hover:bg-accent disabled:opacity-60">Şifreyi değiştir</button>
+      </div>
+      <p className="pt-2 font-semibold">Seçmelilerini düzenle</p>
       {secenekler.length === 0 ? <p className="text-muted-foreground">Seçmeli listesi yüklenmemiş.</p> : null}
       {gruplar.map(({ g, liste }) => (
         <label key={g} className="block">
