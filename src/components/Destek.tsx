@@ -19,7 +19,14 @@ export function useTalepler() {
     setListe((data ?? []) as Talep[]);
     setY(false);
   };
-  useEffect(() => { void yenile(); }, []);
+  useEffect(() => {
+    void yenile();
+    const kanal = supabase
+      .channel(`talepler-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "destek_talepleri" }, () => void yenile())
+      .subscribe();
+    return () => { void supabase.removeChannel(kanal); };
+  }, []);
   return { liste, yukleniyor, yenile };
 }
 
@@ -62,7 +69,14 @@ export function TalepSohbet({ talep, yonetici, onDegisti }: { talep: Talep; yone
     const { data } = await supabase.from("destek_mesajlari").select("*").eq("talep_id", talep.id).order("created_at");
     setMesajlar((data ?? []) as Mesaj[]);
   };
-  useEffect(() => { void yukle(); }, [talep.id]);
+  useEffect(() => {
+    void yukle();
+    const kanal = supabase
+      .channel(`mesaj-${talep.id}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "destek_mesajlari", filter: `talep_id=eq.${talep.id}` }, () => void yukle())
+      .subscribe();
+    return () => { void supabase.removeChannel(kanal); };
+  }, [talep.id]);
   const gonder = async () => {
     if (!metin.trim()) return;
     const { data: u } = await supabase.auth.getUser();

@@ -140,3 +140,15 @@ export function degisenAlanlar(patch: object) {
     secmeli: k.some((a) => (GENEL_ALANLAR.secmeli as readonly string[]).includes(a)),
   };
 }
+
+/** Ortak dosyalar (amfi, seçmeli, öğrencinin dönem programı) değişince yeniden indirir. */
+export async function genelYenile() {
+  const ayar = oku(ANAHTARLAR.ayarlar, {}) as Record<string, unknown>;
+  const prog = ayar["donemId"] && ayar["dil"] ? programAnahtari(String(ayar["donemId"]), ayar["dil"] as Dil) : "";
+  const { data } = await supabase.from("global_data").select("anahtar, veri").in("anahtar", ["amfi", "secmeli", prog].filter(Boolean));
+  const veri: Record<string, unknown> = { ...sec(oku(ANAHTARLAR.veri, {}), GENEL_HEPSI, true), dersler: null, amfi: null };
+  for (const g of data ?? []) Object.assign(veri, (g.veri as object) ?? {});
+  localStorage.setItem(ANAHTARLAR.veri, JSON.stringify(veri));
+  window.dispatchEvent(new Event("ders-takvim:veri"));
+  window.dispatchEvent(new Event(BULUT_OLAY));
+}
