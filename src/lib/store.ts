@@ -43,6 +43,8 @@ export interface Ayarlar {
   onlineDersAyarlari: Record<string, "goster" | "gizle" | "cakismayan">;
   /** Takvimde hiç gösterilmeyecek seçmeli grupları (1-3). */
   gizliSecmeliGruplari: number[];
+  /** İlk girişte gösterilen bilgilendirme metni bir kez görüldü mü. */
+  bilgilendirmeGordu?: boolean;
   donemId?: string | undefined;
   dil?: Dil | undefined;
   ozelDersler?: OzelDers[];
