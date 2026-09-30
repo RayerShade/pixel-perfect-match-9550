@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { Plus, RotateCcw, X } from "lucide-react";
 import { addDays, isoDate } from "@/lib/date-utils";
 import type { Ders, DersOlayi } from "@/lib/schedule-data";
 import { useAyarlar, type Ayarlar, type DersDuzeni, type OzelDers, type Tekrar } from "@/lib/store";
