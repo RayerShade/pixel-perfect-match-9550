@@ -5,7 +5,7 @@ import { DuyuruBandi } from "@/components/DuyuruBandi";
 import { DonemSecici, useDonemler } from "@/components/DonemSecici";
 import { useAyarlar } from "@/lib/store";
 import type { Dil } from "@/lib/program";
-import { CalendarDays, BookOpen, ListChecks, Settings, LogOut, ShieldCheck, Loader2 } from "lucide-react";
+import { CalendarDays, BookOpen, ListChecks, Settings, LogOut, ShieldCheck, Loader2, Info } from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Takvim", icon: CalendarDays },
@@ -29,6 +29,7 @@ export function AppShell({
   // Dönem sorulması için admin en az bir dönem eklemiş olmalı
   const donemEksik = donemler.length > 0 && (!ayarlar.donemId || !donemler.some((d) => d.id === ayarlar.donemId) || !ayarlar.dil);
   const eksik = hazir && user && profil && (!profil.ad_soyad || !profil.ogrenci_no || donemEksik);
+  const uyariGoster = hazir && user && profil && !eksik && !ayarlar.bilgilendirmeGordu;
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-surface/90 backdrop-blur">
@@ -88,6 +89,7 @@ export function AppShell({
         </div>
       ) : null}
       {eksik ? <ProfilTamamla /> : null}
+      {uyariGoster ? <Bilgilendirme /> : null}
       <DuyuruBandi />
 
       <main className="mx-auto max-w-6xl px-3 py-4 md:px-4 md:py-6">{children}</main>
@@ -141,6 +143,30 @@ function ProfilTamamla() {
           {bekle ? "Kaydediliyor…" : "Kaydet"}
         </button>
       </form>
+    </div>
+  );
+}
+
+const BILGILENDIRME_METNI =
+  "Bu site İstanbul Üniversitesi'ne ait değildir, resmi bir uygulama değildir; gönüllü bir öğrenci projesidir. Takvimdeki bilgiler yüklenen program dosyalarından oluşturulur ve her zaman birebir doğru olmayabilir; kritik saat, derslik veya değişiklikler için resmi duyuruları takip et.";
+
+function Bilgilendirme() {
+  const { guncelle } = useAyarlar();
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 px-4">
+      <div className="w-full max-w-sm space-y-3 rounded-2xl border border-border bg-surface p-5 text-center">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
+          <Info className="h-6 w-6" />
+        </div>
+        <h2 className="text-base font-bold">Hoş geldin!</h2>
+        <p className="text-left text-xs leading-relaxed text-muted-foreground">{BILGILENDIRME_METNI}</p>
+        <button
+          onClick={() => guncelle({ bilgilendirmeGordu: true })}
+          className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+        >
+          Anladım
+        </button>
+      </div>
     </div>
   );
 }
