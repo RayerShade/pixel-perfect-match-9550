@@ -151,6 +151,8 @@ function ProfilTamamla() {
   );
 }
 
+const BILGILENDIRME_BEKLEME = 5;
+
 const BILGILENDIRME_MADDELERI = [
   "Bu site İstanbul Üniversitesi'ne ait değildir; resmi bir uygulama değildir, gönüllü bir öğrenci projesidir.",
   "Takvimdeki bilgiler yüklenen program dosyalarından oluşturulur ve her zaman birebir doğru olmayabilir; kritik saat, derslik veya değişiklikler için resmi duyuruları takip et.",
