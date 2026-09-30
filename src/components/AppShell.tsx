@@ -28,10 +28,7 @@ export function AppShell({
 }) {
   const { user, isAdmin, profil, hazir, cikis } = useAuth();
   const { ayarlar } = useAyarlar();
-  const { data: donemler = [] } = useDonemler();
-  // Dönem sorulması için admin en az bir dönem eklemiş olmalı
-  const donemEksik = donemler.length > 0 && (!ayarlar.donemId || !donemler.some((d) => d.id === ayarlar.donemId) || !ayarlar.dil);
-  const eksik = hazir && user && profil && (!profil.ogrenci_no || donemEksik);
+  const eksik = hazir && user && profil && !profil.ogrenci_no;
   const uyariGoster = hazir && user && profil && !eksik && !ayarlar.bilgilendirmeGordu;
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -120,8 +117,6 @@ export function AppShell({
 function ProfilTamamla() {
   const { profil, profilTamamla } = useAuth();
   const { ayarlar, guncelle } = useAyarlar();
-  const [donemId, setDonemId] = useState(ayarlar.donemId ?? "");
-  const [dil, setDil] = useState<Dil | "">(ayarlar.dil ?? "");
   const [no, setNo] = useState(profil?.ogrenci_no ?? "");
   const [bekle, setBekle] = useState(false);
   return (
@@ -129,10 +124,9 @@ function ProfilTamamla() {
       <form
         onSubmit={async (e) => {
           e.preventDefault();
-          if (!no.trim() || !donemId || !dil) return;
+          if (!no.trim()) return;
           setBekle(true);
-          guncelle({ donemId, dil });
-          // Ad soyad öğrenci listesinden otomatik alınır; listede yoksa mevcut değer korunur.
+          guncelle({ ogrenciNo: no.trim() });
           const ad = profil?.ad_soyad || listedenOgrenciAdi(no.trim());
           await profilTamamla(ad, no.trim());
           setBekle(false);
@@ -140,10 +134,9 @@ function ProfilTamamla() {
         className="w-full max-w-sm space-y-3 rounded-2xl border border-border bg-surface p-5"
       >
         <h2 className="text-base font-bold">Profilini tamamla</h2>
-        <p className="text-xs text-muted-foreground">Devam etmek için öğrenci numaranı, dönemini ve Türkçe / İngilizce seçimini yap. Adın öğrenci listesinden otomatik alınır.</p>
+        <p className="text-xs text-muted-foreground">Devam etmek için öğrenci numaranı yaz. Dönemin, dilin ve adın öğrenci listelerinden otomatik bulunur.</p>
         <input required value={no} onChange={(e) => setNo(e.target.value)} placeholder="Öğrenci numarası" inputMode="numeric" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
-        <DonemSecici donemId={donemId} dil={dil} onDegis={(a, b) => { setDonemId(a); setDil(b); }} />
-        <button disabled={bekle || !donemId || !dil} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+        <button disabled={bekle || !no.trim()} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
           {bekle ? "Kaydediliyor…" : "Kaydet"}
         </button>
       </form>
