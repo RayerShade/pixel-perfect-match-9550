@@ -4,7 +4,7 @@ import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { buluttanYukle, yerelTemizle } from "./bulut";
+import { buluttanYukle, genelYenile, yerelTemizle } from "./bulut";
 
 export interface Profil {
   id: string;
@@ -84,6 +84,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     return () => sub.subscription.unsubscribe();
   }, [hazirla, router]);
+
+  // Admin ortak bir dosyayı değiştirince herkeste anında güncelle.
+  const uid = user?.id;
+  useEffect(() => {
+    if (!uid || !hazir) return;
+    let zamanlayici: ReturnType<typeof setTimeout> | undefined;
+    const kanal = supabase
+      .channel(`genel-${uid}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "global_data" }, () => {
+        clearTimeout(zamanlayici);
+        zamanlayici = setTimeout(() => void genelYenile().catch(console.error), 400);
+      })
+      .subscribe();
+    return () => { clearTimeout(zamanlayici); void supabase.removeChannel(kanal); };
+  }, [uid, hazir]);
 
   const profilTamamla = useCallback(
     async (ad: string, no: string) => {
