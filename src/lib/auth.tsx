@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setHazir(false);
       try {
         const p = await hazirla(u);
-        await buluttanYukle(u.id, p?.ogrenci_no ?? "");
+        await buluttanYukle(u.id, p?.ogrenci_no ?? "", u.user_metadata ?? {});
       } catch (e) {
         console.error(e);
       } finally {

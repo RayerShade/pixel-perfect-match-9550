@@ -1,6 +1,27 @@
 import type { YuklenenVeri } from "./schedule-data";
 import { useCallback, useEffect, useState } from "react";
-import { BULUT_OLAY, degisenAlanlar, genelKaydet, kisiselKaydet } from "./bulut";
+import { BULUT_OLAY, degisenAlanlar, genelKaydet, kisiselKaydet, programiYenile } from "./bulut";
+import type { Dil } from "./program";
+
+export type Tekrar = "yok" | "hafta" | "2hafta" | "ay";
+/** Öğrencinin kendi eklediği ders. */
+export interface OzelDers {
+  id: string;
+  ad: string;
+  yer: string;
+  not: string;
+  tarih: string; // ilk gün YYYY-MM-DD
+  startTime: string;
+  endTime: string;
+  tekrar: Tekrar;
+  bitis?: string | undefined; // tekrar son günü
+}
+/** Programdaki bir dersin öğrenci tarafından değiştirilmesi/silinmesi. */
+export interface DersDuzeni {
+  sil?: boolean;
+  startTime?: string;
+  endTime?: string;
+}
 
 const ELECTIVE_KEY = "ders-takvim:secmeliler";
 const GIZLI_KEY = "ders-takvim:gizli-secmeliler";
@@ -21,6 +42,11 @@ export interface Ayarlar {
   onlineDersAyarlari: Record<string, "goster" | "gizle" | "cakismayan">;
   /** Takvimde hiç gösterilmeyecek seçmeli grupları (1-3). */
   gizliSecmeliGruplari: number[];
+  donemId?: string | undefined;
+  dil?: Dil | undefined;
+  ozelDersler?: OzelDers[];
+  /** Anahtar: "bir:<olay key>" (tek seferlik) veya "hep:<ders adı>|<gün>|<saat>" (her hafta) */
+  dersDuzenleri?: Record<string, DersDuzeni>;
 }
 
 export const VARSAYILAN_AYARLAR: Ayarlar = {
@@ -158,6 +184,8 @@ export function useAyarlar() {
       const next = { ...prev, ...patch };
       window.localStorage.setItem(AYAR_KEY, JSON.stringify(next));
       kisiselKaydet();
+      if (("donemId" in patch && patch.donemId !== prev.donemId) || ("dil" in patch && patch.dil !== prev.dil))
+        setTimeout(() => void programiYenile(), 0);
       return next;
     });
   }, []);
