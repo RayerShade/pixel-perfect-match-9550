@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { Activity, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  TABLOLAR, dosyaIslem, dosyaListele, kullaniciEkIslem, kullaniciIslem, satirKaydet, satirSil,
-  sunucuKullanicilar, sunucuOzet, tabloOku, tamYedek, yedekGeriYukle,
+  TABLOLAR, dosyaIslem, dosyaListele, kullaniciDuzenle, kullaniciEkIslem, kullaniciIslem, kullaniciOlustur,
+  satirKaydet, satirSil, sunucuKullanicilar, sunucuOzet, tabloOku, tamYedek, yedekGeriYukle,
 } from "@/lib/sunucu.functions";
 
 export const Route = createFileRoute("/_authenticated/sunucu")({
@@ -129,18 +129,58 @@ function Kullanicilar() {
   const oku = useServerFn(tabloOku);
   const islem = useServerFn(kullaniciIslem);
   const ek = useServerFn(kullaniciEkIslem);
+  const olustur = useServerFn(kullaniciOlustur);
+  const duzenle = useServerFn(kullaniciDuzenle);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["sunucu-kul"], queryFn: () => getir() });
   const prof = useQuery({ queryKey: ["sunucu-tablo", "profiles"], queryFn: async () => JSON.parse(await oku({ data: { tablo: "profiles" } })) as { id: string; ad_soyad: string; ogrenci_no: string }[] });
   const rol = useQuery({ queryKey: ["sunucu-tablo", "user_roles"], queryFn: async () => JSON.parse(await oku({ data: { tablo: "user_roles" } })) as { user_id: string; role: string }[] });
+  const ud = useQuery({ queryKey: ["sunucu-tablo", "user_data"], queryFn: async () => JSON.parse(await oku({ data: { tablo: "user_data" } })) as { user_id: string; ayarlar: Record<string, unknown> }[] });
   const [ara, setAra] = useState("");
   const [filtre, setFiltre] = useState<"hepsi" | "onaysiz" | "yasakli" | "admin" | "hic">("hepsi");
   const [sira, setSira] = useState<"olusturma" | "sonGiris" | "email">("olusturma");
   const [link, setLink] = useState<{ ad: string; url: string } | null>(null);
+  const [yeni, setYeni] = useState(false);
+  const [duz, setDuz] = useState<string | null>(null);
 
   const profMap = useMemo(() => new Map((prof.data ?? []).map((p) => [p.id, p])), [prof.data]);
+  const ayarMap = useMemo(() => new Map((ud.data ?? []).map((x) => [x.user_id, x.ayarlar ?? {}])), [ud.data]);
   const adminler = useMemo(() => new Set((rol.data ?? []).filter((r) => r.role === "admin").map((r) => r.user_id)), [rol.data]);
   const yenile = () => { void qc.invalidateQueries({ queryKey: ["sunucu-kul"] }); void qc.invalidateQueries({ queryKey: ["sunucu-tablo"] }); void qc.invalidateQueries({ queryKey: ["sunucu-ozet"] }); };
+
+  const yeniKaydet = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    try {
+      await olustur({ data: { email: String(f.get("email") ?? ""), sifre: String(f.get("sifre") ?? ""), adSoyad: String(f.get("ad") ?? ""), ogrenciNo: String(f.get("no") ?? "") } });
+      toast.success("Hesap oluşturuldu"); setYeni(false); yenile();
+    } catch (err) { hata(err); }
+  };
+  const duzKaydet = async (u: Kul, e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    try {
+      await duzFn(u, f);
+      toast.success("Kaydedildi"); setDuz(null); yenile();
+    } catch (err) { hata(err); }
+  };
+  const duzFn = (u: Kul, f: FormData) => {
+    const p = profMap.get(u.id);
+    const elle = (ayarMap.get(u.id) ?? {})["grupElle"] as { grup?: string; altGrup?: string } | null | undefined;
+    const val = (k: string) => String(f.get(k) ?? "").trim();
+    const grupDegisti = val("grup") !== String(elle?.grup ?? "") || val("altGrup") !== String(elle?.altGrup ?? "");
+    return duzenle({
+      data: {
+        userId: u.id,
+        email: val("email") && val("email") !== u.email ? val("email") : undefined,
+        sifre: val("sifre") || undefined,
+        adSoyad: val("ad") !== (p?.ad_soyad ?? "") ? val("ad") : undefined,
+        ogrenciNo: val("no") !== (p?.ogrenci_no ?? "") ? val("no") : undefined,
+        grup: grupDegisti ? val("grup") : undefined,
+        altGrup: grupDegisti ? val("altGrup") : undefined,
+      },
+    });
+  };
 
   const yap = async (u: Kul, i: "onayla" | "yasakla" | "yasakKaldir" | "cikisYaptir", ad: string) => {
     if (!confirm(`${u.email}: ${ad}?`)) return;
@@ -172,9 +212,22 @@ function Kullanicilar() {
 
   return (
     <Kart baslik={`Kullanıcılar (${liste.length}/${q.data?.length ?? 0})`} sag={<>
+      <button className={ana} onClick={() => setYeni((v) => !v)}>{yeni ? "Kapat" : "+ Yeni kullanıcı"}</button>
       <button className={btn} onClick={csv}>CSV indir</button>
       <button className={btn} onClick={yenile}><RefreshCw className="h-3 w-3" />yenile</button>
     </>}>
+      {yeni ? (
+        <form onSubmit={(e) => void yeniKaydet(e)} className="mb-3 grid gap-2 rounded-lg border border-primary/40 bg-primary/5 p-3 sm:grid-cols-2 lg:grid-cols-4">
+          <input name="ad" placeholder="Ad soyad" className={giris} />
+          <input name="no" placeholder="Öğrenci no" className={giris} />
+          <input name="email" type="email" required placeholder="E-posta *" className={giris} />
+          <input name="sifre" required minLength={6} placeholder="Şifre (en az 6) *" className={giris} />
+          <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-4">
+            <button type="submit" className={ana}>Hesabı oluştur</button>
+            <span className="text-xs text-muted-foreground">E-posta otomatik onaylı açılır, öğrenci hemen girebilir.</span>
+          </div>
+        </form>
+      ) : null}
       <div className="mb-3 flex flex-wrap gap-2">
         <input value={ara} onChange={(e) => setAra(e.target.value)} placeholder="ad, no, e-posta, id ara" className={`${giris} w-64`} />
         <select value={filtre} onChange={(e) => setFiltre(e.target.value as typeof filtre)} className={giris}>
@@ -220,6 +273,7 @@ function Kullanicilar() {
                   <div><span className="text-muted-foreground">Durum: </span>{u.yasakli ? "yasaklı" : u.onayli ? "onaylı" : "onaysız"}</div>
                 </div>
                 <div className="flex flex-wrap gap-1">
+                  <button className={btn} onClick={() => setDuz(duz === u.id ? null : u.id)}>{duz === u.id ? "Düzenlemeyi kapat" : "Bilgileri düzenle"}</button>
                   {!u.onayli ? <button className={btn} onClick={() => void yap(u, "onayla", "onayla")}>E-postayı onayla</button> : null}
                   <button className={btn} onClick={() => void ekYap(u, "sifreLinki", "şifre sıfırlama bağlantısı")}>Şifre sıfırlama bağlantısı</button>
                   <button className={btn} onClick={() => void ekYap(u, "girisLinki", "giriş bağlantısı")}>Hesaba giriş bağlantısı</button>
@@ -228,6 +282,17 @@ function Kullanicilar() {
                   {u.yasakli ? <button className={btn} onClick={() => void yap(u, "yasakKaldir", "yasağı kaldır")}>Yasağı kaldır</button> : <button className={tehlike} onClick={() => void yap(u, "yasakla", "yasakla")}>Yasakla</button>}
                   <button className={tehlike} onClick={() => void ekYap(u, "sil", "sil")}>Hesabı sil</button>
                 </div>
+                {duz === u.id ? (
+                  <form onSubmit={(e) => void duzKaydet(u, e)} className="grid gap-2 rounded-lg border border-primary/40 bg-primary/5 p-3 sm:grid-cols-3">
+                    <label className="text-xs">Ad soyad<input name="ad" defaultValue={p?.ad_soyad ?? ""} className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Öğrenci no<input name="no" defaultValue={p?.ogrenci_no ?? ""} className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">E-posta<input name="email" type="email" defaultValue={u.email} className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Yeni şifre (boş = değişmez)<input name="sifre" minLength={6} placeholder="••••••" className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Grup (boş = listeden otomatik)<input name="grup" defaultValue={String(((ayarMap.get(u.id) ?? {})["grupElle"] as { grup?: string } | null)?.grup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Alt grup<input name="altGrup" defaultValue={String(((ayarMap.get(u.id) ?? {})["grupElle"] as { altGrup?: string } | null)?.altGrup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
+                    <div className="flex items-end sm:col-span-3"><button type="submit" className={ana}>Kaydet</button></div>
+                  </form>
+                ) : null}
               </div>
             </details>
           );

@@ -182,6 +182,69 @@ export const kullaniciEkIslem = createServerFn({ method: "POST" })
     return { link: l.properties?.action_link ?? null };
   });
 
+export const kullaniciOlustur = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    email: z.string().email().max(200),
+    sifre: z.string().min(6).max(100),
+    adSoyad: z.string().max(100).default(""),
+    ogrenciNo: z.string().max(30).default(""),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await yetkili(context as never);
+    const { data: u, error } = await db.auth.admin.createUser({
+      email: data.email, password: data.sifre, email_confirm: true,
+      user_metadata: { ad_soyad: data.adSoyad, ogrenci_no: data.ogrenciNo },
+    });
+    if (error) throw new Error(error.message);
+    const id = u.user.id;
+    await db.from("profiles").upsert({ id, email: data.email, ad_soyad: data.adSoyad, ogrenci_no: data.ogrenciNo }, { onConflict: "id" });
+    await db.from("user_data").upsert({ user_id: id }, { onConflict: "user_id" });
+    return { id };
+  });
+
+export const kullaniciDuzenle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    userId: z.string().uuid(),
+    email: z.string().email().max(200).optional(),
+    sifre: z.string().min(6).max(100).optional().or(z.literal("")),
+    adSoyad: z.string().max(100).optional(),
+    ogrenciNo: z.string().max(30).optional(),
+    grup: z.string().max(50).optional(),
+    altGrup: z.string().max(50).optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await yetkili(context as never);
+    if (data.userId === context.userId && (data.email || data.sifre)) throw new Error("Kendi e-posta/şifreni buradan değiştiremezsin.");
+    const g: Record<string, unknown> = {};
+    if (data.email) g["email"] = data.email;
+    if (data.sifre) g["password"] = data.sifre;
+    if (Object.keys(g).length) {
+      const { error } = await db.auth.admin.updateUserById(data.userId, g);
+      if (error) throw new Error(error.message);
+    }
+    if (data.adSoyad !== undefined || data.ogrenciNo !== undefined || data.email) {
+      const { data: mevcut } = await db.from("profiles").select("*").eq("id", data.userId).maybeSingle();
+      const { error } = await db.from("profiles").upsert({
+        id: data.userId,
+        email: data.email ?? mevcut?.email ?? "",
+        ad_soyad: data.adSoyad ?? mevcut?.ad_soyad ?? "",
+        ogrenci_no: data.ogrenciNo ?? mevcut?.ogrenci_no ?? "",
+      }, { onConflict: "id" });
+      if (error) throw new Error(error.message);
+    }
+    if (data.grup !== undefined || data.altGrup !== undefined) {
+      const { data: mevcut } = await db.from("user_data").select("ayarlar").eq("user_id", data.userId).maybeSingle();
+      const ayarlar = { ...((mevcut?.ayarlar ?? {}) as Record<string, unknown>) };
+      const grup = (data.grup ?? "").trim();
+      ayarlar["grupElle"] = grup ? { grup, altGrup: (data.altGrup ?? "").trim() } : null;
+      const { error } = await db.from("user_data").upsert({ user_id: data.userId, ayarlar: ayarlar as never }, { onConflict: "user_id" });
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
 export const tamYedek = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
