@@ -375,7 +375,7 @@ export function ProgramYonetimi() {
                     id: crypto.randomUUID(),
                     courseName: "",
                     instructor: "",
-                    courseType: "teorik",
+                    courseType: "teorik" as const,
                     dayOfWeek: 1,
                     startTime: "08:30",
                     endTime: "09:20",
