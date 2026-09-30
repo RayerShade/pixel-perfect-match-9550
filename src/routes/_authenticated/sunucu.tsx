@@ -272,6 +272,7 @@ function Kullanicilar() {
                   <div><span className="text-muted-foreground">Durum: </span>{u.yasakli ? "yasaklı" : u.onayli ? "onaylı" : "onaysız"}</div>
                 </div>
                 <div className="flex flex-wrap gap-1">
+                  <button className={btn} onClick={() => setDuz(duz === u.id ? null : u.id)}>{duz === u.id ? "Düzenlemeyi kapat" : "Bilgileri düzenle"}</button>
                   {!u.onayli ? <button className={btn} onClick={() => void yap(u, "onayla", "onayla")}>E-postayı onayla</button> : null}
                   <button className={btn} onClick={() => void ekYap(u, "sifreLinki", "şifre sıfırlama bağlantısı")}>Şifre sıfırlama bağlantısı</button>
                   <button className={btn} onClick={() => void ekYap(u, "girisLinki", "giriş bağlantısı")}>Hesaba giriş bağlantısı</button>
@@ -280,6 +281,17 @@ function Kullanicilar() {
                   {u.yasakli ? <button className={btn} onClick={() => void yap(u, "yasakKaldir", "yasağı kaldır")}>Yasağı kaldır</button> : <button className={tehlike} onClick={() => void yap(u, "yasakla", "yasakla")}>Yasakla</button>}
                   <button className={tehlike} onClick={() => void ekYap(u, "sil", "sil")}>Hesabı sil</button>
                 </div>
+                {duz === u.id ? (
+                  <form onSubmit={(e) => void duzKaydet(u, e)} className="grid gap-2 rounded-lg border border-primary/40 bg-primary/5 p-3 sm:grid-cols-3">
+                    <label className="text-xs">Ad soyad<input name="ad" defaultValue={p?.ad_soyad ?? ""} className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Öğrenci no<input name="no" defaultValue={p?.ogrenci_no ?? ""} className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">E-posta<input name="email" type="email" defaultValue={u.email} className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Yeni şifre (boş = değişmez)<input name="sifre" minLength={6} placeholder="••••••" className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Grup<input name="grup" defaultValue={String((ayarMap.get(u.id) ?? {}).grup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Alt grup<input name="altGrup" defaultValue={String((ayarMap.get(u.id) ?? {}).altGrup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
+                    <div className="flex items-end sm:col-span-3"><button type="submit" className={ana}>Kaydet</button></div>
+                  </form>
+                ) : null}
               </div>
             </details>
           );
