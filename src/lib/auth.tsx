@@ -1,3 +1,4 @@
+import type React from "react";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,7 +22,9 @@ interface AuthDurumu {
   cikis: () => Promise<void>;
 }
 
-const Ctx = createContext<AuthDurumu | null>(null);
+// Sayfa yeniden yüklenmeden kod güncellendiğinde aynı bağlam korunur (aksi halde "AuthProvider içinde" hatası).
+const g = globalThis as unknown as { __authCtx?: React.Context<AuthDurumu | null> };
+const Ctx = (g.__authCtx ??= createContext<AuthDurumu | null>(null));
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
