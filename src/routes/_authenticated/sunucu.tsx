@@ -3,8 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Activity, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
+import { Activity, CalendarRange, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ProgramYonetimi } from "@/components/ProgramYonetimi";
 import {
   TABLOLAR, dosyaIslem, dosyaListele, kullaniciDuzenle, kullaniciEkIslem, kullaniciIslem, kullaniciOlustur,
   satirKaydet, satirSil, sunucuKullanicilar, sunucuOzet, tabloOku, tamYedek, yedekGeriYukle,
@@ -23,6 +24,7 @@ type Sekme = "ozet" | "kullanicilar" | "donem" | "veri" | "dosyalar" | "duyuru" 
 const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "ozet", ad: "Özet", ikon: Activity },
   { id: "kullanicilar", ad: "Kullanıcılar", ikon: Users },
+  { id: "donem", ad: "Dönemler", ikon: CalendarRange },
   { id: "veri", ad: "Veritabanı", ikon: Database },
   { id: "dosyalar", ad: "Dosyalar", ikon: FileSpreadsheet },
   { id: "duyuru", ad: "Duyuru", ikon: Megaphone },
