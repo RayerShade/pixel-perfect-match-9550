@@ -2,6 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { DuyuruBandi } from "@/components/DuyuruBandi";
+import { DonemSecici, useDonemler } from "@/components/DonemSecici";
+import { useAyarlar } from "@/lib/store";
+import type { Dil } from "@/lib/program";
 import { CalendarDays, BookOpen, ListChecks, Building2, Settings, LogOut, ShieldCheck, Loader2 } from "lucide-react";
 
 const NAV = [
@@ -22,7 +25,11 @@ export function AppShell({
   children: ReactNode;
 }) {
   const { user, isAdmin, profil, hazir, cikis } = useAuth();
-  const eksik = hazir && user && profil && (!profil.ad_soyad || !profil.ogrenci_no);
+  const { ayarlar } = useAyarlar();
+  const { data: donemler = [] } = useDonemler();
+  // Dönem sorulması için admin en az bir dönem eklemiş olmalı
+  const donemEksik = donemler.length > 0 && (!ayarlar.donemId || !donemler.some((d) => d.id === ayarlar.donemId) || !ayarlar.dil);
+  const eksik = hazir && user && profil && (!profil.ad_soyad || !profil.ogrenci_no || donemEksik);
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-surface/90 backdrop-blur">
@@ -107,6 +114,9 @@ export function AppShell({
 
 function ProfilTamamla() {
   const { profil, profilTamamla } = useAuth();
+  const { ayarlar, guncelle } = useAyarlar();
+  const [donemId, setDonemId] = useState(ayarlar.donemId ?? "");
+  const [dil, setDil] = useState<Dil | "">(ayarlar.dil ?? "");
   const [ad, setAd] = useState(profil?.ad_soyad ?? "");
   const [no, setNo] = useState(profil?.ogrenci_no ?? "");
   const [bekle, setBekle] = useState(false);
@@ -115,18 +125,20 @@ function ProfilTamamla() {
       <form
         onSubmit={async (e) => {
           e.preventDefault();
-          if (!ad.trim() || !no.trim()) return;
+          if (!ad.trim() || !no.trim() || !donemId || !dil) return;
           setBekle(true);
-          await profilTamamla(ad.trim(), no.trim());
+          guncelle({ donemId, dil });
+          if (!profil?.ad_soyad || !profil?.ogrenci_no) await profilTamamla(ad.trim(), no.trim());
           setBekle(false);
         }}
         className="w-full max-w-sm space-y-3 rounded-2xl border border-border bg-surface p-5"
       >
         <h2 className="text-base font-bold">Profilini tamamla</h2>
-        <p className="text-xs text-muted-foreground">Devam etmek için ad soyadını ve öğrenci numaranı yaz.</p>
+        <p className="text-xs text-muted-foreground">Devam etmek için bilgilerini, dönemini ve Türkçe / İngilizce seçimini yap.</p>
         <input required value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Ad soyad" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
         <input required value={no} onChange={(e) => setNo(e.target.value)} placeholder="Öğrenci numarası" inputMode="numeric" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
-        <button disabled={bekle} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+        <DonemSecici donemId={donemId} dil={dil} onDegis={(a, b) => { setDonemId(a); setDil(b); }} />
+        <button disabled={bekle || !donemId || !dil} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
           {bekle ? "Kaydediliyor…" : "Kaydet"}
         </button>
       </form>

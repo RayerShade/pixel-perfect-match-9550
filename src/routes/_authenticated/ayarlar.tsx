@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
+import { DonemSecici } from "@/components/DonemSecici";
+import { KisiselDegisiklikler } from "@/components/OzelDersler";
 import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/store";
 import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
 
@@ -52,6 +54,17 @@ function Ayarlar() {
         <section className="rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-bold">Öğrenci Bilgileri</h2>
           <div className="mt-3 space-y-3">
+            <div>
+              <span className="text-xs text-muted-foreground">Dönem ve dil</span>
+              <div className="mt-1">
+                <DonemSecici
+                  donemId={ayarlar.donemId ?? ""}
+                  dil={ayarlar.dil ?? ""}
+                  onDegis={(donemId, dil) => guncelle({ donemId, dil: dil || undefined })}
+                />
+              </div>
+              <span className="mt-1 block text-[11px] text-muted-foreground">Ders programı, uygulamalar ve öğrenci listesi seçtiğin döneme göre otomatik gelir.</span>
+            </div>
             <label className="block">
               <span className="text-xs text-muted-foreground">Öğrenci numarası</span>
               <input
@@ -63,7 +76,7 @@ function Ayarlar() {
               />
               <span className="mt-1 block text-[11px] text-muted-foreground">
                 {!veri.ogrenciler
-                  ? "Önce Haftalık Amfi sayfasından öğrenci listesini yükle."
+                  ? "Bu dönemin öğrenci listesi henüz eklenmedi."
                   : ogrenci
                     ? `✓ ${ogrenci.ad} ${ogrenci.soyad} · Grup ${ogrenci.grup} · Alt grup ${ogrenci.altGrup || "—"}`
                     : ayarlar.ogrenciNo
@@ -80,7 +93,7 @@ function Ayarlar() {
             <BilgiAlani
               etiket="Dönem"
               deger={donem || ayarlar.donem}
-              kaynak={donem ? "Yüklediğin ders programından çekildi" : null}
+              kaynak={donem ? "Dönemin ders programından çekildi" : null}
               onDegistir={(v) => guncelle({ donem: v })}
             />
             <BilgiAlani
@@ -91,6 +104,8 @@ function Ayarlar() {
             />
           </div>
         </section>
+
+        <KisiselDegisiklikler />
 
         <section className="rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-bold">Takvim Görünümü</h2>

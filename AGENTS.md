@@ -11,6 +11,7 @@
 
 ## Architecture rules
 - Data lives in Lovable Cloud; localStorage is only a per-session cache filled by `src/lib/bulut.ts` on sign-in — keeps existing hooks unchanged.
-- Weekly amfi + genel seçmeli data are global (`global_data`, admin-only writes via RLS); yearly program, uygulama, öğrenci list, settings, choices are per-user (`user_data`).
+- Weekly amfi + genel seçmeli are global (`global_data` keys `amfi`/`secmeli`); yearly program, uygulama, öğrenci list are per dönem+dil (`global_data` key `program:<donemId>:<tr|en>`, list in key `donemler`, anon may read only `donemler` for signup) — students never upload.
+- Student personal data (settings incl. donemId/dil, own lessons `ozelDersler`, overrides `dersDuzenleri`, choices) lives in `user_data`; overrides are applied client-side by `kisiselUygula` after schedule generation.
 - Admin role granted only by `hesap_hazirla()` for the verified admin email; roles in `user_roles`, checked with `has_role`.
 - All app pages live under `src/routes/_authenticated/`; only `/auth` and `/reset-password` are public.

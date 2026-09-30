@@ -5,7 +5,6 @@ import { AppShell } from "@/components/AppShell";
 import { amfiSecenekleri, haftalikAmfiKayitlari } from "@/lib/schedule-data";
 import { addDays, formatShort, isoDate, startOfWeek, weekLabel } from "@/lib/date-utils";
 import { useManuelAmfiler, useYuklenenVeri } from "@/lib/store";
-import { VeriYukleme } from "@/components/VeriYukleme";
 
 export const Route = createFileRoute("/_authenticated/amfi")({
   head: () => ({
@@ -67,8 +66,6 @@ function Amfi() {
             Bu hafta
           </button>
         </div>
-
-        <VeriYukleme />
 
         {bekleyen > 0 ? (
           <p className="rounded-xl bg-secmeli-soft px-3 py-2 text-xs font-medium text-bekliyor">

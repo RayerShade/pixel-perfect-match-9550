@@ -3,8 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Activity, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
+import { Activity, CalendarRange, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ProgramYonetimi } from "@/components/ProgramYonetimi";
 import {
   TABLOLAR, dosyaIslem, dosyaListele, kullaniciDuzenle, kullaniciEkIslem, kullaniciIslem, kullaniciOlustur,
   satirKaydet, satirSil, sunucuKullanicilar, sunucuOzet, tabloOku, tamYedek, yedekGeriYukle,
@@ -19,10 +20,11 @@ export const Route = createFileRoute("/_authenticated/sunucu")({
   component: Sunucu,
 });
 
-type Sekme = "ozet" | "kullanicilar" | "veri" | "dosyalar" | "duyuru" | "yedek";
+type Sekme = "ozet" | "kullanicilar" | "donem" | "veri" | "dosyalar" | "duyuru" | "yedek";
 const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "ozet", ad: "Özet", ikon: Activity },
   { id: "kullanicilar", ad: "Kullanıcılar", ikon: Users },
+  { id: "donem", ad: "Dönemler", ikon: CalendarRange },
   { id: "veri", ad: "Veritabanı", ikon: Database },
   { id: "dosyalar", ad: "Dosyalar", ikon: FileSpreadsheet },
   { id: "duyuru", ad: "Duyuru", ikon: Megaphone },
@@ -73,7 +75,7 @@ function Sunucu() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl space-y-4 p-3 md:p-5">
-        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : <Yedek />}
+        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : <Yedek />}
       </main>
     </div>
   );

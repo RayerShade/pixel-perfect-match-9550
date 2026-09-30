@@ -303,6 +303,11 @@ export interface DersOlayi {
   /** Amfi bilgisinin kaynağı */
   kaynak?: "haftalik" | "yillik" | "manuel";
   online?: boolean;
+  /** Öğrencinin kendi eklediği dersin kimliği */
+  ozelId?: string;
+  /** Her hafta aynı ders için değişiklik anahtarı */
+  hepAnahtar?: string;
+  duzenlendi?: boolean;
 }
 
 export const onlineMi = (o: DersOlayi) =>

@@ -1,4 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { DonemSecici } from "@/components/DonemSecici";
+import type { Dil } from "@/lib/program";
 import { Download, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { dosyaBulutaKaydet, dosyaBuluttanSil, dosyaGuvenli, dosyaIndir, type KisiselTur } from "@/lib/dosya-bulut";
@@ -179,36 +181,40 @@ export function HesapDuzenle({
         </button>
       ) : null}
 
-      <p className="pt-2 font-semibold">Bu hesabın dosyaları</p>
-      <div className="space-y-2">
-        {([["yillik", "Yıllık program"], ["uygulama", "Uygulama tablosu"], ["ogrenci", "Öğrenci listesi"]] as const).map(([t, e]) => (
-          <div key={t} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background px-2.5 py-2">
-            <div className="min-w-0">
-              <p className="text-muted-foreground">{e}</p>
-              <p className="truncate font-medium">{dosyalar[t] ?? "Boş"}</p>
-            </div>
-            <div className="flex gap-2">
-              {dosyalar[t] ? (
-                <button
-                  onClick={async () => { if (!(await dosyaIndir(userId, t))) toast.error("Dosya bulunamadı."); }}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 font-semibold hover:bg-accent"
-                >
-                  <Download className="h-3.5 w-3.5" /> İndir
-                </button>
-              ) : null}
-              {dosyalar[t] ? (
-                <button
-                  onClick={() => void dosyaSil(t, e)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 font-semibold text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> Sil
-                </button>
-              ) : null}
-              <DosyaDugmesi etiket={dosyalar[t] ? "Değiştir" : "Yükle"} onDosya={(f) => dosyaYukle(t, f)} />
-            </div>
-          </div>
-        ))}
-      </div>
+      <p className="pt-2 font-semibold">Dönem ve dil</p>
+      <HesapDonemi userId={userId} onKaydedildi={onKaydedildi} />
+    </div>
+  );
+}
+
+function HesapDonemi({ userId, onKaydedildi }: { userId: string; onKaydedildi: () => void }) {
+  const [d, setD] = useState<{ donemId: string; dil: Dil | "" } | null>(null);
+  useEffect(() => {
+    void supabase.from("user_data").select("ayarlar").eq("user_id", userId).maybeSingle().then(({ data }) => {
+      const a = (data?.ayarlar ?? {}) as Record<string, unknown>;
+      setD({ donemId: String(a["donemId"] ?? ""), dil: (a["dil"] as Dil) ?? "" });
+    });
+  }, [userId]);
+  if (!d) return <p className="text-muted-foreground">Yükleniyor…</p>;
+  return (
+    <div className="space-y-2">
+      <DonemSecici donemId={d.donemId} dil={d.dil} onDegis={(donemId, dil) => setD({ donemId, dil })} />
+      <button
+        disabled={!d.donemId || !d.dil}
+        onClick={async () => {
+          const { data } = await supabase.from("user_data").select("ayarlar").eq("user_id", userId).maybeSingle();
+          const ayarlar = { ...((data?.ayarlar ?? {}) as Record<string, unknown>), donemId: d.donemId, dil: d.dil };
+          const { error } = await supabase.from("user_data").upsert({ user_id: userId, ayarlar: ayarlar as Json });
+          if (error) toast.error(error.message);
+          else {
+            toast.success("Dönem kaydedildi.");
+            onKaydedildi();
+          }
+        }}
+        className="rounded-lg bg-primary px-3 py-1.5 font-semibold text-primary-foreground disabled:opacity-50"
+      >
+        Dönemi kaydet
+      </button>
     </div>
   );
 }
