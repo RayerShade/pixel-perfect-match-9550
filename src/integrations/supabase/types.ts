@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      bildirimler: {
+        Row: {
+          baslik: string
+          created_at: string
+          id: string
+          link: string | null
+          metin: string
+          okundu: boolean
+          tur: string
+          user_id: string
+        }
+        Insert: {
+          baslik: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          metin?: string
+          okundu?: boolean
+          tur?: string
+          user_id: string
+        }
+        Update: {
+          baslik?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          metin?: string
+          okundu?: boolean
+          tur?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       destek_mesajlari: {
         Row: {
           created_at: string
@@ -180,6 +213,10 @@ export type Database = {
       admin_yetki_ayarla: {
         Args: { _user_id: string; _ver: boolean }
         Returns: undefined
+      }
+      bildirim_gonder: {
+        Args: { _baslik: string; _hedef: Json; _metin: string }
+        Returns: number
       }
       has_role: {
         Args: {
