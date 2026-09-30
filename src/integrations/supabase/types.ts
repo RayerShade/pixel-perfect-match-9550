@@ -133,6 +133,54 @@ export type Database = {
         }
         Relationships: []
       }
+      panel_ayar: {
+        Row: {
+          id: number
+          sifre_hash: string
+        }
+        Insert: {
+          id?: number
+          sifre_hash: string
+        }
+        Update: {
+          id?: number
+          sifre_hash?: string
+        }
+        Relationships: []
+      }
+      panel_denemeler: {
+        Row: {
+          id: number
+          user_id: string
+          zaman: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          zaman?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          zaman?: string
+        }
+        Relationships: []
+      }
+      panel_erisim: {
+        Row: {
+          bitis: string
+          user_id: string
+        }
+        Insert: {
+          bitis: string
+          user_id: string
+        }
+        Update: {
+          bitis?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           ad_soyad: string
@@ -157,6 +205,21 @@ export type Database = {
           id?: string
           ogrenci_no?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      super_adminler: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -218,6 +281,7 @@ export type Database = {
         Args: { _baslik: string; _hedef: Json; _metin: string }
         Returns: number
       }
+      gercek_super_admin_mi: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -231,6 +295,11 @@ export type Database = {
       }
       ogrenci_sorgula: { Args: { _no: string }; Returns: Json }
       orijinal_admin_mi: { Args: never; Returns: boolean }
+      panel_sifre_dene: { Args: { _sifre: string }; Returns: boolean }
+      super_admin_ayarla: {
+        Args: { _user_id: string; _ver: boolean }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"

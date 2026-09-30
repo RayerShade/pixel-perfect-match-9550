@@ -42,6 +42,11 @@ function AuthSayfasi() {
     if (hazir && user) void navigate({ to: "/", replace: true });
   }, [hazir, user, navigate]);
 
+  useEffect(() => {
+    const h = sessionStorage.getItem("ders-takvim:giris-hata");
+    if (h && hazir && !user) { setMesaj({ ok: false, t: h }); sessionStorage.removeItem("ders-takvim:giris-hata"); }
+  }, [hazir, user]);
+
   const gonder = async (e: FormEvent) => {
     e.preventDefault();
     setBekle(true);
@@ -52,6 +57,7 @@ function AuthSayfasi() {
         const { error } = await supabase.auth.signInWithPassword({ email, password: sifre });
         if (error) throw new Error(error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı." : error.message);
       } else if (mod === "kayit") {
+        if (!email.trim().toLowerCase().endsWith("@ogr.iu.edu.tr")) throw new Error("Sadece @ogr.iu.edu.tr uzantılı İÜ öğrenci e-postasıyla kayıt olunabilir.");
         if (!no.trim()) throw new Error("Öğrenci numarası gerekli.");
         if (sorgu.sonuc?.kayitli) throw new Error("Bu numara zaten başka bir hesaba kayıtlı.");
         const { error } = await supabase.auth.signUp({
