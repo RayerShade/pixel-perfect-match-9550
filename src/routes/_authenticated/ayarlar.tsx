@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
-import { DonemSecici } from "@/components/DonemSecici";
+import { useDonemler } from "@/components/DonemSecici";
+import { DIL_ETIKET } from "@/lib/program";
 import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/store";
 import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
+
 
 export const Route = createFileRoute("/_authenticated/ayarlar")({
   head: () => ({
