@@ -29,11 +29,11 @@ export function YeniTalep({ onOlustu }: { onOlustu: (id: string) => void }) {
   const [metin, setMetin] = useState("");
   const [bekle, setBekle] = useState(false);
   const gonder = async () => {
-    if (!konu.trim() || !metin.trim()) return toast.error("Konu ve mesaj gerekli.");
+    if (!konu.trim() || !metin.trim()) { toast.error("Konu ve mesaj gerekli."); return; }
     setBekle(true);
     const { data: u } = await supabase.auth.getUser();
     const { data, error } = await supabase.from("destek_talepleri").insert({ konu: konu.trim().slice(0, 200), tur, user_id: u.user!.id }).select("id").single();
-    if (error || !data) { setBekle(false); return toast.error("Talep açılamadı."); }
+    if (error || !data) { setBekle(false); toast.error("Talep açılamadı."); return; }
     await supabase.from("destek_mesajlari").insert({ talep_id: data.id, metin: metin.trim().slice(0, 4000), user_id: u.user!.id });
     setBekle(false); setKonu(""); setMetin("");
     toast.success("Talebin gönderildi.");
@@ -67,7 +67,7 @@ export function TalepSohbet({ talep, yonetici, onDegisti }: { talep: Talep; yone
     if (!metin.trim()) return;
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("destek_mesajlari").insert({ talep_id: talep.id, metin: metin.trim().slice(0, 4000), yonetici, user_id: u.user!.id });
-    if (error) return toast.error("Mesaj gönderilemedi.");
+    if (error) { toast.error("Mesaj gönderilemedi."); return; }
     await supabase.from("destek_talepleri").update({ updated_at: new Date().toISOString(), ...(talep.durum === "kapali" && !yonetici ? { durum: "acik" } : {}) }).eq("id", talep.id);
     setMetin(""); await yukle(); onDegisti();
   };

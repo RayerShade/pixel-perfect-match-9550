@@ -20,9 +20,8 @@ function DestekSayfasi() {
   const [secili, setSecili] = useState<string | null>(null);
   const talep = liste.find((t) => t.id === secili);
   return (
-    <AppShell>
+    <AppShell baslik="Destek" aciklama="Sorun, öneri veya şikayet talebi aç.">
       <div className="mx-auto max-w-3xl space-y-4 p-4 pb-28">
-        <h1 className="text-2xl font-bold">Destek</h1>
         <p className="text-sm text-muted-foreground">Yaşadığın sorunları, önerilerini veya şikayetlerini buradan ilet. Cevaplar bu sayfada görünür.</p>
         <YeniTalep onOlustu={async (id) => { await yenile(); setSecili(id); }} />
         <h2 className="font-semibold">Taleplerim</h2>
