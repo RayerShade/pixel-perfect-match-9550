@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { DonemSecici } from "@/components/DonemSecici";
-import { KisiselDegisiklikler } from "@/components/OzelDersler";
 import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/store";
 import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
 
@@ -104,8 +103,6 @@ function Ayarlar() {
             />
           </div>
         </section>
-
-        <KisiselDegisiklikler />
 
         <section className="rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-bold">Takvim Görünümü</h2>
