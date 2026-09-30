@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Activity, LifeBuoy, CalendarRange, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
+import { useDonemler } from "@/components/DonemSecici";
+import type { Hedef } from "@/lib/hedef";
 import { TalepListesi, TalepSohbet, useTalepler } from "@/components/Destek";
 import {
   TABLOLAR, dosyaIslem, dosyaListele, kullaniciDuzenle, kullaniciEkIslem, kullaniciIslem, kullaniciOlustur,
@@ -417,30 +419,111 @@ function Dosyalar() {
   );
 }
 
-type DuyuruVeri = { metin: string; tur: "bilgi" | "uyari"; aktif: boolean };
+type DuyuruVeri = { metin: string; tur: "bilgi" | "uyari"; aktif: boolean; hedef?: Hedef };
+
+function HedefSecici({ hedef, onDegis }: { hedef: Hedef; onDegis: (h: Hedef) => void }) {
+  const { data: donemler = [] } = useDonemler();
+  const { data: kisiler = [] } = useQuery({
+    queryKey: ["hedef-kisiler"],
+    queryFn: async () => ((await supabase.from("profiles").select("id, ad_soyad, ogrenci_no, email").order("ad_soyad")).data ?? []),
+  });
+  const [ara, setAra] = useState("");
+  const secili = hedef.tip === "secili" ? hedef.kullanicilar : [];
+  const filtre = kisiler.filter((k) => `${k.ad_soyad} ${k.ogrenci_no} ${k.email ?? ""}`.toLocaleLowerCase("tr").includes(ara.toLocaleLowerCase("tr")));
+  return (
+    <div className="space-y-2 rounded-lg border border-border p-3">
+      <p className="text-xs font-semibold">Kime gidecek?</p>
+      <div className="flex flex-wrap gap-1.5">
+        {([["herkes", "Herkes"], ["donem", "Dönem / dil"], ["secili", "Seçili öğrenciler"]] as const).map(([t, ad]) => (
+          <button key={t} type="button" className={hedef.tip === t ? ana : btn}
+            onClick={() => onDegis(t === "herkes" ? { tip: "herkes" } : t === "donem" ? { tip: "donem", donemId: donemler[0]?.id ?? "", dil: "" } : { tip: "secili", kullanicilar: [] })}>{ad}</button>
+        ))}
+      </div>
+      {hedef.tip === "donem" ? (
+        <div className="flex flex-wrap gap-2">
+          <select className={giris} value={hedef.donemId} onChange={(e) => onDegis({ ...hedef, donemId: e.target.value })}>
+            <option value="">Tüm dönemler</option>
+            {donemler.map((d) => <option key={d.id} value={d.id}>{d.ad}</option>)}
+          </select>
+          <select className={giris} value={hedef.dil} onChange={(e) => onDegis({ ...hedef, dil: e.target.value as "tr" | "en" | "" })}>
+            <option value="">Türkçe + İngilizce</option><option value="tr">Türkçe</option><option value="en">İngilizce</option>
+          </select>
+        </div>
+      ) : null}
+      {hedef.tip === "secili" ? (
+        <div>
+          <input value={ara} onChange={(e) => setAra(e.target.value)} placeholder="Ad, numara veya e-posta ara…" className={`${giris} w-full`} />
+          <p className="my-1 text-xs text-muted-foreground">{secili.length} öğrenci seçili</p>
+          <div className="max-h-56 overflow-y-auto rounded-md border border-border">
+            {filtre.map((k) => (
+              <label key={k.id} className="flex cursor-pointer items-center gap-2 border-b border-border/60 px-2 py-1.5 text-sm last:border-0 hover:bg-accent">
+                <input type="checkbox" checked={secili.includes(k.id)}
+                  onChange={(e) => onDegis({ tip: "secili", kullanicilar: e.target.checked ? [...secili, k.id] : secili.filter((x) => x !== k.id) })} />
+                <span className="flex-1 truncate">{k.ad_soyad || k.email}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">{k.ogrenci_no}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function Duyuru() {
   const q = useQuery({
     queryKey: ["duyuru"],
     queryFn: async () => ((await supabase.from("global_data").select("veri").eq("anahtar", "duyuru").maybeSingle()).data?.veri ?? null) as DuyuruVeri | null,
   });
   const qc = useQueryClient();
+  const [mod, setMod] = useState<"bant" | "bildirim">("bildirim");
+  const [baslik, setBaslik] = useState("");
   const [d, setD] = useState<DuyuruVeri | null>(null);
+  const [hedef, setHedef] = useState<Hedef | null>(null);
+  const [bekle, setBekle] = useState(false);
   const v = d ?? q.data ?? { metin: "", tur: "bilgi", aktif: false };
+  const h: Hedef = hedef ?? v.hedef ?? { tip: "herkes" };
+  const hedefGecersiz = h.tip === "secili" && h.kullanicilar.length === 0;
   const kaydet = async (yeni: DuyuruVeri) => {
     const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase.from("global_data").upsert({ anahtar: "duyuru", veri: yeni, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() });
+    const { error } = await supabase.from("global_data").upsert({ anahtar: "duyuru", veri: { ...yeni, hedef: h }, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() });
     if (error) { hata(error); return; }
     toast.success(yeni.aktif ? "Duyuru yayında" : "Duyuru kapatıldı"); setD(null); void qc.invalidateQueries({ queryKey: ["duyuru"] });
   };
+  const gonder = async () => {
+    setBekle(true);
+    const { data, error } = await supabase.rpc("bildirim_gonder", { _baslik: baslik.trim(), _metin: v.metin.trim(), _hedef: h as never });
+    setBekle(false);
+    if (error) { hata(error); return; }
+    toast.success(`Bildirim ${data ?? 0} kişiye gönderildi`); setBaslik(""); setD({ ...v, metin: "" });
+  };
   return (
-    <Kart baslik="Site geneli duyuru">
-      <p className="mb-3 text-sm text-muted-foreground">Açık olduğunda tüm kullanıcılar sayfanın üstünde bu mesajı görür (kapatabilirler, yeni mesaj yazınca tekrar görünür).</p>
-      <textarea value={v.metin} onChange={(e) => setD({ ...v, metin: e.target.value })} maxLength={500} placeholder="ör. Bu hafta amfi programı güncellendi." className={`${giris} h-24 w-full`} />
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <select value={v.tur} onChange={(e) => setD({ ...v, tur: e.target.value as DuyuruVeri["tur"] })} className={giris}><option value="bilgi">Bilgi</option><option value="uyari">Uyarı</option></select>
-        <button className={ana} disabled={!v.metin.trim()} onClick={() => void kaydet({ ...v, aktif: true })}>Yayınla</button>
-        <button className={btn} onClick={() => void kaydet({ ...v, aktif: false })}>Kapat</button>
-        <span className="text-xs text-muted-foreground">Şu an: {q.data?.aktif ? "yayında" : "kapalı"}</span>
+    <Kart baslik="Duyuru ve bildirim">
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        <button className={mod === "bildirim" ? ana : btn} onClick={() => setMod("bildirim")}>Bildirim olarak gönder</button>
+        <button className={mod === "bant" ? ana : btn} onClick={() => setMod("bant")}>Sayfa üstü bant</button>
+      </div>
+      <p className="mb-3 text-sm text-muted-foreground">
+        {mod === "bildirim"
+          ? "Seçilen öğrencilerin sağ üstteki zil simgesine düşer; okunana kadar kırmızı rozet görünür."
+          : "Seçilen öğrenciler sayfanın üstünde bu mesajı görür (kapatabilirler, yeni mesaj yazınca tekrar görünür)."}
+      </p>
+      <div className="space-y-2">
+        {mod === "bildirim" ? <input value={baslik} onChange={(e) => setBaslik(e.target.value)} maxLength={200} placeholder="Başlık" className={`${giris} w-full`} /> : null}
+        <textarea value={v.metin} onChange={(e) => setD({ ...v, metin: e.target.value })} maxLength={mod === "bant" ? 500 : 2000} placeholder="ör. Bu hafta amfi programı güncellendi." className={`${giris} h-24 w-full`} />
+        <HedefSecici hedef={h} onDegis={setHedef} />
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {mod === "bildirim" ? (
+          <button className={ana} disabled={bekle || !baslik.trim() || hedefGecersiz} onClick={() => void gonder()}>{bekle ? "Gönderiliyor…" : "Gönder"}</button>
+        ) : (
+          <>
+            <select value={v.tur} onChange={(e) => setD({ ...v, tur: e.target.value as DuyuruVeri["tur"] })} className={giris}><option value="bilgi">Bilgi</option><option value="uyari">Uyarı</option></select>
+            <button className={ana} disabled={!v.metin.trim() || hedefGecersiz} onClick={() => void kaydet({ ...v, aktif: true })}>Yayınla</button>
+            <button className={btn} onClick={() => void kaydet({ ...v, aktif: false })}>Kapat</button>
+            <span className="text-xs text-muted-foreground">Şu an: {q.data?.aktif ? "yayında" : "kapalı"}</span>
+          </>
+        )}
       </div>
     </Kart>
   );

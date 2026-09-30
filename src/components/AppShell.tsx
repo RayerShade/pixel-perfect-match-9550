@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { listedenOgrenciAdi } from "@/lib/bulut";
 import { DuyuruBandi } from "@/components/DuyuruBandi";
+import { BildirimZili } from "@/components/Bildirimler";
 import { DonemSecici, useDonemler } from "@/components/DonemSecici";
 import { useAyarlar } from "@/lib/store";
 import type { Dil } from "@/lib/program";
@@ -74,6 +75,7 @@ export function AppShell({
             <span className="hidden max-w-[10rem] truncate px-1 text-xs text-muted-foreground lg:inline">
               {profil?.ad_soyad || user?.email}
             </span>
+            <BildirimZili />
             <button
               onClick={() => void cikis()}
               title="Çıkış yap"
