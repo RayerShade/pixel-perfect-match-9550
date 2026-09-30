@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
+import { listedenOgrenciAdi } from "@/lib/bulut";
 import { DuyuruBandi } from "@/components/DuyuruBandi";
 import { DonemSecici, useDonemler } from "@/components/DonemSecici";
 import { useAyarlar } from "@/lib/store";
@@ -29,7 +30,7 @@ export function AppShell({
   const { data: donemler = [] } = useDonemler();
   // Dönem sorulması için admin en az bir dönem eklemiş olmalı
   const donemEksik = donemler.length > 0 && (!ayarlar.donemId || !donemler.some((d) => d.id === ayarlar.donemId) || !ayarlar.dil);
-  const eksik = hazir && user && profil && (!profil.ad_soyad || !profil.ogrenci_no || donemEksik);
+  const eksik = hazir && user && profil && (!profil.ogrenci_no || donemEksik);
   const uyariGoster = hazir && user && profil && !eksik && !ayarlar.bilgilendirmeGordu;
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -119,7 +120,6 @@ function ProfilTamamla() {
   const { ayarlar, guncelle } = useAyarlar();
   const [donemId, setDonemId] = useState(ayarlar.donemId ?? "");
   const [dil, setDil] = useState<Dil | "">(ayarlar.dil ?? "");
-  const [ad, setAd] = useState(profil?.ad_soyad ?? "");
   const [no, setNo] = useState(profil?.ogrenci_no ?? "");
   const [bekle, setBekle] = useState(false);
   return (
@@ -127,17 +127,18 @@ function ProfilTamamla() {
       <form
         onSubmit={async (e) => {
           e.preventDefault();
-          if (!ad.trim() || !no.trim() || !donemId || !dil) return;
+          if (!no.trim() || !donemId || !dil) return;
           setBekle(true);
           guncelle({ donemId, dil });
-          if (!profil?.ad_soyad || !profil?.ogrenci_no) await profilTamamla(ad.trim(), no.trim());
+          // Ad soyad öğrenci listesinden otomatik alınır; listede yoksa mevcut değer korunur.
+          const ad = profil?.ad_soyad || listedenOgrenciAdi(no.trim());
+          await profilTamamla(ad, no.trim());
           setBekle(false);
         }}
         className="w-full max-w-sm space-y-3 rounded-2xl border border-border bg-surface p-5"
       >
         <h2 className="text-base font-bold">Profilini tamamla</h2>
-        <p className="text-xs text-muted-foreground">Devam etmek için bilgilerini, dönemini ve Türkçe / İngilizce seçimini yap.</p>
-        <input required value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Ad soyad" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+        <p className="text-xs text-muted-foreground">Devam etmek için öğrenci numaranı, dönemini ve Türkçe / İngilizce seçimini yap. Adın öğrenci listesinden otomatik alınır.</p>
         <input required value={no} onChange={(e) => setNo(e.target.value)} placeholder="Öğrenci numarası" inputMode="numeric" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
         <DonemSecici donemId={donemId} dil={dil} onDegis={(a, b) => { setDonemId(a); setDil(b); }} />
         <button disabled={bekle || !donemId || !dil} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
