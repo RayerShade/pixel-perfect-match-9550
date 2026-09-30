@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { listedenOgrenciAdi } from "@/lib/bulut";
 import { DuyuruBandi } from "@/components/DuyuruBandi";
@@ -151,6 +151,8 @@ function ProfilTamamla() {
   );
 }
 
+const BILGILENDIRME_BEKLEME = 5;
+
 const BILGILENDIRME_MADDELERI = [
   "Bu site İstanbul Üniversitesi'ne ait değildir; resmi bir uygulama değildir, gönüllü bir öğrenci projesidir.",
   "Takvimdeki bilgiler yüklenen program dosyalarından oluşturulur ve her zaman birebir doğru olmayabilir; kritik saat, derslik veya değişiklikler için resmi duyuruları takip et.",
@@ -159,6 +161,13 @@ const BILGILENDIRME_MADDELERI = [
 
 function Bilgilendirme() {
   const { guncelle } = useAyarlar();
+  const [kalan, setKalan] = useState(BILGILENDIRME_BEKLEME);
+  useEffect(() => {
+    if (kalan <= 0) return;
+    const t = setTimeout(() => setKalan((s) => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [kalan]);
+  const acilabilir = kalan <= 0;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 px-4">
       <div className="w-full max-w-sm space-y-3 rounded-2xl border border-border bg-surface p-5 text-center">
@@ -172,11 +181,17 @@ function Bilgilendirme() {
           ))}
         </ol>
         <button
-          onClick={() => guncelle({ bilgilendirmeGordu: true })}
-          className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          disabled={!acilabilir}
+          onClick={() => {
+            if (acilabilir) guncelle({ bilgilendirmeGordu: true });
+          }}
+          className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Anladım
+          {acilabilir ? "Anladım" : `Lütfen önce oku (${kalan})`}
         </button>
+        <p className="text-[11px] text-muted-foreground">
+          Bu pencere {BILGILENDIRME_BEKLEME} saniye boyunca kapatılamaz.
+        </p>
       </div>
     </div>
   );
