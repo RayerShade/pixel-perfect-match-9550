@@ -136,7 +136,7 @@ function Takvim() {
                   await programPdfIndir({
                     olaylar: liste,
                     baslik,
-                    ogrenci: [ayarlar.adSoyad, ayarlar.ogrenciNo].filter(Boolean).join(" — "),
+                    ogrenci: [ayarlar.ogrenciAdi, ayarlar.ogrenciNo].filter(Boolean).join(" — "),
                     donem: ayarlar.donem,
                     dosyaAdi: `ders-programi-${isoDate(gorunum === "hafta" ? monday : imlec)}.pdf`,
                   });
