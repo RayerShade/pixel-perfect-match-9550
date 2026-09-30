@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { Plus, RotateCcw, X } from "lucide-react";
 import { addDays, isoDate } from "@/lib/date-utils";
 import type { Ders, DersOlayi } from "@/lib/schedule-data";
 import { useAyarlar, type Ayarlar, type DersDuzeni, type OzelDers, type Tekrar } from "@/lib/store";
@@ -280,65 +280,3 @@ export function DersDuzenle({ olay, onBitti }: { olay: DersOlayi; onBitti: () =>
   );
 }
 
-/** Ayarlar: öğrencinin eklediği dersler ve değişiklikleri. */
-export function KisiselDegisiklikler() {
-  const { ayarlar, guncelle } = useAyarlar();
-  const [ekle, setEkle] = useState(false);
-  const [duz, setDuz] = useState<OzelDers | null>(null);
-  const ozel = ayarlar.ozelDersler ?? [];
-  const duzen = Object.entries(ayarlar.dersDuzenleri ?? {});
-  const etiket = (k: string, d: DersDuzeni) => {
-    const [tur, rest = ""] = [k.slice(0, 3), k.slice(4)];
-    const ad = tur === "hep" ? rest.split("|")[0] : rest.replace(/^\d{4}-\d{2}-\d{2}-/, "");
-    const ne = d.sil ? "silindi" : `${d.startTime}–${d.endTime}`;
-    return `${ad} · ${tur === "hep" ? "her hafta" : `${rest.slice(0, 10)} haftası`} · ${ne}`;
-  };
-  return (
-    <section className="rounded-2xl border border-border bg-surface p-4">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-bold">Kendi derslerim ve değişikliklerim</h2>
-      </div>
-      {!ozel.length && !duzen.length ? (
-        <p className="mt-2 text-xs text-muted-foreground">Takvimdeki bir derse dokunarak saatini değiştirebilir ya da silebilirsin.</p>
-      ) : null}
-      <ul className="mt-2 divide-y divide-border">
-        {ozel.map((o) => (
-          <li key={o.id} className="flex items-center justify-between gap-2 py-2 text-sm">
-            <button onClick={() => setDuz(o)} className="min-w-0 text-left">
-              <span className="block truncate font-medium">{o.ad}</span>
-              <span className="block text-[11px] text-muted-foreground">
-                {o.tarih} · {o.startTime}–{o.endTime} · {TEKRAR_ETIKET[o.tekrar]}
-              </span>
-            </button>
-            <button
-              aria-label="Sil"
-              onClick={() => guncelle({ ozelDersler: ozel.filter((x) => x.id !== o.id) })}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </li>
-        ))}
-        {duzen.map(([k, d]) => (
-          <li key={k} className="flex items-center justify-between gap-2 py-2 text-sm">
-            <span className="min-w-0 truncate text-xs">{etiket(k, d)}</span>
-            <button
-              aria-label="Geri al"
-              title="Geri al"
-              onClick={() => {
-                const yeni = { ...(ayarlar.dersDuzenleri ?? {}) };
-                delete yeni[k];
-                guncelle({ dersDuzenleri: yeni });
-              }}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
-          </li>
-        ))}
-      </ul>
-      {ekle ? <OzelDersFormu onClose={() => setEkle(false)} /> : null}
-      {duz ? <OzelDersFormu mevcut={duz} onClose={() => setDuz(null)} /> : null}
-    </section>
-  );
-}
