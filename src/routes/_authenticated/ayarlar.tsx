@@ -55,15 +55,12 @@ function Ayarlar() {
           <div className="mt-3 space-y-3">
             <div>
               <span className="text-xs text-muted-foreground">Dönem ve dil</span>
-              <div className="mt-1">
-                <DonemSecici
-                  donemId={ayarlar.donemId ?? ""}
-                  dil={ayarlar.dil ?? ""}
-                  onDegis={(donemId, dil) => guncelle({ donemId, dil: dil || undefined })}
-                />
+              <div className="mt-1 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium">
+                {donemAdi ? `${donemAdi} · ${dilEtiket}` : "Numaran listelerde bulununca otomatik gelir"}
               </div>
-              <span className="mt-1 block text-[11px] text-muted-foreground">Ders programı, uygulamalar ve öğrenci listesi seçtiğin döneme göre otomatik gelir.</span>
+              <span className="mt-1 block text-[11px] text-muted-foreground">Dönemin ve dilin öğrenci numarandan otomatik belirlenir; ders programı, uygulamalar ve öğrenci listesi buna göre gelir.</span>
             </div>
+
             <label className="block">
               <span className="text-xs text-muted-foreground">Öğrenci numarası</span>
               <input
