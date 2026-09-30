@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/sunucu")({
   component: Sunucu,
 });
 
-type Sekme = "ozet" | "kullanicilar" | "veri" | "dosyalar" | "duyuru" | "yedek";
+type Sekme = "ozet" | "kullanicilar" | "donem" | "veri" | "dosyalar" | "duyuru" | "yedek";
 const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "ozet", ad: "Özet", ikon: Activity },
   { id: "kullanicilar", ad: "Kullanıcılar", ikon: Users },
@@ -73,7 +73,7 @@ function Sunucu() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl space-y-4 p-3 md:p-5">
-        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : <Yedek />}
+        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : <Yedek />}
       </main>
     </div>
   );

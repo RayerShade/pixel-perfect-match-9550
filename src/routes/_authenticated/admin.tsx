@@ -6,6 +6,7 @@ import { ChevronDown, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { VeriYukleme } from "@/components/VeriYukleme";
+import { ProgramYonetimi } from "@/components/ProgramYonetimi";
 import { HesapDuzenle } from "@/components/HesapDuzenle";
 import { supabase } from "@/integrations/supabase/client";
 import { hesapOlustur, hesapSil } from "@/lib/admin.functions";
@@ -140,6 +141,16 @@ function Admin() {
             Buraya yüklediğin haftalık amfi programları ve genel seçmeli programı tüm öğrencilerin takvimine yansır.
           </p>
           <VeriYukleme tur="genel" />
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="flex items-center gap-2 text-sm font-bold">
+            <ShieldCheck className="h-4 w-4 text-altin" /> Dönem programları
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Her dönem için Türkçe ve İngilizce ders programı, uygulama tablosu ve öğrenci listesi. Öğrenciler kayıtta seçtikleri döneme göre bunları otomatik görür.
+          </p>
+          <ProgramYonetimi />
         </section>
 
         <YeniHesap onOlustu={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} />
