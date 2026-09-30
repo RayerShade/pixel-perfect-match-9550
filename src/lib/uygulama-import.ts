@@ -85,6 +85,7 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
   const out: UygulamaOlayi[] = [];
   let sutunlar: { i: number; ad: string; hoca: string }[] | null = null;
   let dilim = "";
+  let sonTarih: string | null | undefined = null;
   rows.forEach((r, ri) => {
     const a = metin(r[0]);
     const n = normalize(a);
@@ -92,6 +93,7 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
       const ust = rows[ri - 1] ?? [];
       dilim = metin(ust[0]);
       sutunlar = [];
+      sonTarih = null;
       for (let i = 2; i < r.length; i++) {
         let h = metin(r[i]);
         if (!h || /^saat/i.test(normalize(h))) continue;
@@ -104,12 +106,14 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
       return;
     }
     if (!sutunlar) return;
-    if (!a || /uygulama sayisi|not:|konu/.test(n)) {
+    if (/uygulama sayisi|not:|konu/.test(n)) {
       if (/uygulama sayisi/.test(n)) sutunlar = null;
       return;
     }
-    const tarih = tarihNorm(r[0]);
     const [bas, bit] = saatCifti(r[1]);
+    // Birleştirilmiş tarih hücresi: aynı günün 2. saat satırında tarih sütunu boş gelir → önceki tarihi kullan
+    const tarih = a ? tarihNorm(r[0]) : sonTarih;
+    if (a) sonTarih = tarih;
     if (!tarih || !bas || tarih < "2025-01-01") return;
     for (const s of sutunlar) {
       const g = metin(r[s.i]).toLocaleUpperCase("tr-TR");
