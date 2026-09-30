@@ -1,4 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { DonemSecici } from "@/components/DonemSecici";
+import type { Dil } from "@/lib/program";
 import { useEffect, useState, type FormEvent } from "react";
 import { CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +36,8 @@ function AuthSayfasi() {
   const [sifre, setSifre] = useState("");
   const [ad, setAd] = useState("");
   const [no, setNo] = useState("");
+  const [donemId, setDonemId] = useState("");
+  const [dil, setDil] = useState<Dil | "">("");
   const [bekle, setBekle] = useState(false);
   const [mesaj, setMesaj] = useState<{ ok: boolean; t: string } | null>(null);
 
@@ -52,10 +56,11 @@ function AuthSayfasi() {
         if (error) throw new Error(error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı." : error.message);
       } else if (mod === "kayit") {
         if (!ad.trim() || !no.trim()) throw new Error("Ad soyad ve öğrenci numarası gerekli.");
+        if (!donemId || !dil) throw new Error("Dönemini ve Türkçe / İngilizce seçimini yap.");
         const { error } = await supabase.auth.signUp({
           email,
           password: sifre,
-          options: { emailRedirectTo: window.location.origin, data: { ad_soyad: ad.trim(), ogrenci_no: no.trim() } },
+          options: { emailRedirectTo: window.location.origin, data: { ad_soyad: ad.trim(), ogrenci_no: no.trim(), donem_id: donemId, dil } },
         });
         if (error) throw error;
         setMesaj({ ok: true, t: "Kayıt alındı! E-postana gelen onay bağlantısına tıkla, sonra giriş yap." });
@@ -114,6 +119,7 @@ function AuthSayfasi() {
         <form onSubmit={gonder} className="space-y-3">
           {mod === "kayit" ? (
             <>
+              <DonemSecici donemId={donemId} dil={dil} onDegis={(a, b) => { setDonemId(a); setDil(b); }} />
               <input className={girdi} placeholder="Ad soyad" value={ad} onChange={(e) => setAd(e.target.value)} required />
               <input className={girdi} placeholder="Öğrenci numarası" inputMode="numeric" value={no} onChange={(e) => setNo(e.target.value)} required />
             </>
@@ -154,7 +160,7 @@ function AuthSayfasi() {
               Google ile devam et
             </button>
             {mod === "kayit" ? (
-              <p className="mt-2 text-[11px] text-muted-foreground">Google ile girersen ad soyad ve öğrenci numaran ilk girişte sorulur.</p>
+              <p className="mt-2 text-[11px] text-muted-foreground">Google ile girersen ad soyad, öğrenci numaran ve dönemin ilk girişte sorulur.</p>
             ) : null}
           </>
         ) : null}
