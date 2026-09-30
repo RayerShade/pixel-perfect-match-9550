@@ -68,13 +68,11 @@ function Ayarlar() {
             </div>
 
             <label className="block">
-              <span className="text-xs text-muted-foreground">Öğrenci numarası</span>
+              <span className="text-xs text-muted-foreground">Öğrenci numarası (değiştirilemez)</span>
               <input
-                inputMode="numeric"
-                placeholder="örn. 0101260001"
+                readOnly
                 value={ayarlar.ogrenciNo ?? ""}
-                onChange={(e) => guncelle({ ogrenciNo: e.target.value })}
-                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                className="mt-1 w-full cursor-not-allowed rounded-xl border border-border bg-accent px-3 py-2 text-sm text-muted-foreground"
               />
               <span className="mt-1 block text-[11px] text-muted-foreground">
                 {!veri.ogrenciler

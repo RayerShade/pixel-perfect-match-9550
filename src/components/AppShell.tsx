@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { listedenOgrenciAdi } from "@/lib/bulut";
 import { DuyuruBandi } from "@/components/DuyuruBandi";
 import { BildirimZili } from "@/components/Bildirimler";
+import { NumaraBilgi, useNumaraSorgu } from "@/components/NumaraBilgi";
 
 import { useAyarlar } from "@/lib/store";
 import { CalendarDays, BookOpen, ListChecks, Settings, LifeBuoy, LogOut, ShieldCheck, Loader2, Info } from "lucide-react";
@@ -118,12 +119,14 @@ function ProfilTamamla() {
   const { ayarlar, guncelle } = useAyarlar();
   const [no, setNo] = useState(profil?.ogrenci_no ?? "");
   const [bekle, setBekle] = useState(false);
+  const sorgu = useNumaraSorgu(no);
+  void ayarlar;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 px-4">
       <form
         onSubmit={async (e) => {
           e.preventDefault();
-          if (!no.trim()) return;
+          if (!no.trim() || sorgu.sonuc?.kayitli) return;
           setBekle(true);
           guncelle({ ogrenciNo: no.trim() });
           const ad = profil?.ad_soyad || listedenOgrenciAdi(no.trim());
@@ -135,7 +138,8 @@ function ProfilTamamla() {
         <h2 className="text-base font-bold">Profilini tamamla</h2>
         <p className="text-xs text-muted-foreground">Devam etmek için öğrenci numaranı yaz. Dönemin, dilin ve adın öğrenci listelerinden otomatik bulunur.</p>
         <input required value={no} onChange={(e) => setNo(e.target.value)} placeholder="Öğrenci numarası" inputMode="numeric" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
-        <button disabled={bekle || !no.trim()} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+        <NumaraBilgi sonuc={sorgu.sonuc} yukleniyor={sorgu.yukleniyor} />
+        <button disabled={bekle || !no.trim() || !!sorgu.sonuc?.kayitli} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
           {bekle ? "Kaydediliyor…" : "Kaydet"}
         </button>
       </form>

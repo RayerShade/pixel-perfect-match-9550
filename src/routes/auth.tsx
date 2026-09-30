@@ -4,6 +4,7 @@ import { CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
+import { NumaraBilgi, useNumaraSorgu } from "@/components/NumaraBilgi";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -33,6 +34,7 @@ function AuthSayfasi() {
   const [email, setEmail] = useState("");
   const [sifre, setSifre] = useState("");
   const [no, setNo] = useState("");
+  const sorgu = useNumaraSorgu(no);
   const [bekle, setBekle] = useState(false);
   const [mesaj, setMesaj] = useState<{ ok: boolean; t: string } | null>(null);
 
@@ -51,6 +53,7 @@ function AuthSayfasi() {
         if (error) throw new Error(error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı." : error.message);
       } else if (mod === "kayit") {
         if (!no.trim()) throw new Error("Öğrenci numarası gerekli.");
+        if (sorgu.sonuc?.kayitli) throw new Error("Bu numara zaten başka bir hesaba kayıtlı.");
         const { error } = await supabase.auth.signUp({
           email,
           password: sifre,
@@ -114,7 +117,7 @@ function AuthSayfasi() {
           {mod === "kayit" ? (
             <>
               <input className={girdi} placeholder="Öğrenci numarası" inputMode="numeric" value={no} onChange={(e) => setNo(e.target.value)} required />
-              <p className="text-[11px] text-muted-foreground">Adın, dönemin ve dilin öğrenci numarandan otomatik bulunur.</p>
+              <NumaraBilgi sonuc={sorgu.sonuc} yukleniyor={sorgu.yukleniyor} />
             </>
           ) : null}
           <input className={girdi} type="email" placeholder="E-posta" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
