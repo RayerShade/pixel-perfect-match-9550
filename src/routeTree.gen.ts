@@ -18,6 +18,7 @@ import { Route as AuthenticatedAmfiRouteImport } from './routes/_authenticated/a
 import { Route as AuthenticatedAyarlarRouteImport } from './routes/_authenticated/ayarlar'
 import { Route as AuthenticatedDerslerRouteImport } from './routes/_authenticated/dersler'
 import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authenticated/secmeliler'
+import { Route as AuthenticatedSunucuK7x2RouteImport } from './routes/_authenticated/sunucu-k7x2'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -63,6 +64,11 @@ const AuthenticatedSecmelilerRoute = AuthenticatedSecmelilerRouteImport.update({
   path: '/secmeliler',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSunucuK7x2Route = AuthenticatedSunucuK7x2RouteImport.update({
+  id: '/sunucu-k7x2',
+  path: '/sunucu-k7x2',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/ayarlar': typeof AuthenticatedAyarlarRoute
   '/dersler': typeof AuthenticatedDerslerRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
+  '/sunucu-k7x2': typeof AuthenticatedSunucuK7x2Route
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/ayarlar': typeof AuthenticatedAyarlarRoute
   '/dersler': typeof AuthenticatedDerslerRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
+  '/sunucu-k7x2': typeof AuthenticatedSunucuK7x2Route
   '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/_authenticated/ayarlar': typeof AuthenticatedAyarlarRoute
   '/_authenticated/dersler': typeof AuthenticatedDerslerRoute
   '/_authenticated/secmeliler': typeof AuthenticatedSecmelilerRoute
+  '/_authenticated/sunucu-k7x2': typeof AuthenticatedSunucuK7x2Route
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/ayarlar'
     | '/dersler'
     | '/secmeliler'
+    | '/sunucu-k7x2'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/ayarlar'
     | '/dersler'
     | '/secmeliler'
+    | '/sunucu-k7x2'
     | '/'
   id:
     | '__root__'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ayarlar'
     | '/_authenticated/dersler'
     | '/_authenticated/secmeliler'
+    | '/_authenticated/sunucu-k7x2'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
@@ -201,6 +213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSecmelilerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sunucu-k7x2': {
+      id: '/_authenticated/sunucu-k7x2'
+      path: '/sunucu-k7x2'
+      fullPath: '/sunucu-k7x2'
+      preLoaderRoute: typeof AuthenticatedSunucuK7x2RouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -210,6 +229,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAyarlarRoute: typeof AuthenticatedAyarlarRoute
   AuthenticatedDerslerRoute: typeof AuthenticatedDerslerRoute
   AuthenticatedSecmelilerRoute: typeof AuthenticatedSecmelilerRoute
+  AuthenticatedSunucuK7x2Route: typeof AuthenticatedSunucuK7x2Route
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
@@ -219,6 +239,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAyarlarRoute: AuthenticatedAyarlarRoute,
   AuthenticatedDerslerRoute: AuthenticatedDerslerRoute,
   AuthenticatedSecmelilerRoute: AuthenticatedSecmelilerRoute,
+  AuthenticatedSunucuK7x2Route: AuthenticatedSunucuK7x2Route,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 
