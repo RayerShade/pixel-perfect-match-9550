@@ -34,7 +34,6 @@ function AuthSayfasi() {
   const [mod, setMod] = useState<Mod>("giris");
   const [email, setEmail] = useState("");
   const [sifre, setSifre] = useState("");
-  const [ad, setAd] = useState("");
   const [no, setNo] = useState("");
   const [donemId, setDonemId] = useState("");
   const [dil, setDil] = useState<Dil | "">("");
@@ -55,12 +54,12 @@ function AuthSayfasi() {
         const { error } = await supabase.auth.signInWithPassword({ email, password: sifre });
         if (error) throw new Error(error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı." : error.message);
       } else if (mod === "kayit") {
-        if (!ad.trim() || !no.trim()) throw new Error("Ad soyad ve öğrenci numarası gerekli.");
+        if (!no.trim()) throw new Error("Öğrenci numarası gerekli.");
         if (!donemId || !dil) throw new Error("Dönemini ve Türkçe / İngilizce seçimini yap.");
         const { error } = await supabase.auth.signUp({
           email,
           password: sifre,
-          options: { emailRedirectTo: window.location.origin, data: { ad_soyad: ad.trim(), ogrenci_no: no.trim(), donem_id: donemId, dil } },
+          options: { emailRedirectTo: window.location.origin, data: { ogrenci_no: no.trim(), donem_id: donemId, dil } },
         });
         if (error) throw error;
         setMesaj({ ok: true, t: "Kayıt alındı! E-postana gelen onay bağlantısına tıkla, sonra giriş yap." });
@@ -120,8 +119,8 @@ function AuthSayfasi() {
           {mod === "kayit" ? (
             <>
               <DonemSecici donemId={donemId} dil={dil} onDegis={(a, b) => { setDonemId(a); setDil(b); }} />
-              <input className={girdi} placeholder="Ad soyad" value={ad} onChange={(e) => setAd(e.target.value)} required />
               <input className={girdi} placeholder="Öğrenci numarası" inputMode="numeric" value={no} onChange={(e) => setNo(e.target.value)} required />
+              <p className="text-[11px] text-muted-foreground">Adın, öğrenci numarandan öğrenci listesinden otomatik alınır.</p>
             </>
           ) : null}
           <input className={girdi} type="email" placeholder="E-posta" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -160,7 +159,7 @@ function AuthSayfasi() {
               Google ile devam et
             </button>
             {mod === "kayit" ? (
-              <p className="mt-2 text-[11px] text-muted-foreground">Google ile girersen ad soyad, öğrenci numaran ve dönemin ilk girişte sorulur.</p>
+              <p className="mt-2 text-[11px] text-muted-foreground">Google ile girersen öğrenci numaran ve dönemin ilk girişte sorulur.</p>
             ) : null}
           </>
         ) : null}
