@@ -27,6 +27,7 @@ const ELECTIVE_KEY = "ders-takvim:secmeliler";
 const GIZLI_KEY = "ders-takvim:gizli-secmeliler";
 const AMFI_KEY = "ders-takvim:manuel-amfi";
 const AYAR_KEY = "ders-takvim:ayarlar";
+const AYAR_OLAY = "ders-takvim:ayar";
 
 export interface Ayarlar {
   /** Admin tarafından elle atanan grup (öğrenci listesinin önüne geçer). */
@@ -176,7 +177,11 @@ export function useAyarlar() {
     const yukle = () => setAyarlar(read<Ayarlar>(AYAR_KEY, VARSAYILAN_AYARLAR));
     yukle();
     window.addEventListener(BULUT_OLAY, yukle);
-    return () => window.removeEventListener(BULUT_OLAY, yukle);
+    window.addEventListener(AYAR_OLAY, yukle);
+    return () => {
+      window.removeEventListener(BULUT_OLAY, yukle);
+      window.removeEventListener(AYAR_OLAY, yukle);
+    };
   }, []);
 
   const guncelle = useCallback((patch: Partial<Ayarlar>) => {
@@ -184,6 +189,7 @@ export function useAyarlar() {
       const next = { ...prev, ...patch };
       window.localStorage.setItem(AYAR_KEY, JSON.stringify(next));
       kisiselKaydet();
+      setTimeout(() => window.dispatchEvent(new Event(AYAR_OLAY)), 0);
       if (("donemId" in patch && patch.donemId !== prev.donemId) || ("dil" in patch && patch.dil !== prev.dil))
         setTimeout(() => void programiYenile(), 0);
       return next;
