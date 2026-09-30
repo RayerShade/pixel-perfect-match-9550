@@ -8,7 +8,7 @@ import { AppShell } from "@/components/AppShell";
 import { VeriYukleme } from "@/components/VeriYukleme";
 import { HesapDuzenle } from "@/components/HesapDuzenle";
 import { supabase } from "@/integrations/supabase/client";
-import { hesapSil } from "@/lib/admin.functions";
+import { hesapOlustur, hesapSil } from "@/lib/admin.functions";
 import { useAuth } from "@/lib/auth";
 import { useYuklenenVeri } from "@/lib/store";
 import { SECMELILER, secmeliGruplari } from "@/lib/schedule-data";
@@ -141,6 +141,8 @@ function Admin() {
           </p>
           <VeriYukleme tur="genel" />
         </section>
+
+        <YeniHesap onOlustu={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} />
 
         {secmeliSayim.length ? (
           <section className="rounded-2xl border border-border bg-surface p-4">
@@ -317,5 +319,46 @@ function GrupDuzenle({ userId, ayarlar, onKaydedildi }: { userId: string; ayarla
         {elle?.grup ? <button onClick={() => void kaydet(true)} className="rounded-lg border border-border px-2 py-1 font-semibold hover:bg-accent">Listeye bırak</button> : null}
       </div>
     </div>
+  );
+}
+
+function YeniHesap({ onOlustu }: { onOlustu: () => void }) {
+  const olustur = useServerFn(hesapOlustur);
+  const [acik, setAcik] = useState(false);
+  const [f, setF] = useState({ adSoyad: "", ogrenciNo: "", email: "", sifre: "" });
+  const [bekle, setBekle] = useState(false);
+  const girdi = "w-full rounded-lg border border-border bg-background px-2.5 py-2 text-sm";
+  const gonder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBekle(true);
+    try {
+      await olustur({ data: f });
+      toast.success(`${f.email} hesabı oluşturuldu.`);
+      setF({ adSoyad: "", ogrenciNo: "", email: "", sifre: "" });
+      setAcik(false);
+      onOlustu();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Hesap oluşturulamadı.");
+    } finally {
+      setBekle(false);
+    }
+  };
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-4">
+      <button onClick={() => setAcik((a) => !a)} className="flex w-full items-center justify-between text-sm font-bold">
+        Yeni hesap oluştur <ChevronDown className={`h-4 w-4 transition ${acik ? "rotate-180" : ""}`} />
+      </button>
+      {acik ? (
+        <form onSubmit={gonder} className="mt-3 grid gap-2 sm:grid-cols-2">
+          <input className={girdi} placeholder="Ad soyad" required value={f.adSoyad} onChange={(e) => setF({ ...f, adSoyad: e.target.value })} />
+          <input className={girdi} placeholder="Öğrenci no" value={f.ogrenciNo} onChange={(e) => setF({ ...f, ogrenciNo: e.target.value })} />
+          <input className={girdi} type="email" placeholder="E-posta" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+          <input className={girdi} type="text" placeholder="Şifre (en az 6 karakter)" minLength={6} required value={f.sifre} onChange={(e) => setF({ ...f, sifre: e.target.value })} />
+          <button disabled={bekle} className="rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 sm:col-span-2">
+            {bekle ? "Oluşturuluyor…" : "Hesabı oluştur"}
+          </button>
+        </form>
+      ) : null}
+    </section>
   );
 }
