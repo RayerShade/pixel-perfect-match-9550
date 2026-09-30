@@ -88,7 +88,7 @@ function Dersler() {
         />
         {dallar.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            {agac.size ? "Sonuç bulunamadı." : "Yıllık ders programını Haftalık Amfi sayfasından yükleyince dersler burada görünür."}
+            {agac.size ? "Sonuç bulunamadı." : "Döneminin yıllık programı yüklendiğinde dersler burada görünür; yüklenmesini beklemek için programı yayınlayınca takvimi kontrol et."}
           </p>
         ) : null}
         {dallar.map(([dal, dilimler]) => {

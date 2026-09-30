@@ -137,7 +137,7 @@ function bitisTahmin(bas: string, bit: string) {
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
 
-const ATLA = /^(ogle arasi|serbest calisma|ogle yemegi)$/;
+const ATLA = /^(ogle( yemegi)? arasi|serbest calisma|ogle yemegi|lunch|free time|break)/;
 
 function yerCoz(yer: string): { sinif: string; tur?: DersTuru } {
   const n = normalize(yer);
