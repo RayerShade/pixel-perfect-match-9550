@@ -218,8 +218,8 @@ export const kullaniciDuzenle = createServerFn({ method: "POST" })
     const db = await yetkili(context as never);
     if (data.userId === context.userId && (data.email || data.sifre)) throw new Error("Kendi e-posta/şifreni buradan değiştiremezsin.");
     const g: Record<string, unknown> = {};
-    if (data.email) g.email = data.email;
-    if (data.sifre) g.password = data.sifre;
+    if (data.email) g["email"] = data.email;
+    if (data.sifre) g["password"] = data.sifre;
     if (Object.keys(g).length) {
       const { error } = await db.auth.admin.updateUserById(data.userId, g);
       if (error) throw new Error(error.message);
@@ -238,7 +238,7 @@ export const kullaniciDuzenle = createServerFn({ method: "POST" })
       const { data: mevcut } = await db.from("user_data").select("ayarlar").eq("user_id", data.userId).maybeSingle();
       const ayarlar = { ...((mevcut?.ayarlar ?? {}) as Record<string, unknown>) };
       const grup = (data.grup ?? "").trim();
-      ayarlar.grupElle = grup ? { grup, altGrup: (data.altGrup ?? "").trim() } : null;
+      ayarlar["grupElle"] = grup ? { grup, altGrup: (data.altGrup ?? "").trim() } : null;
       const { error } = await db.from("user_data").upsert({ user_id: data.userId, ayarlar }, { onConflict: "user_id" });
       if (error) throw new Error(error.message);
     }
