@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
-import { DonemSecici } from "@/components/DonemSecici";
+import { useDonemler } from "@/components/DonemSecici";
+import { DIL_ETIKET } from "@/lib/program";
 import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/store";
 import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
+
 
 export const Route = createFileRoute("/_authenticated/ayarlar")({
   head: () => ({
@@ -33,6 +35,10 @@ function Ayarlar() {
   const ad = ogrenci ? `${ogrenci.ad} ${ogrenci.soyad}` : "";
   const grup = ogrenci ? [ogrenci.grup, ogrenci.altGrup].filter(Boolean).join(" / ") : "";
   const donem = donemBilgisi(veri);
+  const { data: donemler = [] } = useDonemler();
+  const donemAdi = donemler.find((d) => d.id === ayarlar.donemId)?.ad ?? "";
+  const dilEtiket = ayarlar.dil ? DIL_ETIKET[ayarlar.dil] : "";
+
   // Ad, grup ve dönem yüklenen dosyalardan gelir; bulununca tercih olarak da kaydedilir.
   useEffect(() => {
     const patch: Partial<Ayarlar> = {};
@@ -55,15 +61,12 @@ function Ayarlar() {
           <div className="mt-3 space-y-3">
             <div>
               <span className="text-xs text-muted-foreground">Dönem ve dil</span>
-              <div className="mt-1">
-                <DonemSecici
-                  donemId={ayarlar.donemId ?? ""}
-                  dil={ayarlar.dil ?? ""}
-                  onDegis={(donemId, dil) => guncelle({ donemId, dil: dil || undefined })}
-                />
+              <div className="mt-1 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium">
+                {donemAdi ? `${donemAdi} · ${dilEtiket}` : "Numaran listelerde bulununca otomatik gelir"}
               </div>
-              <span className="mt-1 block text-[11px] text-muted-foreground">Ders programı, uygulamalar ve öğrenci listesi seçtiğin döneme göre otomatik gelir.</span>
+              <span className="mt-1 block text-[11px] text-muted-foreground">Dönemin ve dilin öğrenci numarandan otomatik belirlenir; ders programı, uygulamalar ve öğrenci listesi buna göre gelir.</span>
             </div>
+
             <label className="block">
               <span className="text-xs text-muted-foreground">Öğrenci numarası</span>
               <input
