@@ -229,6 +229,7 @@ export type Database = {
         Args: { _ad_soyad: string; _ogrenci_no: string }
         Returns: boolean
       }
+      ogrenci_sorgula: { Args: { _no: string }; Returns: Json }
       orijinal_admin_mi: { Args: never; Returns: boolean }
     }
     Enums: {
