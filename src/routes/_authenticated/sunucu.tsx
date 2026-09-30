@@ -359,8 +359,8 @@ function Duyuru() {
   const v = d ?? q.data ?? { metin: "", tur: "bilgi", aktif: false };
   const kaydet = async (yeni: DuyuruVeri) => {
     const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase.from("global_data").upsert({ anahtar: "duyuru", veri: yeni, updated_by: u.user?.id, updated_at: new Date().toISOString() });
-    if (error) return hata(error);
+    const { error } = await supabase.from("global_data").upsert({ anahtar: "duyuru", veri: yeni, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() });
+    if (error) { hata(error); return; }
     toast.success(yeni.aktif ? "Duyuru yayında" : "Duyuru kapatıldı"); setD(null); void qc.invalidateQueries({ queryKey: ["duyuru"] });
   };
   return (

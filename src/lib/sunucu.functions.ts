@@ -131,7 +131,7 @@ export const sunucuOzet = createServerFn({ method: "POST" })
     const { data: genel } = await db.from("global_data").select("anahtar, updated_at");
     const { data: ud } = await db.from("user_data").select("user_id, veri, secmeliler");
     const kayit14: number[] = Array(14).fill(0);
-    for (const x of users) { const d = Math.floor((simdi - new Date(x.created_at).getTime()) / gun); if (d < 14) kayit14[13 - d]++; }
+    for (const x of users) { const d = Math.floor((simdi - new Date(x.created_at).getTime()) / gun); if (d < 14) kayit14[13 - d] = (kayit14[13 - d] ?? 0) + 1; }
     const veriler = (ud ?? []) as { veri: Record<string, unknown> | null; secmeliler: unknown[] | null }[];
     return {
       toplam: users.length,
@@ -176,7 +176,7 @@ export const kullaniciEkIslem = createServerFn({ method: "POST" })
     const tip = data.islem === "sifreLinki" ? "recovery" : "magiclink";
     const { data: l, error } = await db.auth.admin.generateLink({
       type: tip, email,
-      options: { redirectTo: data.origin ? `${data.origin}${tip === "recovery" ? "/reset-password" : "/"}` : undefined },
+      ...(data.origin ? { options: { redirectTo: `${data.origin}${tip === "recovery" ? "/reset-password" : "/"}` } } : {}),
     });
     if (error) throw new Error(error.message);
     return { link: l.properties?.action_link ?? null };
