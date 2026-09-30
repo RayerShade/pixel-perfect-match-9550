@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Plus } from "lucide-react";
+import { toast } from "sonner";
+import { programPdfIndir } from "@/lib/pdf-indir";
 import { AppShell } from "@/components/AppShell";
 import { AyGorunumu, GunGorunumu, HaftaGorunumu } from "@/components/CalendarViews";
 import { DersDetay } from "@/components/DersDetay";
@@ -56,6 +58,7 @@ function Takvim() {
   }, [imlec, gorunum]);
   const [secili, setSecili] = useState<DersOlayi | null>(null);
   const [ekle, setEkle] = useState(false);
+  const [pdfHazirlaniyor, setPdfHazirlaniyor] = useState(false);
 
   const { secili: secmeliler } = useSecmeliler();
   const { manuel, ata } = useManuelAmfiler();
@@ -119,6 +122,37 @@ function Takvim() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <button
+              disabled={pdfHazirlaniyor}
+              onClick={async () => {
+                setPdfHazirlaniyor(true);
+                try {
+                  const liste =
+                    gorunum === "gun"
+                      ? olaylar.filter((o) => sameDay(o.date, imlec))
+                      : gorunum === "ay"
+                        ? olaylar.filter((o) => o.date.getMonth() === imlec.getMonth() && o.date.getFullYear() === imlec.getFullYear())
+                        : olaylar;
+                  await programPdfIndir({
+                    olaylar: liste,
+                    baslik,
+                    ogrenci: [ayarlar.ogrenciAdi, ayarlar.ogrenciNo].filter(Boolean).join(" — "),
+                    donem: ayarlar.donem,
+                    dosyaAdi: `ders-programi-${isoDate(gorunum === "hafta" ? monday : imlec)}.pdf`,
+                  });
+                } catch {
+                  toast.error("PDF oluşturulamadı, tekrar dene.");
+                } finally {
+                  setPdfHazirlaniyor(false);
+                }
+              }}
+              aria-label="PDF indir"
+              title="Görüntülenen programı PDF olarak indir"
+              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent disabled:opacity-50 sm:py-1.5 sm:text-xs"
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">{pdfHazirlaniyor ? "Hazırlanıyor…" : "PDF"}</span>
+            </button>
             <button
               onClick={() => setImlec(new Date())}
               className="rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent sm:py-1.5 sm:text-xs"
