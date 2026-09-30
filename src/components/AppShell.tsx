@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { DuyuruBandi } from "@/components/DuyuruBandi";
-import { DonemSecici } from "@/components/DonemSecici";
+import { DonemSecici, useDonemler } from "@/components/DonemSecici";
 import { useAyarlar } from "@/lib/store";
 import type { Dil } from "@/lib/program";
 import { CalendarDays, BookOpen, ListChecks, Building2, Settings, LogOut, ShieldCheck, Loader2 } from "lucide-react";
@@ -26,7 +26,10 @@ export function AppShell({
 }) {
   const { user, isAdmin, profil, hazir, cikis } = useAuth();
   const { ayarlar } = useAyarlar();
-  const eksik = hazir && user && profil && (!profil.ad_soyad || !profil.ogrenci_no || !ayarlar.donemId || !ayarlar.dil);
+  const { data: donemler = [] } = useDonemler();
+  // Dönem sorulması için admin en az bir dönem eklemiş olmalı
+  const donemEksik = donemler.length > 0 && (!ayarlar.donemId || !donemler.some((d) => d.id === ayarlar.donemId) || !ayarlar.dil);
+  const eksik = hazir && user && profil && (!profil.ad_soyad || !profil.ogrenci_no || donemEksik);
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-surface/90 backdrop-blur">
