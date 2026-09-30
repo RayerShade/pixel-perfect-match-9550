@@ -347,7 +347,8 @@ export function haftaninOlaylari(
 ): DersOlayi[] {
   const mondayIso = isoDate(monday);
   const uyg = ogrenci && veri?.uygulamalar?.length ? veri.uygulamalar : null;
-  const uygTarihleri = new Set(uyg?.map((u) => u.date));
+  // Yalnızca öğrencinin kendi uygulaması olan günler (başka grupların uygulaması genel satırı gizlemesin)
+  const uygTarihleri = new Set(uyg?.filter((u) => grubaUyar(u.gruplar, ogrenci!)).map((u) => u.date));
   const pazar = isoDate(addDays(monday, 6));
   const kayitlar = haftalikAmfiKayitlari(mondayIso, veri);
   const tarihOf = (d: Ders) => d.date ?? isoDate(addDays(monday, d.dayOfWeek - 1));
