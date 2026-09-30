@@ -6,7 +6,6 @@ import { DuyuruBandi } from "@/components/DuyuruBandi";
 import { BildirimZili } from "@/components/Bildirimler";
 
 import { useAyarlar } from "@/lib/store";
-import type { Dil } from "@/lib/program";
 import { CalendarDays, BookOpen, ListChecks, Settings, LifeBuoy, LogOut, ShieldCheck, Loader2, Info } from "lucide-react";
 
 const NAV = [
