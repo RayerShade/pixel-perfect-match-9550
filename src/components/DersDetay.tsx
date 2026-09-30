@@ -1,3 +1,4 @@
+import { DersDuzenle } from "@/components/OzelDersler";
 import { X, Clock, User, MapPin, CalendarDays, Tag, StickyNote, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DERS_TURU_ETIKET, amfiSecenekleri, type DersOlayi } from "@/lib/schedule-data";
@@ -177,6 +178,7 @@ export function DersDetay({
           <Satir icon={Tag} etiket="Dönem" deger={ders.semester} />
           <Satir icon={StickyNote} etiket="Notlar" deger={ders.notes || "—"} />
         </div>
+        <DersDuzenle key={olay.key} olay={olay} onBitti={onClose} />
 
       </div>
     </div>

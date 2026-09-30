@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AyGorunumu, GunGorunumu, HaftaGorunumu } from "@/components/CalendarViews";
 import { DersDetay } from "@/components/DersDetay";
+import { OzelDersFormu, kisiselUygula } from "@/components/OzelDersler";
 import { TUR_NOKTA } from "@/components/ders-stil";
 import {
   DERS_TURU_ETIKET,
@@ -13,7 +14,7 @@ import {
   ogrenciBul,
   type DersOlayi,
 } from "@/lib/schedule-data";
-import { addDays, formatLong, sameDay, startOfWeek, weekLabel, AYLAR, GUN_KISA } from "@/lib/date-utils";
+import { addDays, isoDate, formatLong, sameDay, startOfWeek, weekLabel, AYLAR, GUN_KISA } from "@/lib/date-utils";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -54,6 +55,7 @@ function Takvim() {
     sonDurum.gorunum = gorunum;
   }, [imlec, gorunum]);
   const [secili, setSecili] = useState<DersOlayi | null>(null);
+  const [ekle, setEkle] = useState(false);
 
   const { secili: secmeliler } = useSecmeliler();
   const { manuel, ata } = useManuelAmfiler();
@@ -64,14 +66,19 @@ function Takvim() {
   const ogrenci = useMemo(() => ogrenciBul(veri, ayarlar.ogrenciNo ?? "", ayarlar.grupElle), [veri, ayarlar.ogrenciNo, ayarlar.grupElle]);
   const olaylar = useMemo(
     () =>
-      onlineFiltrele(
-        gorunum === "ay"
-          ? ayinOlaylari(imlec, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? [])
-          : haftaninOlaylari(monday, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? []),
-        ayarlar.onlineGorunum ?? "goster",
-        ayarlar.onlineDersAyarlari ?? {},
+      kisiselUygula(
+        onlineFiltrele(
+          gorunum === "ay"
+            ? ayinOlaylari(imlec, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? [])
+            : haftaninOlaylari(monday, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? []),
+          ayarlar.onlineGorunum ?? "goster",
+          ayarlar.onlineDersAyarlari ?? {},
+        ),
+        gorunum === "ay" ? startOfWeek(new Date(imlec.getFullYear(), imlec.getMonth(), 1)) : monday,
+        gorunum === "ay" ? addDays(new Date(imlec.getFullYear(), imlec.getMonth() + 1, 0), 7) : addDays(monday, 6),
+        ayarlar,
       ),
-    [gorunum, imlec, monday, secmeliler, manuel, veri, ogrenci, ayarlar.onlineGorunum, ayarlar.onlineDersAyarlari, ayarlar.gizliSecmeliGruplari],
+    [gorunum, imlec, monday, secmeliler, manuel, veri, ogrenci, ayarlar],
   );
 
   const bekleyen = olaylar.filter((o) => o.amfi === null).length;
@@ -112,6 +119,14 @@ function Takvim() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <button
+              onClick={() => setEkle(true)}
+              aria-label="Ders ekle"
+              title="Ders ekle"
+              className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground sm:py-1.5 sm:text-xs"
+            >
+              <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Ekle</span>
+            </button>
             <button
               onClick={() => setImlec(new Date())}
               className="rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent sm:py-1.5 sm:text-xs"
@@ -217,6 +232,7 @@ function Takvim() {
         </div>
       </div>
 
+      {ekle ? <OzelDersFormu varsayilanTarih={isoDate(imlec)} onClose={() => setEkle(false)} /> : null}
       <DersDetay olay={secili} onClose={() => setSecili(null)} onAmfiSec={(k, a) => {
           ata(k, a);
           setSecili((s) => (s ? { ...s, amfi: a, kaynak: "manuel" } : s));
