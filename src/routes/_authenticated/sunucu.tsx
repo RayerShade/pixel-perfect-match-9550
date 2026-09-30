@@ -3,9 +3,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Activity, CalendarRange, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
+import { Activity, LifeBuoy, CalendarRange, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
+import { TalepListesi, TalepSohbet, useTalepler } from "@/components/Destek";
 import {
   TABLOLAR, dosyaIslem, dosyaListele, kullaniciDuzenle, kullaniciEkIslem, kullaniciIslem, kullaniciOlustur,
   satirKaydet, satirSil, sunucuKullanicilar, sunucuOzet, tabloOku, tamYedek, yedekGeriYukle,
@@ -20,10 +21,11 @@ export const Route = createFileRoute("/_authenticated/sunucu")({
   component: Sunucu,
 });
 
-type Sekme = "ozet" | "kullanicilar" | "donem" | "veri" | "dosyalar" | "duyuru" | "yedek";
+type Sekme = "ozet" | "kullanicilar" | "destek" | "donem" | "veri" | "dosyalar" | "duyuru" | "yedek";
 const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "ozet", ad: "Özet", ikon: Activity },
   { id: "kullanicilar", ad: "Kullanıcılar", ikon: Users },
+  { id: "destek", ad: "Destek", ikon: LifeBuoy },
   { id: "donem", ad: "Dönemler", ikon: CalendarRange },
   { id: "veri", ad: "Veritabanı", ikon: Database },
   { id: "dosyalar", ad: "Dosyalar", ikon: FileSpreadsheet },
@@ -75,7 +77,7 @@ function Sunucu() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl space-y-4 p-3 md:p-5">
-        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : <Yedek />}
+        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : <Yedek />}
       </main>
     </div>
   );
@@ -469,6 +471,33 @@ function Yedek() {
         <p className="mb-3 text-sm text-muted-foreground">Aynı anahtara sahip satırların üzerine yazılır; yedekte olmayan satırlar silinmez. Hesabı silinmiş kullanıcıların satırları geri yüklenemez.</p>
         <input type="file" accept=".json,application/json" disabled={mesgul} onChange={(e) => { const f = e.target.files?.[0]; if (f) void geri(f); e.target.value = ""; }} className="text-sm" />
       </Kart>
+    </div>
+  );
+}
+
+function DestekYonetim() {
+  const { liste, yenile } = useTalepler();
+  const [secili, setSecili] = useState<string | null>(null);
+  const [filtre, setFiltre] = useState<"acik" | "kapali" | "hepsi">("acik");
+  const { data: kisiler } = useQuery({
+    queryKey: ["destek-kisiler"],
+    queryFn: async () => (await supabase.from("profiles").select("id, ad_soyad, email")).data ?? [],
+  });
+  const ad = (id: string) => { const p = kisiler?.find((k) => k.id === id); return p ? p.ad_soyad || p.email || "" : ""; };
+  const gorunen = liste.filter((t) => filtre === "hepsi" || t.durum === filtre);
+  const talep = liste.find((t) => t.id === secili);
+  return (
+    <div className="grid gap-4 md:grid-cols-[320px_1fr]">
+      <div className="space-y-2">
+        <div className="flex gap-1">
+          {(["acik", "kapali", "hepsi"] as const).map((f) => (
+            <button key={f} onClick={() => setFiltre(f)} className={filtre === f ? ana : btn}>{f === "acik" ? "Açık" : f === "kapali" ? "Kapalı" : "Hepsi"}</button>
+          ))}
+          <button onClick={() => void yenile()} className={btn}><RefreshCw className="h-3 w-3" /></button>
+        </div>
+        <TalepListesi liste={gorunen} secili={secili} sec={setSecili} ekstra={(t) => ad(t.user_id)} />
+      </div>
+      {talep ? <TalepSohbet talep={talep} yonetici onDegisti={yenile} /> : <p className="text-sm text-muted-foreground">Bir talep seç.</p>}
     </div>
   );
 }
