@@ -16,6 +16,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAyarlarRouteImport } from './routes/_authenticated/ayarlar'
 import { Route as AuthenticatedDerslerRouteImport } from './routes/_authenticated/dersler'
+import { Route as AuthenticatedDestekRouteImport } from './routes/_authenticated/destek'
 import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authenticated/secmeliler'
 import { Route as AuthenticatedSunucuRouteImport } from './routes/_authenticated/sunucu'
 
@@ -53,6 +54,11 @@ const AuthenticatedDerslerRoute = AuthenticatedDerslerRouteImport.update({
   path: '/dersler',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDestekRoute = AuthenticatedDestekRouteImport.update({
+  id: '/destek',
+  path: '/destek',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSecmelilerRoute = AuthenticatedSecmelilerRouteImport.update({
   id: '/secmeliler',
   path: '/secmeliler',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/ayarlar': typeof AuthenticatedAyarlarRoute
   '/dersler': typeof AuthenticatedDerslerRoute
+  '/destek': typeof AuthenticatedDestekRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/sunucu': typeof AuthenticatedSunucuRoute
 }
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/ayarlar': typeof AuthenticatedAyarlarRoute
   '/dersler': typeof AuthenticatedDerslerRoute
+  '/destek': typeof AuthenticatedDestekRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/sunucu': typeof AuthenticatedSunucuRoute
   '/': typeof AuthenticatedIndexRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/ayarlar': typeof AuthenticatedAyarlarRoute
   '/_authenticated/dersler': typeof AuthenticatedDerslerRoute
+  '/_authenticated/destek': typeof AuthenticatedDestekRoute
   '/_authenticated/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/_authenticated/sunucu': typeof AuthenticatedSunucuRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ayarlar'
     | '/dersler'
+    | '/destek'
     | '/secmeliler'
     | '/sunucu'
   fileRoutesByTo: FileRoutesByTo
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ayarlar'
     | '/dersler'
+    | '/destek'
     | '/secmeliler'
     | '/sunucu'
     | '/'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/ayarlar'
     | '/_authenticated/dersler'
+    | '/_authenticated/destek'
     | '/_authenticated/secmeliler'
     | '/_authenticated/sunucu'
     | '/_authenticated/'
@@ -187,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDerslerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/destek': {
+      id: '/_authenticated/destek'
+      path: '/destek'
+      fullPath: '/destek'
+      preLoaderRoute: typeof AuthenticatedDestekRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/secmeliler': {
       id: '/_authenticated/secmeliler'
       path: '/secmeliler'
@@ -208,6 +227,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAyarlarRoute: typeof AuthenticatedAyarlarRoute
   AuthenticatedDerslerRoute: typeof AuthenticatedDerslerRoute
+  AuthenticatedDestekRoute: typeof AuthenticatedDestekRoute
   AuthenticatedSecmelilerRoute: typeof AuthenticatedSecmelilerRoute
   AuthenticatedSunucuRoute: typeof AuthenticatedSunucuRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -217,6 +237,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAyarlarRoute: AuthenticatedAyarlarRoute,
   AuthenticatedDerslerRoute: AuthenticatedDerslerRoute,
+  AuthenticatedDestekRoute: AuthenticatedDestekRoute,
   AuthenticatedSecmelilerRoute: AuthenticatedSecmelilerRoute,
   AuthenticatedSunucuRoute: AuthenticatedSunucuRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
