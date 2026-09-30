@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
+import { DuyuruBandi } from "@/components/DuyuruBandi";
 import { CalendarDays, BookOpen, ListChecks, Building2, Settings, LogOut, ShieldCheck, Loader2 } from "lucide-react";
 
 const NAV = [
@@ -81,6 +82,7 @@ export function AppShell({
         </div>
       ) : null}
       {eksik ? <ProfilTamamla /> : null}
+      <DuyuruBandi />
 
       <main className="mx-auto max-w-6xl px-3 py-4 md:px-4 md:py-6">{children}</main>
 
