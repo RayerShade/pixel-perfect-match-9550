@@ -37,10 +37,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hazirla = useCallback(async (u: User, ad = "", no = "") => {
     const m = u.user_metadata ?? {};
-    const { data: admin } = await supabase.rpc("hesap_hazirla", {
+    const { data: admin, error } = await supabase.rpc("hesap_hazirla", {
       _ad_soyad: ad || m["ad_soyad"] || m["full_name"] || m["name"] || "",
       _ogrenci_no: no || m["ogrenci_no"] || "",
     });
+    if (error?.message.includes("IU_EPOSTA_GEREKLI")) {
+      sessionStorage.setItem("ders-takvim:giris-hata", "Sadece @ogr.iu.edu.tr uzantılı İÜ öğrenci e-postasıyla hesap açılabilir.");
+      await supabase.auth.signOut();
+      throw new Error("IU_EPOSTA_GEREKLI");
+    }
     setIsAdmin(Boolean(admin));
     const { data: p } = await supabase.from("profiles").select("id, email, ad_soyad, ogrenci_no").eq("id", u.id).maybeSingle();
     setProfil(p);
