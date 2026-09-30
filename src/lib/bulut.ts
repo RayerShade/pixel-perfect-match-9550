@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { PROGRAM_ALANLARI, programAnahtari, type Dil } from "./program";
 
 export const ANAHTARLAR = {
   veri: "ders-takvim:yuklenen-veri",
@@ -14,7 +15,7 @@ export const GENEL_ALANLAR = {
   amfi: ["amfi", "secmeliOlaylari", "amfiAdlari", "amfiDosyalari"],
   secmeli: ["genelSecmeliler", "secmeliDosya"],
 } as const;
-const GENEL_HEPSI: string[] = [...GENEL_ALANLAR.amfi, ...GENEL_ALANLAR.secmeli];
+const GENEL_HEPSI: string[] = [...GENEL_ALANLAR.amfi, ...GENEL_ALANLAR.secmeli, ...PROGRAM_ALANLARI];
 
 export const BULUT_OLAY = "ders-takvim:bulut";
 
@@ -40,34 +41,26 @@ export function yerelTemizle() {
 }
 
 /** Giriş sonrası: hesabın verilerini ve ortak dosyaları cihaza indirir. */
-export async function buluttanYukle(userId: string, ogrenciNo: string) {
+export async function buluttanYukle(userId: string, ogrenciNo: string, meta: Record<string, unknown> = {}) {
   yukleniyor = true;
-  let tasinacak = false;
-  let genelTasi: ("amfi" | "secmeli")[] = [];
+  let kaydet = false;
   try {
     const [{ data: kisisel }, { data: genel }] = await Promise.all([
       supabase.from("user_data").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("global_data").select("anahtar, veri"),
     ]);
-    const yerel = oku(ANAHTARLAR.veri, {}) as Record<string, unknown>;
-    const bulutKisisel = (kisisel?.veri as Record<string, unknown>) ?? {};
-    // İlk girişte cihazdaki eski yüklemeleri hesaba taşı
-    tasinacak = !Object.keys(bulutKisisel).length && Boolean(yerel["dersler"] || yerel["uygulamalar"] || yerel["ogrenciler"]);
-    const veri: Record<string, unknown> = {
-      dersler: null,
-      amfi: null,
-      ...(tasinacak ? sec(yerel, GENEL_HEPSI, true) : bulutKisisel),
-    };
-    const genelAnahtarlar = new Set((genel ?? []).map((g) => g.anahtar));
-    genelTasi = (["amfi", "secmeli"] as const).filter(
-      (a) => !genelAnahtarlar.has(a) && GENEL_ALANLAR[a].some((f) => yerel[f]),
-    );
-    for (const a of genelTasi) Object.assign(veri, sec(yerel, GENEL_ALANLAR[a]));
-    for (const g of genel ?? []) Object.assign(veri, (g.veri as object) ?? {});
     const ayar = { ...((kisisel?.ayarlar as Record<string, unknown>) ?? {}) };
     const gizli = (ayar["__gizli"] as string[]) ?? [];
     delete ayar["__gizli"];
     if (!ayar["ogrenciNo"] && ogrenciNo) ayar["ogrenciNo"] = ogrenciNo;
+    // Kayıtta seçilen dönem/dil
+    if (!ayar["donemId"] && meta["donem_id"]) { ayar["donemId"] = meta["donem_id"]; kaydet = true; }
+    if (!ayar["dil"] && meta["dil"]) { ayar["dil"] = meta["dil"]; kaydet = true; }
+    const prog = ayar["donemId"] && ayar["dil"] ? programAnahtari(String(ayar["donemId"]), ayar["dil"] as Dil) : "";
+    const veri: Record<string, unknown> = { dersler: null, amfi: null };
+    for (const g of genel ?? []) {
+      if (g.anahtar === "amfi" || g.anahtar === "secmeli" || g.anahtar === prog) Object.assign(veri, (g.veri as object) ?? {});
+    }
     localStorage.setItem(ANAHTARLAR.veri, JSON.stringify(veri));
     localStorage.setItem(ANAHTARLAR.ayarlar, JSON.stringify(ayar));
     localStorage.setItem(ANAHTARLAR.secmeliler, JSON.stringify(kisisel?.secmeliler ?? []));
@@ -77,10 +70,26 @@ export async function buluttanYukle(userId: string, ogrenciNo: string) {
   } finally {
     yukleniyor = false;
   }
-  if (tasinacak) kisiselKaydet();
-  genelTasi.forEach((a) => genelKaydet(a));
+  if (kaydet) kisiselKaydet();
   window.dispatchEvent(new Event("ders-takvim:veri"));
   window.dispatchEvent(new Event(BULUT_OLAY));
+}
+
+/** Öğrencinin dönem/dil seçimi değişince o programı indirir. */
+export async function programiYenile() {
+  const ayar = oku(ANAHTARLAR.ayarlar, {}) as Record<string, unknown>;
+  const veri = sec(oku(ANAHTARLAR.veri, {}), PROGRAM_ALANLARI, true);
+  if (ayar["donemId"] && ayar["dil"]) {
+    const { data } = await supabase
+      .from("global_data")
+      .select("veri")
+      .eq("anahtar", programAnahtari(String(ayar["donemId"]), ayar["dil"] as Dil))
+      .maybeSingle();
+    Object.assign(veri, (data?.veri as object) ?? {});
+  }
+  if (!veri["dersler"]) veri["dersler"] = null;
+  localStorage.setItem(ANAHTARLAR.veri, JSON.stringify(veri));
+  window.dispatchEvent(new Event("ders-takvim:veri"));
 }
 
 const zaman: Record<string, ReturnType<typeof setTimeout>> = {};
