@@ -239,7 +239,7 @@ export const kullaniciDuzenle = createServerFn({ method: "POST" })
       const ayarlar = { ...((mevcut?.ayarlar ?? {}) as Record<string, unknown>) };
       const grup = (data.grup ?? "").trim();
       ayarlar["grupElle"] = grup ? { grup, altGrup: (data.altGrup ?? "").trim() } : null;
-      const { error } = await db.from("user_data").upsert({ user_id: data.userId, ayarlar }, { onConflict: "user_id" });
+      const { error } = await db.from("user_data").upsert({ user_id: data.userId, ayarlar: ayarlar as never }, { onConflict: "user_id" });
       if (error) throw new Error(error.message);
     }
     return { ok: true };
