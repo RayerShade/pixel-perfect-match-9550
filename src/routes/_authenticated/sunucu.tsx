@@ -211,9 +211,22 @@ function Kullanicilar() {
 
   return (
     <Kart baslik={`Kullanıcılar (${liste.length}/${q.data?.length ?? 0})`} sag={<>
+      <button className={ana} onClick={() => setYeni((v) => !v)}>{yeni ? "Kapat" : "+ Yeni kullanıcı"}</button>
       <button className={btn} onClick={csv}>CSV indir</button>
       <button className={btn} onClick={yenile}><RefreshCw className="h-3 w-3" />yenile</button>
     </>}>
+      {yeni ? (
+        <form onSubmit={(e) => void yeniKaydet(e)} className="mb-3 grid gap-2 rounded-lg border border-primary/40 bg-primary/5 p-3 sm:grid-cols-2 lg:grid-cols-4">
+          <input name="ad" placeholder="Ad soyad" className={giris} />
+          <input name="no" placeholder="Öğrenci no" className={giris} />
+          <input name="email" type="email" required placeholder="E-posta *" className={giris} />
+          <input name="sifre" required minLength={6} placeholder="Şifre (en az 6) *" className={giris} />
+          <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-4">
+            <button type="submit" className={ana}>Hesabı oluştur</button>
+            <span className="text-xs text-muted-foreground">E-posta otomatik onaylı açılır, öğrenci hemen girebilir.</span>
+          </div>
+        </form>
+      ) : null}
       <div className="mb-3 flex flex-wrap gap-2">
         <input value={ara} onChange={(e) => setAra(e.target.value)} placeholder="ad, no, e-posta, id ara" className={`${giris} w-64`} />
         <select value={filtre} onChange={(e) => setFiltre(e.target.value as typeof filtre)} className={giris}>
