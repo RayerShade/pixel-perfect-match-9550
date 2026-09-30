@@ -151,8 +151,11 @@ function ProfilTamamla() {
   );
 }
 
-const BILGILENDIRME_METNI =
-  "Bu site İstanbul Üniversitesi'ne ait değildir, resmi bir uygulama değildir; gönüllü bir öğrenci projesidir. Takvimdeki bilgiler yüklenen program dosyalarından oluşturulur ve her zaman birebir doğru olmayabilir; kritik saat, derslik veya değişiklikler için resmi duyuruları takip et.";
+const BILGILENDIRME_MADDELERI = [
+  "Bu site İstanbul Üniversitesi'ne ait değildir; resmi bir uygulama değildir, gönüllü bir öğrenci projesidir.",
+  "Takvimdeki bilgiler yüklenen program dosyalarından oluşturulur ve her zaman birebir doğru olmayabilir; kritik saat, derslik veya değişiklikler için resmi duyuruları takip et.",
+  "İTF Takvim hâlâ geliştirme aşamasındadır. Problemlerini ve tavsiyelerini destek hattımıza iletebilirsin.",
+];
 
 function Bilgilendirme() {
   const { guncelle } = useAyarlar();
@@ -163,7 +166,11 @@ function Bilgilendirme() {
           <Info className="h-6 w-6" />
         </div>
         <h2 className="text-base font-bold">Hoş geldin!</h2>
-        <p className="text-left text-xs leading-relaxed text-muted-foreground">{BILGILENDIRME_METNI}</p>
+        <ol className="list-decimal space-y-2 pl-5 text-left text-xs leading-relaxed text-muted-foreground">
+          {BILGILENDIRME_MADDELERI.map((madde) => (
+            <li key={madde}>{madde}</li>
+          ))}
+        </ol>
         <button
           onClick={() => guncelle({ bilgilendirmeGordu: true })}
           className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
