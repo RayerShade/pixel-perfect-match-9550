@@ -14,7 +14,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as AuthenticatedAmfiRouteImport } from './routes/_authenticated/amfi'
 import { Route as AuthenticatedAyarlarRouteImport } from './routes/_authenticated/ayarlar'
 import { Route as AuthenticatedDerslerRouteImport } from './routes/_authenticated/dersler'
 import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authenticated/secmeliler'
@@ -44,11 +43,6 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAmfiRoute = AuthenticatedAmfiRouteImport.update({
-  id: '/amfi',
-  path: '/amfi',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedAyarlarRoute = AuthenticatedAyarlarRouteImport.update({
   id: '/ayarlar',
   path: '/ayarlar',
@@ -75,7 +69,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/amfi': typeof AuthenticatedAmfiRoute
   '/ayarlar': typeof AuthenticatedAyarlarRoute
   '/dersler': typeof AuthenticatedDerslerRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
@@ -85,7 +78,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/amfi': typeof AuthenticatedAmfiRoute
   '/ayarlar': typeof AuthenticatedAyarlarRoute
   '/dersler': typeof AuthenticatedDerslerRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
@@ -98,7 +90,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
-  '/_authenticated/amfi': typeof AuthenticatedAmfiRoute
   '/_authenticated/ayarlar': typeof AuthenticatedAyarlarRoute
   '/_authenticated/dersler': typeof AuthenticatedDerslerRoute
   '/_authenticated/secmeliler': typeof AuthenticatedSecmelilerRoute
@@ -112,7 +103,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/admin'
-    | '/amfi'
     | '/ayarlar'
     | '/dersler'
     | '/secmeliler'
@@ -122,7 +112,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/admin'
-    | '/amfi'
     | '/ayarlar'
     | '/dersler'
     | '/secmeliler'
@@ -134,7 +123,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/admin'
-    | '/_authenticated/amfi'
     | '/_authenticated/ayarlar'
     | '/_authenticated/dersler'
     | '/_authenticated/secmeliler'
@@ -185,13 +173,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/amfi': {
-      id: '/_authenticated/amfi'
-      path: '/amfi'
-      fullPath: '/amfi'
-      preLoaderRoute: typeof AuthenticatedAmfiRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/ayarlar': {
       id: '/_authenticated/ayarlar'
       path: '/ayarlar'
@@ -225,7 +206,6 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
-  AuthenticatedAmfiRoute: typeof AuthenticatedAmfiRoute
   AuthenticatedAyarlarRoute: typeof AuthenticatedAyarlarRoute
   AuthenticatedDerslerRoute: typeof AuthenticatedDerslerRoute
   AuthenticatedSecmelilerRoute: typeof AuthenticatedSecmelilerRoute
@@ -235,7 +215,6 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
-  AuthenticatedAmfiRoute: AuthenticatedAmfiRoute,
   AuthenticatedAyarlarRoute: AuthenticatedAyarlarRoute,
   AuthenticatedDerslerRoute: AuthenticatedDerslerRoute,
   AuthenticatedSecmelilerRoute: AuthenticatedSecmelilerRoute,
