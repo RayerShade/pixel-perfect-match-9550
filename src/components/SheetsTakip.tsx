@@ -44,7 +44,7 @@ export function SheetsTakip({ anahtarlar }: { anahtarlar?: string[] }) {
                 }}
                 className="rounded-md border border-border bg-background px-1 py-0.5"
               >
-                {[15, 30, 60, 120, 360, 720, 1440].map((m) => (
+                {[5, 10, 15, 30, 60, 120, 360, 720, 1440].map((m) => (
                   <option key={m} value={m}>{m < 60 ? `${m} dk` : `${m / 60} saat`}</option>
                 ))}
               </select>
