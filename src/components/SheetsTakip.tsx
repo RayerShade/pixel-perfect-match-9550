@@ -35,6 +35,19 @@ export function SheetsTakip({ anahtarlar }: { anahtarlar?: string[] }) {
             <span className="text-muted-foreground">son kontrol {zaman(k.son_kontrol)} · son değişiklik {zaman(k.son_degisim)}</span>
             {k.hata ? <span className="text-destructive">Hata: {k.hata}</span> : null}
             <span className="ml-auto flex items-center gap-1.5">
+              <select
+                aria-label="Kontrol aralığı"
+                value={k.aralik_dk}
+                onChange={async (e) => {
+                  await supabase.from("sheets_kaynaklari").update({ aralik_dk: Number(e.target.value) }).eq("id", k.id);
+                  void yenile();
+                }}
+                className="rounded-md border border-border bg-background px-1 py-0.5"
+              >
+                {[15, 30, 60, 120, 360, 720, 1440].map((m) => (
+                  <option key={m} value={m}>{m < 60 ? `${m} dk` : `${m / 60} saat`}</option>
+                ))}
+              </select>
               <label className="flex items-center gap-1">
                 <input
                   type="checkbox"
