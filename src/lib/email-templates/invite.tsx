@@ -23,28 +23,26 @@ export const InviteEmail = ({
   siteUrl,
   confirmationUrl,
 }: InviteEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="tr" dir="ltr">
     <Head>
       <style>{darkModeCss}</style>
     </Head>
-    <Preview>You've been invited to join {siteName}</Preview>
+    <Preview>{siteName}'e davet edildin</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>You've been invited</Heading>
+        <Heading style={h1}>Davet edildin</Heading>
         <Text style={text}>
-          You've been invited to join{' '}
+          {' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
-          . Click the button below to accept the invitation and create your
-          account.
+          {"'e davet edildin. Daveti kabul edip hesabını oluşturmak için aşağıdaki butona tıkla."}
         </Text>
         <Button className="dm-btn" style={button} href={confirmationUrl}>
-          Accept Invitation
+          Daveti Kabul Et
         </Button>
         <Text style={footer}>
-          If you weren't expecting this invitation, you can safely ignore this
-          email.
+          Bu daveti beklemiyorsan bu e-postayı görmezden gelebilirsin.
         </Text>
       </Container>
     </Body>
