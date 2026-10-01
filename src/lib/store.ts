@@ -41,6 +41,8 @@ export interface Ayarlar {
   gunBitis: number;
   onlineGorunum: "goster" | "gizle" | "cakismayan";
   onlineDersAyarlari: Record<string, "goster" | "gizle" | "cakismayan">;
+  /** Türkçe telafi uygulamaları ve İngilizce Laboratory Skills repeat/make-up kayıtları. */
+  telafiGoster: boolean;
   /** Takvimde hiç gösterilmeyecek seçmeli grupları (1-3). */
   gizliSecmeliGruplari: number[];
   /** İlk girişte gösterilen bilgilendirme metni bir kez görüldü mü. */
@@ -62,6 +64,7 @@ export const VARSAYILAN_AYARLAR: Ayarlar = {
   gunBitis: 18,
   onlineGorunum: "goster",
   onlineDersAyarlari: {},
+  telafiGoster: true,
   gizliSecmeliGruplari: [],
 };
 

@@ -72,8 +72,8 @@ function Takvim() {
       kisiselUygula(
         onlineFiltrele(
           gorunum === "ay"
-            ? ayinOlaylari(imlec, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? [])
-            : haftaninOlaylari(monday, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? []),
+            ? ayinOlaylari(imlec, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? [], ayarlar.telafiGoster ?? true)
+            : haftaninOlaylari(monday, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? [], ayarlar.telafiGoster ?? true),
           ayarlar.onlineGorunum ?? "goster",
           ayarlar.onlineDersAyarlari ?? {},
         ),
