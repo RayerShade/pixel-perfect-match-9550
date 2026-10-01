@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +18,8 @@ import {
 } from "@/lib/schedule-data";
 import { addDays, isoDate, formatLong, sameDay, startOfWeek, weekLabel, AYLAR, GUN_KISA } from "@/lib/date-utils";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
+import { useKatilim } from "@/lib/katilim";
+import { devamHesapla, tumOlaylar } from "@/lib/devam";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -85,6 +87,22 @@ function Takvim() {
   );
 
   const bekleyen = olaylar.filter((o) => o.amfi === null).length;
+  const { katilim, ayarla, kapali } = useKatilim();
+  const isaretle = (liste: DersOlayi[]) => {
+    const bugunSonu = new Date(bugun.getFullYear(), bugun.getMonth(), bugun.getDate(), 23, 59);
+    const uygun = liste.filter((o) => !o.ozelId && o.date.getTime() <= bugunSonu.getTime());
+    if (!uygun.length) {
+      toast.info("Henüz yapılmamış dersler işaretlenemez.");
+      return;
+    }
+    const hepsi = uygun.every((o) => katilim[o.key]);
+    ayarla(uygun.map((o) => o.key), !hepsi);
+  };
+  const gunIsaretle = (g: Date) => isaretle(olaylar.filter((o) => sameDay(o.date, g)));
+  const uyarilar = useMemo(() => {
+    const tum = tumOlaylar(veri, secmeliler, manuel, ogrenci, ayarlar);
+    return devamHesapla(tum, ayarlar.katilim ?? {}).filter((g) => g.uyari && !kapali.includes(g.dilim));
+  }, [veri, secmeliler, manuel, ogrenci, ayarlar, kapali]);
 
   const kaydir = (yon: number) => {
     if (gorunum === "gun") setImlec((d) => addDays(d, yon));
@@ -190,6 +208,21 @@ function Takvim() {
           </p>
         ) : null}
 
+        {uyarilar.length ? (
+          <Link to="/dersler" className="mt-3 block rounded-xl bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/15">
+            ⚠️ Devamsızlık: {uyarilar.slice(0, 3).map((g) => `${g.dal} (${g.dilim})`).join(", ")}
+            {uyarilar.length > 3 ? ` ve ${uyarilar.length - 3} ders daha` : ""} — bu derslerden kalabilirsin. Ayrıntı için dokun.
+          </Link>
+        ) : null}
+
+        {gorunum === "hafta" ? (
+          <div className="mt-3 flex justify-end">
+            <button onClick={() => isaretle(olaylar)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">
+              Tüm haftaya girdim olarak işaretle / kaldır
+            </button>
+          </div>
+        ) : null}
+
         {gorunum === "gun" ? (
           <div className="mt-3 grid grid-cols-7 gap-1">
             {Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((g, i) => {
@@ -230,10 +263,12 @@ function Takvim() {
               baslangic={ayarlar.gunBaslangic}
               bitis={ayarlar.gunBitis}
               bugun={bugun}
+              katilim={katilim}
+              onGunIsaretle={gunIsaretle}
             />
           ) : null}
           {gorunum === "gun" ? (
-            <GunGorunumu gun={imlec} olaylar={olaylar} onSec={setSecili} bugun={bugun} />
+            <GunGorunumu gun={imlec} olaylar={olaylar} onSec={setSecili} bugun={bugun} katilim={katilim} onGunIsaretle={gunIsaretle} />
           ) : null}
           {gorunum === "ay" ? (
             <AyGorunumu
