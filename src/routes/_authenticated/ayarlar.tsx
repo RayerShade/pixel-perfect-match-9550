@@ -56,7 +56,7 @@ function Ayarlar() {
   return (
     <AppShell baslik="Ayarlar" aciklama="Uygulama tercihleri">
       <div className="space-y-3">
-        <section className="rounded-2xl border border-border bg-surface p-4">
+        <section data-tur="ogrenci-bilgi" className="rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-bold">Öğrenci Bilgileri</h2>
           <div className="mt-3 space-y-3">
             <div>
@@ -105,7 +105,7 @@ function Ayarlar() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-surface p-4">
+        <section data-tur="takvim-gorunum" className="rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-bold">Takvim Görünümü</h2>
           <label className="mt-3 flex items-center justify-between gap-3">
             <span className="text-sm">Hafta sonunu göster</span>

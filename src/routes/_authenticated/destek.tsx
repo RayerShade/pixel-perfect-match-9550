@@ -26,7 +26,7 @@ function DestekSayfasi() {
       <div className="mx-auto max-w-3xl space-y-4 p-4 pb-28">
         <p className="text-sm text-muted-foreground">Yaşadığın sorunları, önerilerini veya şikayetlerini buradan ilet. Cevaplar bu sayfada görünür.</p>
         <TanitimTusu />
-        <YeniTalep onOlustu={async (id) => { await yenile(); setSecili(id); }} />
+        <div data-tur="yeni-talep"><YeniTalep onOlustu={async (id) => { await yenile(); setSecili(id); }} /></div>
         <h2 className="font-semibold">Taleplerim</h2>
         <TalepListesi liste={liste} secili={secili} sec={setSecili} />
         {talep && <TalepSohbet talep={talep} yonetici={false} onDegisti={yenile} />}
@@ -39,7 +39,7 @@ function TanitimTusu() {
   const { guncelle } = useAyarlar();
   const nav = useNavigate();
   return (
-    <button type="button" onClick={() => { guncelle({ turGordu: false }); void nav({ to: "/" }); }} className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-4 text-left">
+    <button type="button" onClick={() => { sessionStorage.removeItem("tur-adim"); guncelle({ turGordu: false }); void nav({ to: "/" }); }} className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-4 text-left">
       <CircleHelp className="h-5 w-5 shrink-0 text-primary" />
       <span className="flex-1"><span className="block text-sm font-semibold">Site tanıtımını tekrar izle</span><span className="block text-xs text-muted-foreground">Özellikleri adım adım gösterir</span></span>
     </button>

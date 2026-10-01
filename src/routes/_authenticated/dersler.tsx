@@ -128,7 +128,7 @@ function Dersler() {
           const uyariKapali = kapali.includes(dl.ad);
           let sonTur: OlayTuru | null = null;
           return (
-            <section key={dl.ad} className="overflow-hidden rounded-2xl border border-border bg-surface">
+            <section key={dl.ad} data-tur="dilim" className="overflow-hidden rounded-2xl border border-border bg-surface">
               <div className="flex items-center gap-2 p-4">
                 <button onClick={() => ac(dl.ad)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${acikDl ? "rotate-180" : ""}`} />

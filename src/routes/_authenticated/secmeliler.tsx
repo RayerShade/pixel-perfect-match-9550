@@ -60,7 +60,7 @@ function Secmeliler() {
             const secilen = hepsi.find((d) => secili.includes(d.id));
             const grupGizli = gizliGruplar.includes(grup);
             return (
-              <section key={saat} className={grupGizli ? "opacity-60" : undefined}>
+              <section key={saat} data-tur="secmeli-grup" className={grupGizli ? "opacity-60" : undefined}>
                 <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                   <div className="min-w-0">
                     <h2 className="font-display text-base font-bold">{grup}. Seçmeli · {saat}</h2>
