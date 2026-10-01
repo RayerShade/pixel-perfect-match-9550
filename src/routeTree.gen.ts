@@ -20,6 +20,8 @@ import { Route as AuthenticatedDestekRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authenticated/secmeliler'
 import { Route as AuthenticatedSunucuRouteImport } from './routes/_authenticated/sunucu'
 import { Route as ApiPublicSheetsKontrolRouteImport } from './routes/api/public/sheets-kontrol'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -75,6 +77,16 @@ const ApiPublicSheetsKontrolRoute = ApiPublicSheetsKontrolRouteImport.update({
   path: '/api/public/sheets-kontrol',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -87,6 +99,8 @@ export interface FileRoutesByFullPath {
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/sunucu': typeof AuthenticatedSunucuRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -99,6 +113,8 @@ export interface FileRoutesByTo {
   '/sunucu': typeof AuthenticatedSunucuRoute
   '/': typeof AuthenticatedIndexRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +129,8 @@ export interface FileRoutesById {
   '/_authenticated/sunucu': typeof AuthenticatedSunucuRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +145,8 @@ export interface FileRouteTypes {
     | '/secmeliler'
     | '/sunucu'
     | '/api/public/sheets-kontrol'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -139,6 +159,8 @@ export interface FileRouteTypes {
     | '/sunucu'
     | '/'
     | '/api/public/sheets-kontrol'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   id:
     | '__root__'
     | '/_authenticated'
@@ -152,6 +174,8 @@ export interface FileRouteTypes {
     | '/_authenticated/sunucu'
     | '/_authenticated/'
     | '/api/public/sheets-kontrol'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -159,6 +183,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicSheetsKontrolRoute: typeof ApiPublicSheetsKontrolRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -240,6 +266,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSheetsKontrolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -271,6 +311,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicSheetsKontrolRoute: ApiPublicSheetsKontrolRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
