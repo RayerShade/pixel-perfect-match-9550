@@ -229,7 +229,7 @@ function Kullanicilar() {
   const superYap = async (u: Kul, ver: boolean) => {
     if (!confirm(`${u.email}: ${ver ? "super admin yap" : "super admin yetkisini al"}?`)) return;
     const { error } = await supabase.rpc("super_admin_ayarla", { _user_id: u.id, _ver: ver });
-    if (error) return hata(new Error(error.message));
+    if (error) { hata(new Error(error.message)); return; }
     toast.success("Tamam"); void sup.refetch(); yenile();
   };
 
