@@ -185,12 +185,16 @@ async function kaynakIsle(admin: Admin, k: Kaynak): Promise<{ degisti: boolean; 
 /** Aktif tüm (veya tek) kaynakları kontrol eder. Hatalı kaynak tekrar tekrar denenmez: aktif=false yapılır. */
 export async function sheetsKontrol(id?: string) {
   const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
-  let q = admin.from("sheets_kaynaklari").select("id, anahtar, tur, url, son_hash");
+  let q = admin.from("sheets_kaynaklari").select("id, anahtar, tur, url, son_hash, son_kontrol, aralik_dk");
   q = id ? q.eq("id", id) : q.eq("aktif", true);
   const { data, error } = await q;
   if (error) throw error;
   const sonuc: { id: string; degisti: boolean; bildirim: number; hata?: string }[] = [];
-  for (const k of (data ?? []) as Kaynak[]) {
+  const simdi = Date.now();
+  const sirada = ((data ?? []) as (Kaynak & { son_kontrol: string | null; aralik_dk: number })[]).filter(
+    (k) => id || !k.son_kontrol || simdi - new Date(k.son_kontrol).getTime() >= (k.aralik_dk - 2) * 60_000,
+  );
+  for (const k of sirada) {
     try {
       sonuc.push({ id: k.id, ...(await kaynakIsle(admin, k)) });
     } catch (e) {

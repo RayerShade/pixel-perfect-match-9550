@@ -212,6 +212,7 @@ export type Database = {
         Row: {
           aktif: boolean
           anahtar: string
+          aralik_dk: number
           created_at: string
           hata: string | null
           id: string
@@ -225,6 +226,7 @@ export type Database = {
         Insert: {
           aktif?: boolean
           anahtar: string
+          aralik_dk?: number
           created_at?: string
           hata?: string | null
           id?: string
@@ -238,6 +240,7 @@ export type Database = {
         Update: {
           aktif?: boolean
           anahtar?: string
+          aralik_dk?: number
           created_at?: string
           hata?: string | null
           id?: string
