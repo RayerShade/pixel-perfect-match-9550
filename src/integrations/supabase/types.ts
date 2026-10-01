@@ -326,6 +326,20 @@ export type Database = {
         Args: { _baslik: string; _hedef: Json; _metin: string }
         Returns: number
       }
+      duyuru_listesi: {
+        Args: never
+        Returns: {
+          alici: number
+          baslik: string
+          metin: string
+          okuyan: number
+          zaman: string
+        }[]
+      }
+      duyuru_sil: {
+        Args: { _baslik: string; _metin: string; _zaman: string }
+        Returns: number
+      }
       gercek_super_admin_mi: { Args: never; Returns: boolean }
       has_role: {
         Args: {

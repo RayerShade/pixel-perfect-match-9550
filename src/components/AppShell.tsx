@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { listedenOgrenciAdi } from "@/lib/bulut";
 import { DuyuruBandi } from "@/components/DuyuruBandi";
 import { BildirimZili } from "@/components/Bildirimler";
+import { Tanitim } from "@/components/Tanitim";
 import { NumaraBilgi, useNumaraSorgu } from "@/components/NumaraBilgi";
 
 import { useAyarlar } from "@/lib/store";
@@ -30,6 +31,7 @@ export function AppShell({
   const { ayarlar } = useAyarlar();
   const eksik = hazir && user && profil && !profil.ogrenci_no;
   const uyariGoster = hazir && user && profil && !eksik && !ayarlar.bilgilendirmeGordu;
+  const turGoster = hazir && user && profil && !eksik && ayarlar.bilgilendirmeGordu && !ayarlar.turGordu;
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-surface/90 backdrop-blur">
@@ -50,6 +52,7 @@ export function AppShell({
               <Link
                 key={to}
                 to={to}
+                data-tur={`nav-${to}`}
                 activeOptions={{ exact: to === "/" }}
                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent data-[status=active]:bg-teorik-soft data-[status=active]:text-teorik"
               >
@@ -72,7 +75,7 @@ export function AppShell({
             <span className="hidden max-w-[10rem] truncate px-1 text-xs text-muted-foreground lg:inline">
               {profil?.ad_soyad || user?.email}
             </span>
-            <BildirimZili />
+            <span data-tur="zil" className="inline-flex"><BildirimZili /></span>
             <button
               onClick={() => void cikis()}
               title="Çıkış yap"
@@ -91,6 +94,7 @@ export function AppShell({
       ) : null}
       {eksik ? <ProfilTamamla /> : null}
       {uyariGoster ? <Bilgilendirme /> : null}
+      {turGoster ? <Tanitim /> : null}
       <DuyuruBandi />
 
       <main className="mx-auto max-w-6xl px-3 py-4 md:px-4 md:py-6">{children}</main>
@@ -101,6 +105,7 @@ export function AppShell({
             <Link
               key={to}
               to={to}
+              data-tur={`nav-${to}`}
               activeOptions={{ exact: to === "/" }}
               className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium text-muted-foreground transition-colors data-[status=active]:text-teorik"
             >
