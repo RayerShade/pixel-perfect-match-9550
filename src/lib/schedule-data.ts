@@ -263,8 +263,15 @@ export function ingilizceProgram(veri?: YuklenenVeri): boolean {
   const l = veri?.dersler;
   if (!l?.length) return false;
   if (ingCache.has(l)) return ingCache.get(l)!;
-  const tr = l.filter((d) => /[çğışöüİÇĞŞÖÜ]/.test(d.courseName)).length;
-  const r = tr / l.length < 0.08;
+  // Hoca adları (" / Prof. Dr. İlhan …") Türkçe harf içerebilir: yalnız ders adına bak,
+  // ve İngilizce/Türkçe sık kelimeleri karşılaştır.
+  let en = 0, tr = 0;
+  for (const d of l) {
+    const ad = d.courseName.split(" /")[0]!.toLocaleLowerCase("tr-TR");
+    if (/\b(the|and|of|to|in|for|with|introduction|what|is|health|laboratory|skills|disease|lecture)\b/.test(ad)) en++;
+    if (/\b(ve|ile|giriş|nedir|için|uygulama|sağlık|hastalık|ders|dersi)\b/.test(ad) || /[çğışöü]/.test(ad)) tr++;
+  }
+  const r = en > tr;
   ingCache.set(l, r);
   return r;
 }
