@@ -1,0 +1,2 @@
+ALTER TABLE public.sheets_kaynaklari ADD COLUMN IF NOT EXISTS aralik_dk integer NOT NULL DEFAULT 60 CHECK (aralik_dk >= 15);
+SELECT cron.alter_job((SELECT jobid FROM cron.job WHERE jobname = 'sheets-kontrol'), schedule := '*/15 * * * *');
