@@ -1,4 +1,5 @@
 import { addDays, hashString, isoDate, startOfWeek } from "./date-utils";
+import { hucreDili } from "./excel-import";
 
 export type DersTuru = "teorik" | "pratik" | "pbl" | "secmeli" | "sinav";
 
@@ -277,7 +278,12 @@ export function ingilizceProgram(veri?: YuklenenVeri): boolean {
 }
 /** Amfi kayıtlarından programın diline ait olanlar ("DÖNEM 1 İNGİLİZCE" satırları İngilizce programa). */
 function dilKayitlari(kayitlar: HaftalikAmfiKaydi[], ing: boolean) {
-  return kayitlar.filter((k) => (k.group === "EN") === ing);
+  return kayitlar.filter((k) => {
+    // Kutuda hem Türkçe hem İngilizce yazıyorsa (entegre oturum) iki programa da ait
+    const dil = k.group === "TR+EN" ? "TR+EN" : (hucreDili(k.courseName) ?? k.group);
+    if (dil === "TR+EN") return true;
+    return (dil === "EN") === ing;
+  });
 }
 const ortusme = (d: Ders, k: HaftalikAmfiKaydi) =>
   Math.min(dk(d.endTime), dk(k.endTime || k.startTime) + 1) - Math.max(dk(d.startTime), dk(k.startTime));
