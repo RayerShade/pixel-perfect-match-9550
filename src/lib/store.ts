@@ -47,6 +47,7 @@ export interface Ayarlar {
   gizliSecmeliGruplari: number[];
   /** İlk girişte gösterilen bilgilendirme metni bir kez görüldü mü. */
   bilgilendirmeGordu?: boolean;
+  turGordu?: boolean;
   donemId?: string | undefined;
   dil?: Dil | undefined;
   ozelDersler?: OzelDers[];

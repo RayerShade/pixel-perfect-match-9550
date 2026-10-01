@@ -164,7 +164,7 @@ function Takvim() {
                   setPdfHazirlaniyor(false);
                 }
               }}
-              aria-label="PDF indir"
+              aria-label="PDF indir" data-tur="pdf"
               title="Görüntülenen programı PDF olarak indir"
               className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent disabled:opacity-50 sm:py-1.5 sm:text-xs"
             >
@@ -295,7 +295,7 @@ function Takvim() {
 
       <button
         onClick={() => setEkle(true)}
-        aria-label="Ders ekle"
+        aria-label="Ders ekle" data-tur="ekle"
         title="Kendi dersini ekle"
         className="fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 md:bottom-8 md:right-8"
       >
