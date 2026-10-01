@@ -1,4 +1,5 @@
-import { SheetsTusu } from "@/components/SheetsTusu";
+import { SheetsTusu, type SheetsTur } from "@/components/SheetsTusu";
+import { SheetsTakip } from "@/components/SheetsTakip";
 import { useRef, useState } from "react";
 import { BookMarked, CalendarRange, FileSpreadsheet, FlaskConical, Trash2, Upload, Users } from "lucide-react";
 import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
@@ -15,7 +16,9 @@ function YuklemeKarti({
   durum,
   onDosya,
   onSil,
+  kaynak,
 }: {
+  kaynak?: { anahtar: string; tur: SheetsTur };
   baslik: string;
   aciklama: string;
   ikon: React.ReactNode;
@@ -74,7 +77,7 @@ function YuklemeKarti({
         <Upload className="h-3.5 w-3.5" />
         {yukleniyor ? "Okunuyor…" : "Excel dosyası seç"}
       </button>
-      <SheetsTusu className="mt-2" onDosya={async (f) => setMesaj({ ok: true, t: await onDosya(f) })} />
+      <SheetsTusu className="mt-2" kaynak={kaynak} onDosya={async (f) => setMesaj({ ok: true, t: await onDosya(f) })} />
     </div>
   );
 }
@@ -111,6 +114,7 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
       {g ? (
       <YuklemeKarti
         baslik="Haftalık amfi programı"
+        kaynak={{ anahtar: "amfi", tur: "amfi" }}
         aciklama="Tarih, saat, ders ve amfi/derslik sütunlarını okur; sadece amfi bilgisini günceller. Her hafta yeni dosya ekleyebilirsin, eski haftalar korunur."
         ikon={<FileSpreadsheet className="h-4 w-4" />}
         durum={
@@ -173,6 +177,7 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
       {g ? (
       <YuklemeKarti
         baslik="Genel seçmeli ders programı"
+        kaynak={{ anahtar: "secmeli", tur: "secmeli" }}
         aciklama="Tüm seçmeli derslerin adı, hocası, saati ve amfisi önce buradan alınır; eksik bilgiler haftalık amfi programından tamamlanır."
         ikon={<BookMarked className="h-4 w-4" />}
         durum={veri.genelSecmeliler?.length ? `${veri.secmeliDosya ?? "Seçmeli programı"} · ${veri.genelSecmeliler.length} seçmeli` : null}
@@ -185,6 +190,7 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
         onSil={() => kaydet({ genelSecmeliler: null, secmeliDosya: undefined })}
       />
       ) : null}
+      {g ? <div className="sm:col-span-2"><SheetsTakip anahtarlar={["amfi", "secmeli"]} /></div> : null}
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import { SheetsTusu } from "@/components/SheetsTusu";
+import { SheetsTusu, type SheetsTur } from "@/components/SheetsTusu";
+import { SheetsTakip } from "@/components/SheetsTakip";
 import { ProgramTakvim } from "@/components/ProgramTakvim";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import { dosyaGuvenli } from "@/lib/dosya-bulut";
 import { programiYenile } from "@/lib/bulut";
 import {
   DIL_ETIKET,
+  programAnahtari,
   donemSil,
   donemleriKaydet,
   programGetir,
@@ -136,7 +138,7 @@ const UYG_SUTUN: Sutun<UygulamaOlayi>[] = [
   { ad: "Hoca", al: (r) => r.hoca, koy: (r, v) => ({ ...r, hoca: v }), gen: "8rem" },
 ];
 
-function DosyaTusu({ etiket, onDosya }: { etiket: string; onDosya: (f: File) => Promise<void> }) {
+function DosyaTusu({ etiket, onDosya, kaynak }: { etiket: string; onDosya: (f: File) => Promise<void>; kaynak?: { anahtar: string; tur: SheetsTur } }) {
   const ref = useRef<HTMLInputElement>(null);
   const [bekle, setBekle] = useState(false);
   return (
@@ -168,7 +170,7 @@ function DosyaTusu({ etiket, onDosya }: { etiket: string; onDosya: (f: File) => 
       >
         <Upload className="h-3.5 w-3.5" /> {bekle ? "Okunuyor…" : etiket}
       </button>
-      <SheetsTusu onDosya={onDosya} />
+      <SheetsTusu onDosya={onDosya} kaynak={kaynak} />
     </>
   );
 }
@@ -329,6 +331,7 @@ export function ProgramYonetimi() {
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <DosyaTusu
                         etiket={n ? "Değiştir" : "Yükle"}
+                        kaynak={{ anahtar: programAnahtari(donemId, dil), tur: k === "dersler" ? "yillik" : k === "uygulamalar" ? "uygulama" : "ogrenci" }}
                         onDosya={async (f) => {
                           if (k === "dersler") {
                             const dersler = await yillikProgramOku(f);
@@ -368,6 +371,8 @@ export function ProgramYonetimi() {
                   </div>
                 ))}
               </div>
+
+              <SheetsTakip anahtarlar={[programAnahtari(donemId, dil)]} />
 
               {bolum === "dersler" ? (
                 <ProgramTakvim
