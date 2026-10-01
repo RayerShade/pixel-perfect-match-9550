@@ -186,7 +186,7 @@ export interface SecmeliGrupDersi {
   bilgi?: string;
 }
 
-const SECMELI_SLOT = /^se[çc]meli ders/i;
+const SECMELI_SLOT = /^(se[çc]meli ders|elective course)/i;
 const trBaslik = (s: string) =>
   s
     .toLocaleLowerCase("tr-TR")
