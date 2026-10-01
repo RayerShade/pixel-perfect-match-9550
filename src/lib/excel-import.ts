@@ -261,7 +261,7 @@ async function amfiIzgarasiOku(
           return;
         }
         if (!DONEM1.test(hucre)) return;
-        if (n.includes("ingilizce") && !n.includes("turkce")) return;
+        const ing = n.includes("ingilizce") && !n.includes("turkce");
         if (/\btopl/.test(n)) return; // toplantı satırları öğrenci dersi değil
         const acik = saatAraligi(hucre.replace(/^[^-]*-/, ""));
         const bas = acik[1] ? acik[0] : sb;
@@ -277,7 +277,7 @@ async function amfiIzgarasiOku(
           startTime: sb < bas && acik[1] ? bas : sb,
           endTime: acik[1] && bit > se ? bit : se,
           courseName: hucre.replace(/\s+/g, " "),
-          group: "",
+          group: ing ? "EN" : "TR",
           classroom: amfi,
           amphitheater: amfi,
           sourceFile: file.name,
