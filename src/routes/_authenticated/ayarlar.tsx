@@ -181,6 +181,22 @@ function Ayarlar() {
               </div>
             ) : null}
           </div>
+          {(ayarlar.devamUyariKapali ?? []).length ? (
+            <div className="mt-4 border-t border-border pt-4">
+              <span className="block text-sm">Devamsızlık uyarısı kapalı dilimler</span>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(ayarlar.devamUyariKapali ?? []).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => guncelle({ devamUyariKapali: (ayarlar.devamUyariKapali ?? []).filter((x) => x !== d) })}
+                    className="rounded-lg border border-border px-2.5 py-1 text-xs hover:bg-accent"
+                  >
+                    {d} · uyarıyı aç
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <label className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4">
             <span>
               <span className="block text-sm">Telafi uygulamalarını göster</span>

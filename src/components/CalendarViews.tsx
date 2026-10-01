@@ -50,10 +50,12 @@ function Blok({
   olay,
   onSec,
   kompakt,
+  girdi,
 }: {
   olay: DersOlayi;
   onSec: (o: DersOlayi) => void;
   kompakt?: boolean;
+  girdi?: boolean;
 }) {
   return (
     <button
@@ -61,7 +63,7 @@ function Blok({
       className={`flex h-full w-full flex-col overflow-hidden rounded-lg px-1.5 py-1 text-left transition-shadow hover:shadow-card ${TUR_SINIFI[olay.ders.courseType]}`}
     >
       <span className="truncate text-[11px] font-bold leading-tight sm:text-xs">
-        {olay.ders.courseName}
+        {girdi ? "✓ " : ""}{olay.ders.courseName}
       </span>
       {!kompakt ? (
         <span className="truncate text-[10px] opacity-80">{olay.ders.instructor}</span>
@@ -86,6 +88,8 @@ function Izgara({
   baslangic,
   bitis,
   bugun,
+  katilim = {},
+  onGunIsaretle,
 }: {
   gunler: Date[];
   olaylar: DersOlayi[];
@@ -93,6 +97,8 @@ function Izgara({
   baslangic: number;
   bitis: number;
   bugun: Date;
+  katilim?: Record<string, true> | undefined;
+  onGunIsaretle?: ((g: Date) => void) | undefined;
 }) {
   const saatler = Array.from({ length: bitis - baslangic }, (_, i) => baslangic + i);
   const yukseklik = saatler.length * SAAT_YUKSEKLIGI;
@@ -119,6 +125,15 @@ function Izgara({
                 >
                   {g.getDate()}
                 </p>
+                {onGunIsaretle && olaylar.some((o) => sameDay(o.date, g)) ? (
+                  <button
+                    onClick={() => onGunIsaretle(g)}
+                    title="Bu günün tüm derslerine girdim olarak işaretle / kaldır"
+                    className="mt-1 rounded-md px-1.5 text-[10px] font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    {olaylar.filter((o) => sameDay(o.date, g)).every((o) => katilim[o.key]) ? "✓ Girdim" : "Günü işaretle"}
+                  </button>
+                ) : null}
               </div>
             );
           })}
@@ -178,7 +193,7 @@ function Izgara({
                         width: `calc(${100 / toplam}% - 4px)`,
                       }}
                     >
-                      <Blok olay={o} onSec={onSec} kompakt={h < 56} />
+                      <Blok olay={o} onSec={onSec} kompakt={h < 56} girdi={Boolean(katilim[o.key])} />
                     </div>
                   );
                 })}
@@ -199,6 +214,8 @@ export function HaftaGorunumu({
   baslangic,
   bitis,
   bugun,
+  katilim,
+  onGunIsaretle,
 }: {
   monday: Date;
   olaylar: DersOlayi[];
@@ -207,6 +224,8 @@ export function HaftaGorunumu({
   baslangic: number;
   bitis: number;
   bugun: Date;
+  katilim?: Record<string, true> | undefined;
+  onGunIsaretle?: ((g: Date) => void) | undefined;
 }) {
   const gunSayisi = haftaSonu ? 7 : 5;
   const gunler = Array.from({ length: gunSayisi }, (_, i) => addDays(monday, i));
@@ -218,6 +237,8 @@ export function HaftaGorunumu({
       baslangic={baslangic}
       bitis={bitis}
       bugun={bugun}
+      katilim={katilim}
+      onGunIsaretle={onGunIsaretle}
     />
   );
 }
@@ -227,11 +248,15 @@ export function GunGorunumu({
   olaylar,
   onSec,
   bugun,
+  katilim = {},
+  onGunIsaretle,
 }: {
   gun: Date;
   olaylar: DersOlayi[];
   onSec: (o: DersOlayi) => void;
   bugun: Date;
+  katilim?: Record<string, true> | undefined;
+  onGunIsaretle?: ((g: Date) => void) | undefined;
 }) {
   const gunOlaylari = olaylar
     .filter((o) => sameDay(o.date, gun))
@@ -247,10 +272,17 @@ export function GunGorunumu({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-muted-foreground">
-        {GUN_UZUN[(gun.getDay() + 6) % 7]}
-        {sameDay(gun, bugun) ? " · Bugün" : ""}
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-muted-foreground">
+          {GUN_UZUN[(gun.getDay() + 6) % 7]}
+          {sameDay(gun, bugun) ? " · Bugün" : ""}
+        </p>
+        {onGunIsaretle ? (
+          <button onClick={() => onGunIsaretle(gun)} className="rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:bg-accent">
+            {gunOlaylari.every((o) => katilim[o.key]) ? "✓ Tüm güne girdim" : "Tüm günü işaretle"}
+          </button>
+        ) : null}
+      </div>
       {gunOlaylari.map((o) => (
         <button
           key={o.key}
@@ -262,7 +294,7 @@ export function GunGorunumu({
             <p>{o.ders.endTime}</p>
           </div>
           <div className={`min-w-0 rounded-xl px-3 py-2 ${TUR_SINIFI[o.ders.courseType]}`}>
-            <p className="truncate text-sm font-bold">{o.ders.courseName}</p>
+            <p className="truncate text-sm font-bold">{katilim[o.key] ? "✓ " : ""}{o.ders.courseName}</p>
             <p className="truncate text-xs opacity-80">{o.ders.instructor}</p>
             <p className="truncate text-xs font-medium">
               {o.amfi ?? "⚠️ Eşleşme bekliyor"}

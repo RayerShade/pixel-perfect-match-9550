@@ -19,6 +19,7 @@ import { Route as AuthenticatedDerslerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDestekRouteImport } from './routes/_authenticated/destek'
 import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authenticated/secmeliler'
 import { Route as AuthenticatedSunucuRouteImport } from './routes/_authenticated/sunucu'
+import { Route as ApiPublicSheetsKontrolRouteImport } from './routes/api/public/sheets-kontrol'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -69,6 +70,11 @@ const AuthenticatedSunucuRoute = AuthenticatedSunucuRouteImport.update({
   path: '/sunucu',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicSheetsKontrolRoute = ApiPublicSheetsKontrolRouteImport.update({
+  id: '/api/public/sheets-kontrol',
+  path: '/api/public/sheets-kontrol',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/destek': typeof AuthenticatedDestekRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/sunucu': typeof AuthenticatedSunucuRoute
+  '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/sunucu': typeof AuthenticatedSunucuRoute
   '/': typeof AuthenticatedIndexRoute
+  '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/_authenticated/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/_authenticated/sunucu': typeof AuthenticatedSunucuRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/destek'
     | '/secmeliler'
     | '/sunucu'
+    | '/api/public/sheets-kontrol'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/secmeliler'
     | '/sunucu'
     | '/'
+    | '/api/public/sheets-kontrol'
   id:
     | '__root__'
     | '/_authenticated'
@@ -140,12 +151,14 @@ export interface FileRouteTypes {
     | '/_authenticated/secmeliler'
     | '/_authenticated/sunucu'
     | '/_authenticated/'
+    | '/api/public/sheets-kontrol'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicSheetsKontrolRoute: typeof ApiPublicSheetsKontrolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSunucuRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/sheets-kontrol': {
+      id: '/api/public/sheets-kontrol'
+      path: '/api/public/sheets-kontrol'
+      fullPath: '/api/public/sheets-kontrol'
+      preLoaderRoute: typeof ApiPublicSheetsKontrolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -250,6 +270,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicSheetsKontrolRoute: ApiPublicSheetsKontrolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

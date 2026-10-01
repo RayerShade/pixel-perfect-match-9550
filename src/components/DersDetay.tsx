@@ -3,6 +3,8 @@ import { X, Clock, User, MapPin, CalendarDays, Tag, StickyNote, Users } from "lu
 import { useEffect, useState } from "react";
 import { DERS_TURU_ETIKET, amfiSecenekleri, type DersOlayi } from "@/lib/schedule-data";
 import { useYuklenenVeri } from "@/lib/store";
+import { useKatilim } from "@/lib/katilim";
+import { olayKategori } from "@/lib/dilim";
 import { GUN_UZUN, formatLong, isoDate, startOfWeek } from "@/lib/date-utils";
 import { TUR_SINIFI } from "./ders-stil";
 
@@ -125,6 +127,7 @@ export function DersDetay({
   onAmfiSec: (key: string, amfi: string) => void;
 }) {
   const { veri } = useYuklenenVeri();
+  const { katilim, ayarla } = useKatilim();
   const hafta = olay ? isoDate(startOfWeek(olay.date)) : "";
   const secenekler = olay ? amfiSecenekleri(veri, hafta) : [];
 
@@ -157,6 +160,24 @@ export function DersDetay({
           </button>
         </div>
 
+        {!olay.ozelId ? (
+          <label className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5">
+            <span className="text-sm font-semibold">
+              Bu derse girdim
+              {olayKategori(olay) ? (
+                <span className="block text-[11px] font-normal text-muted-foreground">
+                  {olayKategori(olay)!.dilim} · {olayKategori(olay)!.dal}
+                </span>
+              ) : null}
+            </span>
+            <input
+              type="checkbox"
+              className="h-5 w-5 accent-primary"
+              checked={Boolean(katilim[olay.key])}
+              onChange={(e) => ayarla([olay.key], e.target.checked)}
+            />
+          </label>
+        ) : null}
         <div className="mt-4">
           <Satir icon={User} etiket="Öğretim Üyesi" deger={ders.instructor} />
           <Satir

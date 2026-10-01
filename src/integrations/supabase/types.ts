@@ -208,6 +208,48 @@ export type Database = {
         }
         Relationships: []
       }
+      sheets_kaynaklari: {
+        Row: {
+          aktif: boolean
+          anahtar: string
+          created_at: string
+          hata: string | null
+          id: string
+          son_degisim: string | null
+          son_hash: string | null
+          son_kontrol: string | null
+          tur: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          aktif?: boolean
+          anahtar: string
+          created_at?: string
+          hata?: string | null
+          id?: string
+          son_degisim?: string | null
+          son_hash?: string | null
+          son_kontrol?: string | null
+          tur: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          aktif?: boolean
+          anahtar?: string
+          created_at?: string
+          hata?: string | null
+          id?: string
+          son_degisim?: string | null
+          son_hash?: string | null
+          son_kontrol?: string | null
+          tur?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       super_adminler: {
         Row: {
           created_at: string
