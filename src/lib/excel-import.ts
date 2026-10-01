@@ -281,10 +281,8 @@ async function amfiIzgarasiOku(
           }
           return;
         }
-        if (!DONEM1.test(hucre)) return;
-        // Yalnız hücrenin başındaki etiket kısmına bak (ders adındaki kelimeler karışmasın)
-        const etiket = ayir(hucre.split(/[-–:]\s*(?=[A-ZÇĞİÖŞÜa-zçğıöşü]{3,}\s)/)[0] ?? hucre).slice(0, 40);
-        const ing = (INGILIZCE_N.test(etiket) || /ingilizce|english/.test(n)) && !TURKCE_N.test(etiket);
+        const dil = hucreDili(hucre);
+        if (!dil) return;
         if (/\btopl/.test(n)) return; // toplantı satırları öğrenci dersi değil
         const acik = saatAraligi(hucre.replace(/^[^-]*-/, ""));
         const bas = acik[1] ? acik[0] : sb;
