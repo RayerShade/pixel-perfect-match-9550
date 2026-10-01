@@ -97,8 +97,8 @@ function Izgara({
   baslangic: number;
   bitis: number;
   bugun: Date;
-  katilim?: Record<string, true>;
-  onGunIsaretle?: (g: Date) => void;
+  katilim?: Record<string, true> | undefined;
+  onGunIsaretle?: ((g: Date) => void) | undefined;
 }) {
   const saatler = Array.from({ length: bitis - baslangic }, (_, i) => baslangic + i);
   const yukseklik = saatler.length * SAAT_YUKSEKLIGI;
@@ -224,8 +224,8 @@ export function HaftaGorunumu({
   baslangic: number;
   bitis: number;
   bugun: Date;
-  katilim?: Record<string, true>;
-  onGunIsaretle?: (g: Date) => void;
+  katilim?: Record<string, true> | undefined;
+  onGunIsaretle?: ((g: Date) => void) | undefined;
 }) {
   const gunSayisi = haftaSonu ? 7 : 5;
   const gunler = Array.from({ length: gunSayisi }, (_, i) => addDays(monday, i));
@@ -255,8 +255,8 @@ export function GunGorunumu({
   olaylar: DersOlayi[];
   onSec: (o: DersOlayi) => void;
   bugun: Date;
-  katilim?: Record<string, true>;
-  onGunIsaretle?: (g: Date) => void;
+  katilim?: Record<string, true> | undefined;
+  onGunIsaretle?: ((g: Date) => void) | undefined;
 }) {
   const gunOlaylari = olaylar
     .filter((o) => sameDay(o.date, gun))

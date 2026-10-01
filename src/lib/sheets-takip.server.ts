@@ -90,7 +90,7 @@ function amfiFarki(eski: HaftalikAmfiKaydi[], yeni: HaftalikAmfiKaydi[]): Degisi
 }
 
 /** Hedef öğrencilere tek bildirim. donemId/dil verilmezse herkes. */
-async function bildir(admin: Admin, degisimler: Degisim[], hedef: { donemId?: string; dil?: string; ogrenciler?: Record<string, Ogrenci> }) {
+async function bildir(admin: Admin, degisimler: Degisim[], hedef: { donemId?: string | undefined; dil?: string | undefined; ogrenciler?: Record<string, Ogrenci> | undefined }) {
   if (!degisimler.length) return 0;
   const { data: rows } = await admin.from("user_data").select("user_id, ayarlar");
   const { data: profs } = await admin.from("profiles").select("id, ogrenci_no");

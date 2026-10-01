@@ -18,7 +18,7 @@ function YuklemeKarti({
   onSil,
   kaynak,
 }: {
-  kaynak?: { anahtar: string; tur: SheetsTur };
+  kaynak?: { anahtar: string; tur: SheetsTur } | undefined;
   baslik: string;
   aciklama: string;
   ikon: React.ReactNode;

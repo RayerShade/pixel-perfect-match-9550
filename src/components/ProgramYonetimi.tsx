@@ -138,7 +138,7 @@ const UYG_SUTUN: Sutun<UygulamaOlayi>[] = [
   { ad: "Hoca", al: (r) => r.hoca, koy: (r, v) => ({ ...r, hoca: v }), gen: "8rem" },
 ];
 
-function DosyaTusu({ etiket, onDosya, kaynak }: { etiket: string; onDosya: (f: File) => Promise<void>; kaynak?: { anahtar: string; tur: SheetsTur } }) {
+function DosyaTusu({ etiket, onDosya, kaynak }: { etiket: string; onDosya: (f: File) => Promise<void>; kaynak?: { anahtar: string; tur: SheetsTur } | undefined }) {
   const ref = useRef<HTMLInputElement>(null);
   const [bekle, setBekle] = useState(false);
   return (

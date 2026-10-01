@@ -14,7 +14,7 @@ export function SheetsTusu({
 }: {
   onDosya: (f: File) => Promise<unknown>;
   className?: string;
-  kaynak?: { anahtar: string; tur: SheetsTur };
+  kaynak?: { anahtar: string; tur: SheetsTur } | undefined;
 }) {
   const [bekle, setBekle] = useState(false);
   const al = async () => {
