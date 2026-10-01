@@ -15,13 +15,37 @@ import {
 } from "@/lib/sunucu.functions";
 
 export const Route = createFileRoute("/_authenticated/sunucu")({
-  beforeLoad: async () => {
-    const { data } = await supabase.rpc("orijinal_admin_mi");
-    if (!data) throw redirect({ to: "/" });
-  },
   head: () => ({ meta: [{ title: "Sunucu paneli" }, { name: "robots", content: "noindex, nofollow" }] }),
-  component: Sunucu,
+  component: SunucuKapi,
 });
+
+function SunucuKapi() {
+  const q = useQuery({ queryKey: ["panel-yetki"], queryFn: async () => (await supabase.rpc("orijinal_admin_mi")).data === true });
+  const [sifre, setSifre] = useState("");
+  const [bekle, setBekle] = useState(false);
+  const [mesaj, setMesaj] = useState("");
+  if (q.isLoading) return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">yükleniyor…</div>;
+  if (q.data) return <Sunucu />;
+  const gir = async (e: React.FormEvent) => {
+    e.preventDefault(); setBekle(true); setMesaj("");
+    const { data, error } = await supabase.rpc("panel_sifre_dene", { _sifre: sifre });
+    setBekle(false);
+    if (error) return setMesaj(error.message);
+    if (!data) return setMesaj("Şifre hatalı.");
+    await q.refetch();
+  };
+  return (
+    <div className="grid min-h-screen place-items-center bg-background px-4">
+      <form onSubmit={(e) => void gir(e)} className="w-full max-w-xs space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="flex items-center gap-2"><Server className="h-5 w-5 text-primary" /><b>Sunucu paneli</b></div>
+        <input type="password" autoFocus value={sifre} onChange={(e) => setSifre(e.target.value)} placeholder="Panel şifresi" className={`${giris} w-full`} />
+        {mesaj ? <p className="text-xs text-destructive">{mesaj}</p> : null}
+        <button type="submit" disabled={bekle || !sifre} className={`${ana} w-full justify-center py-2 text-sm`}>Gir</button>
+        <a href="/" className="block text-center text-xs text-muted-foreground hover:underline">Siteye dön</a>
+      </form>
+    </div>
+  );
+}
 
 type Sekme = "ozet" | "kullanicilar" | "destek" | "donem" | "veri" | "dosyalar" | "duyuru" | "yedek";
 const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
@@ -152,6 +176,8 @@ function Kullanicilar() {
   const profMap = useMemo(() => new Map((prof.data ?? []).map((p) => [p.id, p])), [prof.data]);
   const ayarMap = useMemo(() => new Map((ud.data ?? []).map((x) => [x.user_id, x.ayarlar ?? {}])), [ud.data]);
   const adminler = useMemo(() => new Set((rol.data ?? []).filter((r) => r.role === "admin").map((r) => r.user_id)), [rol.data]);
+  const sup = useQuery({ queryKey: ["super-adminler"], queryFn: async () => (await supabase.from("super_adminler").select("user_id")).data ?? [] });
+  const superler = useMemo(() => new Set((sup.data ?? []).map((r) => r.user_id)), [sup.data]);
   const yenile = () => { void qc.invalidateQueries({ queryKey: ["sunucu-kul"] }); void qc.invalidateQueries({ queryKey: ["sunucu-tablo"] }); void qc.invalidateQueries({ queryKey: ["sunucu-ozet"] }); };
 
   const yeniKaydet = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -199,6 +225,12 @@ function Kullanicilar() {
       if (r.link) setLink({ ad: `${u.email} — ${ad}`, url: r.link }); else toast.success("Tamam");
       yenile();
     } catch (e) { hata(e); }
+  };
+  const superYap = async (u: Kul, ver: boolean) => {
+    if (!confirm(`${u.email}: ${ver ? "super admin yap" : "super admin yetkisini al"}?`)) return;
+    const { error } = await supabase.rpc("super_admin_ayarla", { _user_id: u.id, _ver: ver });
+    if (error) return hata(new Error(error.message));
+    toast.success("Tamam"); void sup.refetch(); yenile();
   };
 
   const liste = (q.data ?? [])
@@ -265,6 +297,7 @@ function Kullanicilar() {
                 <span className="text-muted-foreground">{u.email}</span>
                 {p?.ogrenci_no ? <span className="font-mono text-xs">{p.ogrenci_no}</span> : null}
                 <span className="ml-auto flex flex-wrap gap-1 text-[10px] font-semibold">
+                  {superler.has(u.id) || u.email.toLowerCase() === "cerandeniz435@gmail.com" ? <span className="rounded bg-primary/15 px-1.5 py-0.5 text-primary">SUPER ADMİN</span> : null}
                   {adm ? <span className="rounded bg-altin/20 px-1.5 py-0.5 text-altin">ADMİN</span> : null}
                   {u.yasakli ? <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-destructive">YASAKLI</span> : u.onayli ? null : <span className="rounded bg-muted px-1.5 py-0.5">ONAYSIZ</span>}
                   <span className="rounded bg-muted px-1.5 py-0.5">{u.yontem || "?"}</span>
@@ -285,6 +318,9 @@ function Kullanicilar() {
                   <button className={btn} onClick={() => void ekYap(u, "girisLinki", "giriş bağlantısı")}>Hesaba giriş bağlantısı</button>
                   <button className={btn} onClick={() => void yap(u, "cikisYaptir", "tüm cihazlardan çıkış")}>Tüm cihazlardan çıkar</button>
                   <button className={btn} onClick={() => void ekYap(u, adm ? "adminAl" : "adminVer", adm ? "admin yetkisini al" : "admin yap")}>{adm ? "Admin yetkisini al" : "Admin yap"}</button>
+                  {u.email.toLowerCase() !== "cerandeniz435@gmail.com" ? (
+                    <button className={btn} onClick={() => void superYap(u, !superler.has(u.id))}>{superler.has(u.id) ? "Super admin yetkisini al" : "Super admin yap"}</button>
+                  ) : null}
                   {u.yasakli ? <button className={btn} onClick={() => void yap(u, "yasakKaldir", "yasağı kaldır")}>Yasağı kaldır</button> : <button className={tehlike} onClick={() => void yap(u, "yasakla", "yasakla")}>Yasakla</button>}
                   <button className={tehlike} onClick={() => void ekYap(u, "sil", "sil")}>Hesabı sil</button>
                 </div>
