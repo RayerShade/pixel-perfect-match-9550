@@ -298,7 +298,7 @@ async function amfiIzgarasiOku(
           startTime: sb < bas && acik[1] ? bas : sb,
           endTime: acik[1] && bit > se ? bit : se,
           courseName: hucre.replace(/\s+/g, " "),
-          group: ing ? "EN" : "TR",
+          group: dil,
           classroom: amfi,
           amphitheater: amfi,
           sourceFile: file.name,
