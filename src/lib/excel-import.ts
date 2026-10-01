@@ -195,13 +195,28 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
   return dersler;
 }
 
-/** Dönem 1 yazımları (normalize edilmiş metinde): "dönem 1", "dönem-I", "1. dönem", "d1", "class 1", "term 1", "year 1", "med 1". */
+/** Hücre metnini sadeleştir: küçük harf, Türkçe karakterler düz, harf-rakam ayrık, tek boşluk. */
+const ayir = (s: string) =>
+  normalize(s)
+    .replace(/(\d)([a-z])/g, "$1 $2")
+    .replace(/([a-z])(\d)/g, "$1 $2");
+/** Hücrede "dönem 1" geçiyor mu? Yazım biçimi önemsiz: dönem 1, dönem-1, dönem I, 1. dönem, d1, class 1, term 1, year 1, med 1, phase 1. */
 const DONEM1_N = /(^|[^a-z0-9])(donem ?(1|i)|1 ?donem|d ?1|class ?(1|i)|term ?(1|i)|year ?(1|i)|med ?1|phase ?(1|i))(?![a-z0-9])/;
-const DONEM1 = { test: (s: string) => DONEM1_N.test(ayir(s)) };
-const ayir = (s: string) => normalize(s).replace(/(\d)([a-z])/g, "$1 $2").replace(/([a-z])(\d)/g, "$1 $2");
-/** İngilizce program işaretleri: İNGİLİZCE, İNG, ENG, ENGLISH, EN, İTF-EN vb. */
+/** Hücrede "ingilizce" geçiyor mu? ingilizce, ing, eng, english, en, ingl. */
 const INGILIZCE_N = /(^|[^a-z])(ingilizce|ing|eng|english|en|ingl)(?![a-z])/;
+/** Hücrede "türkçe" geçiyor mu? turkce, tr, turkish. */
 const TURKCE_N = /(^|[^a-z])(turkce|tr|turkish)(?![a-z])/;
+/**
+ * Kural basit: kutunun içinde "dönem 1" + "ingilizce" (veya eşdeğerleri) varsa İngilizce programına,
+ * "dönem 1" + "türkçe" varsa Türkçe programına aittir. İkisinin de yeri/yazımı önemsiz.
+ * Dönem 1 yazıp dil belirtilmemişse Türkçe sayılır.
+ */
+const hucreDili = (hucre: string): "EN" | "TR" | null => {
+  const n = ayir(hucre);
+  if (!DONEM1_N.test(n)) return null;
+  if (INGILIZCE_N.test(n)) return "EN";
+  return "TR";
+};
 
 /** Fakülte amfi programı: her gün için "tarih" satırı, "SAAT" + amfi adları başlığı, saat satırları. */
 async function amfiIzgarasiOku(
