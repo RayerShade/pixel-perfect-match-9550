@@ -286,7 +286,7 @@ async function amfiIzgarasiOku(
         }
         const dil = hucreDili(hucre);
         if (!dil) return;
-        if (/\btopl/.test(n)) return; // toplantı satırları öğrenci dersi değil
+        if (/toplanti/.test(n)) return; // toplantı satırları öğrenci dersi değil
         const acik = saatAraligi(hucre.replace(/^[^-]*-/, ""));
         const bas = acik[1] ? acik[0] : sb;
         const bit = acik[1] ? acik[1] : se;
