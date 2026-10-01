@@ -392,7 +392,7 @@ export function haftaninOlaylari(
   const saatler = gruplar ? secmeliSaatleri(veri) : [];
 
   const uygOlaylari: DersOlayi[] = (uyg ?? [])
-    .filter((u) => u.date >= mondayIso && u.date <= pazar && grubaUyar(u.gruplar, ogrenci!))
+    .filter((u) => u.date >= mondayIso && u.date <= pazar && !!ogrenci && grubaUyar(u.gruplar, ogrenci))
     .map((u) => {
       const key = `${mondayIso}-${u.id}`;
       const amfiyeBak = !u.yer || /amfi program/i.test(normalizeTr(u.yer));
