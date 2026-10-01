@@ -52,6 +52,10 @@ export interface Ayarlar {
   ozelDersler?: OzelDers[];
   /** Anahtar: "bir:<olay key>" (tek seferlik) veya "hep:<ders adı>|<gün>|<saat>" (her hafta) */
   dersDuzenleri?: Record<string, DersDuzeni>;
+  /** Öğrencinin girdi olarak işaretlediği dersler (olay key → true). */
+  katilim?: Record<string, true>;
+  /** Devamsızlık uyarısı kapatılan dilimler. */
+  devamUyariKapali?: string[];
 }
 
 export const VARSAYILAN_AYARLAR: Ayarlar = {
@@ -189,8 +193,9 @@ export function useAyarlar() {
     };
   }, []);
 
-  const guncelle = useCallback((patch: Partial<Ayarlar>) => {
+  const guncelle = useCallback((p: Partial<Ayarlar> | ((prev: Ayarlar) => Partial<Ayarlar>)) => {
     setAyarlar((prev) => {
+      const patch = typeof p === "function" ? p(prev) : p;
       const next = { ...prev, ...patch };
       window.localStorage.setItem(AYAR_KEY, JSON.stringify(next));
       kisiselKaydet();
