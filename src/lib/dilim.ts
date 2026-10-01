@@ -13,8 +13,8 @@ export const baslikYap = (s: string) =>
 
 /** Dilim adını listede yazdığı gibi al (sadece boşlukları düzelt, "Dilimi" eki dahil). */
 const dilimAdi = (s: string) => {
-  const t = s.replace(/\s+/g, " ").trim();
-  return /^dikey koridor/i.test(t) ? "Dikey Koridor" : t;
+  const t = s.replace(/\s+/g, " ").trim().toLocaleUpperCase("tr-TR");
+  return /^dikey koridor/.test(t.toLocaleLowerCase("tr-TR")) ? "Dikey Koridor" : t;
 };
 
 /** Ders notunun ilk parçası "HÜCRE DİLİMİ / ANATOMİ AD. - ..." → dilim + ana dal. */
@@ -27,7 +27,7 @@ export function dilimDal(d: Ders): { dilim: string; dal: string } {
     const dal = dalHam.replace(/\s*-\s*$/, "").replace(/\s+/g, " ").trim() || "Genel";
     return { dilim, dal };
   }
-  if (/dilim|koridor/i.test(bolum) && bolum.length < 60) return { dilim: dilimAdi(bolum), dal: "Genel" };
+  if (/dilim|koridor/.test(bolum.toLocaleLowerCase("tr-TR")) && bolum.length < 60) return { dilim: dilimAdi(bolum), dal: "Genel" };
   return { dilim: DIGER, dal: "Genel" };
 }
 

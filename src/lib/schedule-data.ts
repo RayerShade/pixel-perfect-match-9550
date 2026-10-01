@@ -99,8 +99,12 @@ export function ogrenciBul(
   no: string,
   elle?: { grup: string; altGrup: string } | null,
 ): Ogrenci | undefined {
-  const k = no.replace(/\D/g, "").replace(/^0+/, "");
-  const o = k ? veri?.ogrenciler?.[k] : undefined;
+  const k = no.replace(/\D/g, "");
+  const tablo = veri?.ogrenciler ?? {};
+  const kk = k.replace(/^0+/, "");
+  const o = k
+    ? (tablo[k] ?? tablo[kk] ?? Object.entries(tablo).find(([n]) => n.replace(/^0+/, "") === kk)?.[1])
+    : undefined;
   if (!elle?.grup) return o;
   return { no: k, ad: "", soyad: "", ...o, grup: elle.grup, altGrup: elle.altGrup };
 }
@@ -388,7 +392,7 @@ export function haftaninOlaylari(
   const saatler = gruplar ? secmeliSaatleri(veri) : [];
 
   const uygOlaylari: DersOlayi[] = (uyg ?? [])
-    .filter((u) => u.date >= mondayIso && u.date <= pazar && grubaUyar(u.gruplar, ogrenci!))
+    .filter((u) => u.date >= mondayIso && u.date <= pazar && !!ogrenci && grubaUyar(u.gruplar, ogrenci))
     .map((u) => {
       const key = `${mondayIso}-${u.id}`;
       const amfiyeBak = !u.yer || /amfi program/i.test(normalizeTr(u.yer));
