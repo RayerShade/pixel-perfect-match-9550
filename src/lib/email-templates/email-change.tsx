@@ -30,34 +30,33 @@ export const EmailChangeEmail = ({
   newEmail,
   confirmationUrl,
 }: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="tr" dir="ltr">
     <Head>
       <style>{darkModeCss}</style>
     </Head>
-    <Preview>Confirm your email change for {siteName}</Preview>
+    <Preview>{siteName} e-posta değişikliğini onayla</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email change</Heading>
+        <Heading style={h1}>E-posta değişikliğini onayla</Heading>
         <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
+          {siteName} hesabındaki e-posta adresini{' '}
           <Link href={`mailto:${oldEmail}`} style={link}>
             {oldEmail}
           </Link>{' '}
-          to{' '}
+          adresinden{' '}
           <Link href={`mailto:${newEmail}`} style={link}>
             {newEmail}
-          </Link>
-          .
+          </Link>{' '}
+          adresine değiştirmek istedin.
         </Text>
         <Text style={text}>
-          Click the button below to confirm this change:
+          Bu değişikliği onaylamak için aşağıdaki butona tıkla:
         </Text>
         <Button className="dm-btn" style={button} href={confirmationUrl}>
-          Confirm Email Change
+          Değişikliği Onayla
         </Button>
         <Text style={footer}>
-          If you didn't request this change, please secure your account
-          immediately.
+          Bu değişikliği sen istemediysen lütfen hemen hesabının güvenliğini sağla.
         </Text>
       </Container>
     </Body>
