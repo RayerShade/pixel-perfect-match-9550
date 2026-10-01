@@ -18,7 +18,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Pixel Perfect Preview"
+const SITE_NAME = "İTF Takvim"
 const ROOT_DOMAIN = "itftakvim.xyz"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
