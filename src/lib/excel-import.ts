@@ -197,7 +197,8 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
 
 /** Dönem 1 yazımları (normalize edilmiş metinde): "dönem 1", "dönem-I", "1. dönem", "d1", "class 1", "term 1", "year 1", "med 1". */
 const DONEM1_N = /(^|[^a-z0-9])(donem ?(1|i)|1 ?donem|d ?1|class ?(1|i)|term ?(1|i)|year ?(1|i)|med ?1|phase ?(1|i))(?![a-z0-9])/;
-const DONEM1 = { test: (s: string) => DONEM1_N.test(normalize(s).replace(/(\d)\s+(?=\d)/g, "$1")) };
+const DONEM1 = { test: (s: string) => DONEM1_N.test(ayir(s)) };
+const ayir = (s: string) => normalize(s).replace(/(\d)([a-z])/g, "$1 $2").replace(/([a-z])(\d)/g, "$1 $2");
 /** İngilizce program işaretleri: İNGİLİZCE, İNG, ENG, ENGLISH, EN, İTF-EN vb. */
 const INGILIZCE_N = /(^|[^a-z])(ingilizce|ing|eng|english|en|ingl)(?![a-z])/;
 const TURKCE_N = /(^|[^a-z])(turkce|tr|turkish)(?![a-z])/;
@@ -267,7 +268,7 @@ async function amfiIzgarasiOku(
         }
         if (!DONEM1.test(hucre)) return;
         // Yalnız hücrenin başındaki etiket kısmına bak (ders adındaki kelimeler karışmasın)
-        const etiket = normalize(hucre.split(/[-–:]\s*(?=[A-ZÇĞİÖŞÜa-zçğıöşü]{3,}\s)/)[0] ?? hucre).slice(0, 40);
+        const etiket = ayir(hucre.split(/[-–:]\s*(?=[A-ZÇĞİÖŞÜa-zçğıöşü]{3,}\s)/)[0] ?? hucre).slice(0, 40);
         const ing = (INGILIZCE_N.test(etiket) || /ingilizce|english/.test(n)) && !TURKCE_N.test(etiket);
         if (/\btopl/.test(n)) return; // toplantı satırları öğrenci dersi değil
         const acik = saatAraligi(hucre.replace(/^[^-]*-/, ""));
