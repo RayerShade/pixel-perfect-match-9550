@@ -506,6 +506,75 @@ function HedefSecici({ hedef, onDegis }: { hedef: Hedef; onDegis: (h: Hedef) => 
   );
 }
 
+type BantGecmis = { metin: string; tur: string; zaman: string };
+type BildirimGecmis = { baslik: string; metin: string; zaman: string; alici: number; okuyan: number };
+
+function DuyuruGecmisi({ mod }: { mod: "bant" | "bildirim" }) {
+  const qc = useQueryClient();
+  const bq = useQuery({
+    queryKey: ["bildirim-gecmis"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("duyuru_listesi" as never);
+      if (error) throw error;
+      return (data ?? []) as unknown as BildirimGecmis[];
+    },
+  });
+  const gq = useQuery({
+    queryKey: ["duyuru-gecmis"],
+    queryFn: async () => {
+      const v = (await supabase.from("global_data").select("veri").eq("anahtar", "duyuru_gecmis").maybeSingle()).data?.veri;
+      return (Array.isArray(v) ? v : []) as BantGecmis[];
+    },
+  });
+  const bildirimSil = async (b: BildirimGecmis) => {
+    if (!confirm(`"${b.baslik}" bildirimi ${b.alici} kişinin zilinden silinsin mi?`)) return;
+    const { data, error } = await supabase.rpc("duyuru_sil" as never, { _baslik: b.baslik, _metin: b.metin, _zaman: b.zaman } as never);
+    if (error) { hata(error); return; }
+    toast.success(`${data ?? 0} bildirim silindi`); void bq.refetch();
+  };
+  const bantGecmisSil = async (i: number) => {
+    const liste = (gq.data ?? []).filter((_, j) => j !== i);
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase.from("global_data").upsert({ anahtar: "duyuru_gecmis", veri: liste as never, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() });
+    if (error) { hata(error); return; }
+    void qc.invalidateQueries({ queryKey: ["duyuru-gecmis"] });
+  };
+  const tarih = (z: string) => new Date(z).toLocaleString("tr-TR", { dateStyle: "medium", timeStyle: "short" });
+  return (
+    <div className="mt-5 border-t border-border pt-4">
+      <h3 className="mb-2 text-sm font-semibold">{mod === "bildirim" ? "Gönderilen bildirimler" : "Yayınlanan bant duyuruları"}</h3>
+      {mod === "bildirim" ? (
+        bq.isLoading ? <p className="text-xs text-muted-foreground">Yükleniyor…</p> : !bq.data?.length ? <p className="text-xs text-muted-foreground">Henüz bildirim gönderilmedi.</p> : (
+          <ul className="max-h-96 space-y-2 overflow-y-auto">
+            {bq.data.map((b) => (
+              <li key={b.zaman + b.baslik} className="flex items-start gap-3 rounded-lg bg-accent p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold">{b.baslik}</p>
+                  {b.metin ? <p className="mt-0.5 whitespace-pre-wrap text-xs text-muted-foreground">{b.metin}</p> : null}
+                  <p className="mt-1 text-[11px] text-muted-foreground">{tarih(b.zaman)} · {b.alici} kişi · {b.okuyan} okudu</p>
+                </div>
+                <button className={btn} onClick={() => void bildirimSil(b)}>Sil</button>
+              </li>
+            ))}
+          </ul>
+        )
+      ) : !gq.data?.length ? <p className="text-xs text-muted-foreground">Kayıtlı geçmiş yok.</p> : (
+        <ul className="max-h-96 space-y-2 overflow-y-auto">
+          {gq.data.map((g, i) => (
+            <li key={g.zaman + i} className="flex items-start gap-3 rounded-lg bg-accent p-3">
+              <div className="min-w-0 flex-1">
+                <p className="whitespace-pre-wrap text-sm">{g.metin}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{tarih(g.zaman)} · {g.tur === "uyari" ? "Uyarı" : "Bilgi"}</p>
+              </div>
+              <button className={btn} onClick={() => void bantGecmisSil(i)}>Sil</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function Duyuru() {
   const q = useQuery({
     queryKey: ["duyuru"],
@@ -524,14 +593,25 @@ function Duyuru() {
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("global_data").upsert({ anahtar: "duyuru", veri: { ...yeni, hedef: h }, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() });
     if (error) { hata(error); return; }
-    toast.success(yeni.aktif ? "Duyuru yayında" : "Duyuru kapatıldı"); setD(null); void qc.invalidateQueries({ queryKey: ["duyuru"] });
+    if (yeni.aktif) {
+      const eski = ((await supabase.from("global_data").select("veri").eq("anahtar", "duyuru_gecmis").maybeSingle()).data?.veri ?? []) as BantGecmis[];
+      const liste = [{ metin: yeni.metin, tur: yeni.tur, zaman: new Date().toISOString() }, ...(Array.isArray(eski) ? eski : [])].slice(0, 100);
+      await supabase.from("global_data").upsert({ anahtar: "duyuru_gecmis", veri: liste as never, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() });
+    }
+    toast.success(yeni.aktif ? "Duyuru yayında" : "Duyuru kapatıldı"); setD(null); void qc.invalidateQueries({ queryKey: ["duyuru"] }); void qc.invalidateQueries({ queryKey: ["duyuru-gecmis"] });
+  };
+  const bantSil = async () => {
+    if (!confirm("Sayfa üstü duyuru herkesten kaldırılsın mı?")) return;
+    const { error } = await supabase.from("global_data").delete().eq("anahtar", "duyuru");
+    if (error) { hata(error); return; }
+    toast.success("Duyuru silindi"); setD(null); void qc.invalidateQueries({ queryKey: ["duyuru"] });
   };
   const gonder = async () => {
     setBekle(true);
     const { data, error } = await supabase.rpc("bildirim_gonder", { _baslik: baslik.trim(), _metin: v.metin.trim(), _hedef: h as never });
     setBekle(false);
     if (error) { hata(error); return; }
-    toast.success(`Bildirim ${data ?? 0} kişiye gönderildi`); setBaslik(""); setD({ ...v, metin: "" });
+    toast.success(`Bildirim ${data ?? 0} kişiye gönderildi`); setBaslik(""); setD({ ...v, metin: "" }); void qc.invalidateQueries({ queryKey: ["bildirim-gecmis"] });
   };
   return (
     <Kart baslik="Duyuru ve bildirim">
@@ -558,9 +638,11 @@ function Duyuru() {
             <button className={ana} disabled={!v.metin.trim() || hedefGecersiz} onClick={() => void kaydet({ ...v, aktif: true })}>Yayınla</button>
             <button className={btn} onClick={() => void kaydet({ ...v, aktif: false })}>Kapat</button>
             <span className="text-xs text-muted-foreground">Şu an: {q.data?.aktif ? "yayında" : "kapalı"}</span>
+            {q.data ? <button className={btn} onClick={() => void bantSil()}>Sil</button> : null}
           </>
         )}
       </div>
+      <DuyuruGecmisi mod={mod} />
     </Kart>
   );
 }
