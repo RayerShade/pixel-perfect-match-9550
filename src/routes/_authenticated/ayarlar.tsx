@@ -181,6 +181,18 @@ function Ayarlar() {
               </div>
             ) : null}
           </div>
+          <label className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4">
+            <span>
+              <span className="block text-sm">Telafi uygulamalarını göster</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">Türkçe telafi uygulamaları ile İngilizce Laboratory Skills telafi derslerini takvimde gösterir.</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={ayarlar.telafiGoster ?? true}
+              onChange={(e) => guncelle({ telafiGoster: e.target.checked })}
+              className="h-5 w-5 shrink-0 accent-[var(--teorik)]"
+            />
+          </label>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-muted-foreground">Başlangıç saati</span>

@@ -268,7 +268,37 @@ function enIyiKayit(d: Ders, tarih: string, kayitlar: HaftalikAmfiKaydi[]) {
 }
 
 export function aktifDersler(veri?: YuklenenVeri): Ders[] {
-  return veri?.dersler ?? DERSLER;
+  return (veri?.dersler ?? DERSLER)
+    // Eski yüklemelerde kayıtlı kalmış mola satırlarını da anında temizle.
+    .filter((d) => !/^(lunch(?: break)?|free(?: study)? time|break)(?:\b|\s|$)/i.test(d.courseName.trim()))
+    .map((d) => {
+      const ad = normalizeTr(d.courseName);
+      // "Uygulama Alanları" gibi ders adları uygulama değildir. Türkçede yalnız
+      // doğrudan UYGULAMA, İngilizcede LABORATORY SKILLS uygulama kabul edilir.
+      if (d.courseType === "pratik" && ad !== "uygulama" && !/^laboratory skills\b/i.test(ad) && !/\bpratik\b/i.test(ad))
+        return { ...d, courseType: "teorik" as const };
+      return d;
+    });
+}
+
+const telafiMi = (d: Ders) => /\btelafi\b|\brepeat\b|\bmake[ -]?up\b/i.test(`${d.courseName} ${d.notes}`);
+
+/** İngilizce yıllık programdaki "(Uygulama adı) İ1" parçalarından öğrencininkini seçer. */
+function ingilizceLaboratuvariniSec(d: Ders, ogrenci?: Ogrenci): Ders | null {
+  if (!/^laboratory skills\b/i.test(d.courseName.trim()) || !ogrenci) return d;
+  const hedef = `${ogrenci.altGrup || ogrenci.grup}`.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").replace(/[^i0-9]/g, "");
+  if (!hedef) return d;
+  const eslesmeler = [...d.courseName.matchAll(/\(([^)]+)\)\s*[İIıi]\s*(\d+)/g)];
+  if (!eslesmeler.length) return d;
+  const secilen = eslesmeler.find((m) => `i${m[2]}` === hedef);
+  if (!secilen) return null;
+  const telafi = telafiMi(d);
+  return {
+    ...d,
+    courseName: `${secilen[1]!.trim()}${telafi ? " (Telafi)" : ""}`,
+    group: hedef.toLocaleUpperCase("tr-TR"),
+    notes: [d.notes, `Laboratory Skills · Grup ${hedef.toLocaleUpperCase("tr-TR")}`].filter(Boolean).join(" · "),
+  };
 }
 
 export function haftalikAmfiKayitlari(mondayIso: string, veri?: YuklenenVeri): HaftalikAmfiKaydi[] {
@@ -344,6 +374,7 @@ export function haftaninOlaylari(
   veri?: YuklenenVeri,
   ogrenci?: Ogrenci,
   gizliGruplar: number[] = [],
+  telafiGoster = true,
 ): DersOlayi[] {
   const mondayIso = isoDate(monday);
   const uyg = ogrenci && veri?.uygulamalar?.length ? veri.uygulamalar : null;
@@ -386,7 +417,12 @@ export function haftaninOlaylari(
       };
     });
 
-  return [...aktifDersler(veri).filter(
+  const yillikDersler = aktifDersler(veri)
+    .map((d) => ingilizceLaboratuvariniSec(d, ogrenci))
+    .filter((d): d is Ders => d !== null)
+    .filter((d) => telafiGoster || !telafiMi(d));
+
+  return [...yillikDersler.filter(
     (d) =>
       (!d.electiveId || seciliSecmeliler.includes(d.electiveId)) &&
       (!d.date || (d.date >= mondayIso && d.date <= pazar)) &&
@@ -444,7 +480,7 @@ export function haftaninOlaylari(
       group: d.group,
       kaynak,
     };
-  }).filter((o): o is DersOlayi => o !== null), ...uygOlaylari];
+  }).filter((o): o is DersOlayi => o !== null), ...uygOlaylari.filter((o) => telafiGoster || !telafiMi(o.ders))];
 }
 
 const normalizeTr = (s: string) => s.toLocaleLowerCase("tr-TR").trim();
@@ -456,13 +492,14 @@ export function ayinOlaylari(
   veri?: YuklenenVeri,
   ogrenci?: Ogrenci,
   gizliGruplar: number[] = [],
+  telafiGoster = true,
 ): DersOlayi[] {
   const ilk = new Date(ayIcindeBirGun.getFullYear(), ayIcindeBirGun.getMonth(), 1);
   const son = new Date(ayIcindeBirGun.getFullYear(), ayIcindeBirGun.getMonth() + 1, 0);
   const olaylar: DersOlayi[] = [];
   let hafta = startOfWeek(ilk);
   while (hafta <= son) {
-    olaylar.push(...haftaninOlaylari(hafta, seciliSecmeliler, manuelAmfiler, veri, ogrenci, gizliGruplar));
+    olaylar.push(...haftaninOlaylari(hafta, seciliSecmeliler, manuelAmfiler, veri, ogrenci, gizliGruplar, telafiGoster));
     hafta = addDays(hafta, 7);
   }
   return olaylar;

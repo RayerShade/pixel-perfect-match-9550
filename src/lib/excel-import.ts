@@ -88,10 +88,13 @@ function gunNorm(v: unknown): number {
 
 function turNorm(v: unknown, ad: string): DersTuru {
   const n = normalize(`${v ?? ""} ${ad}`);
+  const adN = normalize(ad);
   if (/sinav|kurul deg|degerlendirme/.test(n)) return "sinav";
   if (/pdo|pbl|probleme dayali/.test(n)) return "pbl";
   if (/secmeli/.test(n)) return "secmeli";
-  if (/lab|pratik|uygulama/.test(n)) return "pratik";
+  // Yıllık programda yalnızca açık uygulama satırları pratiktir. Örneğin
+  // "Uygulama Alanları" bir ders adı olabilir ve uygulama sayılmamalıdır.
+  if (/^laboratory skills\b/.test(adN) || adN === "uygulama" || /\bpratik\b/.test(n)) return "pratik";
   return "teorik";
 }
 
@@ -137,7 +140,7 @@ function bitisTahmin(bas: string, bit: string) {
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
 
-const ATLA = /^(ogle( yemegi)? arasi|serbest calisma|ogle yemegi|lunch|free time|break)/;
+const ATLA = /^(ogle( yemegi)? arasi|serbest calisma|ogle yemegi|lunch(?: break)?|free(?: study)? time|break)(?:\b|\s|$)/;
 
 function yerCoz(yer: string): { sinif: string; tur?: DersTuru } {
   const n = normalize(yer);
