@@ -133,7 +133,7 @@ function Dersler() {
                 <button onClick={() => ac(dl.ad)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${acikDl ? "rotate-180" : ""}`} />
                   <div className="min-w-0">
-                    <p className="font-bold">{dl.ad}{dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? "" : " Dilimi"}</p>
+                    <p className="font-bold">{dl.ad}</p>
                     <Istatistik olaylar={tumu} katilim={katilim} />
                   </div>
                 </button>
