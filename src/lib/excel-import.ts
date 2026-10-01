@@ -208,13 +208,16 @@ const INGILIZCE_N = /(^|[^a-z])(ingilizce|ing|eng|english|en|ingl)(?![a-z])/;
 const TURKCE_N = /(^|[^a-z])(turkce|tr|turkish)(?![a-z])/;
 /**
  * Kural basit: kutunun içinde "dönem 1" + "ingilizce" (veya eşdeğerleri) varsa İngilizce programına,
- * "dönem 1" + "türkçe" varsa Türkçe programına aittir. İkisinin de yeri/yazımı önemsiz.
+ * "dönem 1" + "türkçe" varsa Türkçe programına aittir. İkisi birden yazıyorsa (entegre oturum) ikisine de.
  * Dönem 1 yazıp dil belirtilmemişse Türkçe sayılır.
  */
-const hucreDili = (hucre: string): "EN" | "TR" | null => {
+export const hucreDili = (hucre: string): "EN" | "TR" | "TR+EN" | null => {
   const n = ayir(hucre);
   if (!DONEM1_N.test(n)) return null;
-  if (INGILIZCE_N.test(n)) return "EN";
+  const en = INGILIZCE_N.test(n);
+  const tr = TURKCE_N.test(n);
+  if (en && tr) return "TR+EN";
+  if (en) return "EN";
   return "TR";
 };
 
@@ -283,7 +286,7 @@ async function amfiIzgarasiOku(
         }
         const dil = hucreDili(hucre);
         if (!dil) return;
-        if (/\btopl/.test(n)) return; // toplantı satırları öğrenci dersi değil
+        if (/toplanti/.test(n)) return; // toplantı satırları öğrenci dersi değil
         const acik = saatAraligi(hucre.replace(/^[^-]*-/, ""));
         const bas = acik[1] ? acik[0] : sb;
         const bit = acik[1] ? acik[1] : se;
