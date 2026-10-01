@@ -195,7 +195,12 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
   return dersler;
 }
 
-const DONEM1 = /d[oö]nem\s*-?\s*(1|i)(?![0-9i])/i;
+/** Dönem 1 yazımları (normalize edilmiş metinde): "dönem 1", "dönem-I", "1. dönem", "d1", "class 1", "term 1", "year 1", "med 1". */
+const DONEM1_N = /(^|[^a-z0-9])(donem ?(1|i)|1 ?donem|d ?1|class ?(1|i)|term ?(1|i)|year ?(1|i)|med ?1|phase ?(1|i))(?![a-z0-9])/;
+const DONEM1 = { test: (s: string) => DONEM1_N.test(normalize(s).replace(/(\d)\s+(?=\d)/g, "$1")) };
+/** İngilizce program işaretleri: İNGİLİZCE, İNG, ENG, ENGLISH, EN, İTF-EN vb. */
+const INGILIZCE_N = /(^|[^a-z])(ingilizce|ing|eng|english|en|ingl)(?![a-z])/;
+const TURKCE_N = /(^|[^a-z])(turkce|tr|turkish)(?![a-z])/;
 
 /** Fakülte amfi programı: her gün için "tarih" satırı, "SAAT" + amfi adları başlığı, saat satırları. */
 async function amfiIzgarasiOku(
@@ -261,7 +266,9 @@ async function amfiIzgarasiOku(
           return;
         }
         if (!DONEM1.test(hucre)) return;
-        const ing = n.includes("ingilizce") && !n.includes("turkce");
+        // Yalnız hücrenin başındaki etiket kısmına bak (ders adındaki kelimeler karışmasın)
+        const etiket = normalize(hucre.split(/[-–:]\s*(?=[A-ZÇĞİÖŞÜa-zçğıöşü]{3,}\s)/)[0] ?? hucre).slice(0, 40);
+        const ing = (INGILIZCE_N.test(etiket) || /ingilizce|english/.test(n)) && !TURKCE_N.test(etiket);
         if (/\btopl/.test(n)) return; // toplantı satırları öğrenci dersi değil
         const acik = saatAraligi(hucre.replace(/^[^-]*-/, ""));
         const bas = acik[1] ? acik[0] : sb;
