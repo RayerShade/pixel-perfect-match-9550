@@ -4,14 +4,14 @@ import { olayKategori, type OlayTuru } from "./dilim";
 import { haftaninOlaylari, type DersOlayi, type Ogrenci, type YuklenenVeri } from "./schedule-data";
 import type { Ayarlar } from "./store";
 
-/** Uyarı eşiği: kaçırılan oturum / o dersin TÜM oturumları bu oranı geçince öğrenci uyarılır. */
-export const DEVAMSIZLIK_UYARI = 0.2;
-/** Kalma eşiği: bu oranı geçersen o dersten kalırsın (yani derslerin en az %70'ine girmek gerekir). */
-export const DEVAMSIZLIK_KALMA = 0.3;
-export const devamsizlikUyari = (kacan: number, toplam: number) => toplam > 0 && kacan / toplam > DEVAMSIZLIK_UYARI;
-export const devamsizlikKaldi = (kacan: number, toplam: number) => toplam > 0 && kacan / toplam > DEVAMSIZLIK_KALMA;
-/** Kalma sınırına (%30) ulaşmadan önce kaç oturum daha kaçırılabilir. */
-export const kalanHak = (kacan: number, toplam: number) => Math.floor(toplam * DEVAMSIZLIK_KALMA) - kacan;
+/** Kalma eşiği (dilim bazında): teoriklerin en az %70'ine, uygulamaların en az %80'ine girmek gerekir. */
+export const KALMA_SINIRI: Record<OlayTuru, number> = { ders: 0.3, uygulama: 0.2 };
+/** Uyarı eşiği: kalma sınırına varmadan önce öğrenci uyarılır. */
+export const UYARI_SINIRI: Record<OlayTuru, number> = { ders: 0.2, uygulama: 0.1 };
+export const devamsizlikUyari = (kacan: number, toplam: number, tur: OlayTuru = "ders") => toplam > 0 && kacan / toplam > UYARI_SINIRI[tur];
+export const devamsizlikKaldi = (kacan: number, toplam: number, tur: OlayTuru = "ders") => toplam > 0 && kacan / toplam > KALMA_SINIRI[tur];
+/** Kalma sınırına ulaşmadan önce kaç oturum daha kaçırılabilir. */
+export const kalanHak = (kacan: number, toplam: number, tur: OlayTuru = "ders") => Math.floor(toplam * KALMA_SINIRI[tur]) - kacan;
 export type { OlayTuru };
 
 /** Programın tüm haftalarındaki olaylar (takvimle aynı anahtarlarla). */
@@ -63,8 +63,8 @@ export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>
   for (const o of olaylar) {
     const k = olayKategori(o);
     if (!k) continue;
-    const id = `${k.dilim}|${k.tur}|${k.dal}`;
-    const g = m.get(id) ?? { ...k, yapilan: 0, girilen: 0, toplam: 0, oran: 1, uyari: false, kaldi: false };
+    const id = `${k.dilim}|${k.tur}`;
+    const g = m.get(id) ?? { ...k, dal: k.tur === "uygulama" ? "uygulamalar" : "teorik dersler", yapilan: 0, girilen: 0, toplam: 0, oran: 1, uyari: false, kaldi: false };
     g.toplam++;
     if (gecti(o, simdi)) {
       g.yapilan++;
@@ -75,7 +75,7 @@ export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>
   return [...m.values()].map((g) => {
     const kacan = g.yapilan - g.girilen;
     const oran = g.toplam ? kacan / g.toplam : 0;
-    return { ...g, oran, uyari: devamsizlikUyari(kacan, g.toplam), kaldi: devamsizlikKaldi(kacan, g.toplam) };
+    return { ...g, oran, uyari: devamsizlikUyari(kacan, g.toplam, g.tur), kaldi: devamsizlikKaldi(kacan, g.toplam, g.tur) };
   });
 }
 
