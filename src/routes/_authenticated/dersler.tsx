@@ -6,7 +6,7 @@ import { ogrenciBul, type DersOlayi } from "@/lib/schedule-data";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 import { useKatilim } from "@/lib/katilim";
 import { ONLINE_DILIM, SECMELI_DILIM, olayKategori, type OlayTuru } from "@/lib/dilim";
-import { devamsizlikUyari, gecti, kalanHak, tumOlaylar } from "@/lib/devam";
+import { devamsizlikKaldi, devamsizlikUyari, gecti, kalanHak, tumOlaylar } from "@/lib/devam";
 
 export const Route = createFileRoute("/_authenticated/dersler")({
   head: () => ({
@@ -59,12 +59,20 @@ function Istatistik({ olaylar, katilim, tur }: { olaylar: DersOlayi[]; katilim: 
   if (!yapilan.length) return <span className="text-[11px] text-muted-foreground">{olaylar.length} oturum · henüz başlamadı</span>;
   const kacan = yapilan.length - girilen;
   const oran = kacan / olaylar.length;
+  const kaldi = Boolean(tur) && devamsizlikKaldi(kacan, olaylar.length);
   const uyari = Boolean(tur) && devamsizlikUyari(kacan, olaylar.length);
   const hak = kalanHak(kacan, olaylar.length);
+  const renk = kaldi ? "font-semibold text-destructive" : uyari ? "font-semibold text-bekliyor" : "text-muted-foreground";
   return (
-    <span className={`text-[11px] ${uyari ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
+    <span className={`text-[11px] ${renk}`}>
       {girilen}/{yapilan.length} girildi · devamsızlık {kacan}/{olaylar.length} (%{Math.round(oran * 100)})
-      {tur ? (uyari ? " · ⚠️ %20 sınırı aşıldı, kalabilirsin" : ` · ${Math.max(hak, 0)} hak kaldı`) : ""}
+      {tur
+        ? kaldi
+          ? " · 🚫 %30 aşıldı, bu dersten kaldın"
+          : uyari
+            ? ` · ⚠️ %20 aşıldı · %30 sınırına ${Math.max(hak, 0)} oturum kaldı`
+            : ` · ${Math.max(hak, 0)} hak kaldı`
+        : ""}
     </span>
   );
 }
@@ -112,7 +120,7 @@ function Dersler() {
           className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
         <p className="px-1 text-[11px] text-muted-foreground">
-          Bir dersin (dilimdeki anabilim dalı) tüm oturumlarının %20'sinden fazlasını kaçırırsan devamsızlıktan kalabilirsin. Oran o dersin bütün oturumlarına göre hesaplanır.
+          Bir dersin (dilimdeki anabilim dalı) oturumlarının %30'undan fazlasını kaçırırsan o dersten kalırsın; yani en az %70'ine girmen gerekir. Kaçırmalar %20'yi geçince uyarı alırsın — amaç %30'a varmadan fark etmen. Oran o dersin bütün oturumlarına göre hesaplanır.
         </p>
         {!agac.length ? (
           <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">

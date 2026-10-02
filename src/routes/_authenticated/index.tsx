@@ -99,9 +99,10 @@ function Takvim() {
     ayarla(uygun.map((o) => o.key), !hepsi);
   };
   const gunIsaretle = (g: Date) => isaretle(olaylar.filter((o) => sameDay(o.date, g)));
-  const uyarilar = useMemo(() => {
+  const { kalanlar, uyarilar } = useMemo(() => {
     const tum = tumOlaylar(veri, secmeliler, manuel, ogrenci, ayarlar);
-    return devamHesapla(tum, ayarlar.katilim ?? {}).filter((g) => g.uyari && !kapali.includes(g.dilim));
+    const gs = devamHesapla(tum, ayarlar.katilim ?? {}).filter((g) => !kapali.includes(g.dilim));
+    return { kalanlar: gs.filter((g) => g.kaldi), uyarilar: gs.filter((g) => g.uyari && !g.kaldi) };
   }, [veri, secmeliler, manuel, ogrenci, ayarlar, kapali]);
 
   const kaydir = (yon: number) => {
@@ -208,10 +209,17 @@ function Takvim() {
           </p>
         ) : null}
 
+        {kalanlar.length ? (
+          <Link to="/dersler" className="mt-3 block rounded-xl bg-destructive/15 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/20">
+            🚫 Devamsızlıktan kaldığın dersler: {kalanlar.slice(0, 3).map((g) => `${g.dal} (${g.dilim})`).join(", ")}
+            {kalanlar.length > 3 ? ` ve ${kalanlar.length - 3} ders daha` : ""} — %30 sınırını aştın. Ayrıntı için dokun.
+          </Link>
+        ) : null}
+
         {uyarilar.length ? (
           <Link to="/dersler" className="mt-3 block rounded-xl bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/15">
             ⚠️ Devamsızlık: {uyarilar.slice(0, 3).map((g) => `${g.dal} (${g.dilim})`).join(", ")}
-            {uyarilar.length > 3 ? ` ve ${uyarilar.length - 3} ders daha` : ""} — bu derslerden kalabilirsin. Ayrıntı için dokun.
+            {uyarilar.length > 3 ? ` ve ${uyarilar.length - 3} ders daha` : ""} — %20'yi aştın, %30'u geçersen bu derslerden kalırsın. Ayrıntı için dokun.
           </Link>
         ) : null}
 
