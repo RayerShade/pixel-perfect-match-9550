@@ -413,7 +413,8 @@ export function haftaninOlaylari(
   telafiGoster = true,
 ): DersOlayi[] {
   const mondayIso = isoDate(monday);
-  const uyg = ogrenci && veri?.uygulamalar?.length ? veri.uygulamalar : null;
+  // Tekrarlı grup harfi olan kayıtlar (ör. not/açıklama hücresinden yanlış okunmuş "G A A F D…") gerçek oturum değildir.
+  const uyg = ogrenci && veri?.uygulamalar?.length ? veri.uygulamalar.filter((u) => new Set(u.gruplar).size === u.gruplar.length) : null;
   // Uygulama tablosunda kayıt olan tüm günlerde genel "UYGULAMA" satırı gizlenir (eski davranış)
   const uygTarihleri = new Set(uyg?.map((u) => u.date));
   const pazar = isoDate(addDays(monday, 6));
