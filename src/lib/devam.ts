@@ -4,9 +4,12 @@ import { olayKategori, type OlayTuru } from "./dilim";
 import { haftaninOlaylari, type DersOlayi, type Ogrenci, type YuklenenVeri } from "./schedule-data";
 import type { Ayarlar } from "./store";
 
-export const ESIK: Record<OlayTuru, number> = { ders: 0.7, uygulama: 0.8 };
-/** Bu kadar oturum yapılmadan uyarı verilmez (ilk haftalarda yanlış alarm olmasın). */
-export const EN_AZ_OTURUM = 5;
+/** Devamsızlık sınırı: kaçırılan oturum / o dersin TÜM oturumları bu oranı geçerse uyarı. */
+export const DEVAMSIZLIK_SINIRI = 0.2;
+export const devamsizlikUyari = (kacan: number, toplam: number) => toplam > 0 && kacan / toplam > DEVAMSIZLIK_SINIRI;
+/** Uyarı verilmeden önce kalan kaçırma hakkı (0 = artık bir tane daha kaçırırsa sınır aşılır). */
+export const kalanHak = (kacan: number, toplam: number) => Math.floor(toplam * DEVAMSIZLIK_SINIRI) - kacan;
+export type { OlayTuru };
 
 /** Programın tüm haftalarındaki olaylar (takvimle aynı anahtarlarla). */
 export function tumOlaylar(
@@ -66,8 +69,9 @@ export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>
     m.set(id, g);
   }
   return [...m.values()].map((g) => {
-    const oran = g.yapilan ? g.girilen / g.yapilan : 1;
-    return { ...g, oran, uyari: g.yapilan >= EN_AZ_OTURUM && oran < ESIK[g.tur] };
+    const kacan = g.yapilan - g.girilen;
+    const oran = g.toplam ? kacan / g.toplam : 0;
+    return { ...g, oran, uyari: devamsizlikUyari(kacan, g.toplam) };
   });
 }
 

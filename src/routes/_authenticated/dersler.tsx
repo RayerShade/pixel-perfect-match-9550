@@ -6,7 +6,7 @@ import { ogrenciBul, type DersOlayi } from "@/lib/schedule-data";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 import { useKatilim } from "@/lib/katilim";
 import { ONLINE_DILIM, SECMELI_DILIM, olayKategori, type OlayTuru } from "@/lib/dilim";
-import { ESIK, EN_AZ_OTURUM, gecti, tumOlaylar } from "@/lib/devam";
+import { devamsizlikUyari, gecti, kalanHak, tumOlaylar } from "@/lib/devam";
 
 export const Route = createFileRoute("/_authenticated/dersler")({
   head: () => ({
@@ -57,12 +57,14 @@ function Istatistik({ olaylar, katilim, tur }: { olaylar: DersOlayi[]; katilim: 
   const yapilan = olaylar.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
   if (!yapilan.length) return <span className="text-[11px] text-muted-foreground">{olaylar.length} oturum · henüz başlamadı</span>;
-  const oran = girilen / yapilan.length;
-  const uyari = tur && yapilan.length >= EN_AZ_OTURUM && oran < ESIK[tur];
+  const kacan = yapilan.length - girilen;
+  const oran = kacan / olaylar.length;
+  const uyari = Boolean(tur) && devamsizlikUyari(kacan, olaylar.length);
+  const hak = kalanHak(kacan, olaylar.length);
   return (
     <span className={`text-[11px] ${uyari ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
-      {girilen}/{yapilan.length} girildi (%{Math.round(oran * 100)}) · toplam {olaylar.length}
-      {uyari ? ` · ⚠️ %${ESIK[tur] * 100} altı, kalabilirsin` : ""}
+      {girilen}/{yapilan.length} girildi · devamsızlık {kacan}/{olaylar.length} (%{Math.round(oran * 100)})
+      {tur ? (uyari ? " · ⚠️ %20 sınırı aşıldı, kalabilirsin" : ` · ${Math.max(hak, 0)} hak kaldı`) : ""}
     </span>
   );
 }
@@ -110,7 +112,7 @@ function Dersler() {
           className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
         <p className="px-1 text-[11px] text-muted-foreground">
-          Teorik derslerin %70'ine, uygulamaların %80'ine girmen gerekir. Hesap yalnızca bugüne kadar yapılmış derslerle yapılır.
+          Bir dersin (dilimdeki anabilim dalı) tüm oturumlarının %20'sinden fazlasını kaçırırsan devamsızlıktan kalabilirsin. Oran o dersin bütün oturumlarına göre hesaplanır.
         </p>
         {!agac.length ? (
           <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
