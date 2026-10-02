@@ -117,6 +117,8 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
     if (!tarih || !bas || tarih < "2025-01-01") return;
     for (const s of sutunlar) {
       const g = metin(r[s.i]).toLocaleUpperCase("tr-TR");
+      // Hücre yalnız grup kodlarından oluşmalı (A, D1, EF, "A - B"); açıklama metinlerindeki harfler grup sayılmaz.
+      if (!/^[\sA-H\d,;\/+&-]*$/.test(g)) continue;
       const gruplar = [...g.matchAll(/([A-H])(\d)?/g)].map((m) => m[0]);
       if (!gruplar.length) continue;
       out.push({
