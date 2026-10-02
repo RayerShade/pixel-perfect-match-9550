@@ -10,7 +10,7 @@ const ADIMLAR: Adim[] = [
   { sayfa: "/", hedef: "pdf", baslik: "PDF indir", metin: "Görüntülediğin gün, hafta ya da ayın programını yazdırmaya hazır PDF olarak indir." },
   { sayfa: "/", hedef: "zil", baslik: "Bildirimler", metin: "Duyurular, destek cevapları ve programdaki değişiklikler buraya düşer. Okunmamış varsa kırmızı rozet görürsün." },
   { sayfa: "/dersler", hedef: "nav-/dersler", baslik: "Dersler", metin: "Bu sayfada tüm derslerin ve uygulamaların listelenir." },
-  { sayfa: "/dersler", hedef: "dilim", baslik: "Dilimler ve devam", metin: "Dersler dilimlere, dilim içinde ana dallara ayrılır. Bir dilimin tüm derslerini ya da tek tek dersleri 'girdim' diye işaretleyebilirsin; devamsızlık %20'yi geçince uyarı alırsın, %30'u geçersen o dersten kalırsın." },
+  { sayfa: "/dersler", hedef: "dilim", baslik: "Dilimler ve devam", metin: "Dersler dilimlere, dilim içinde ana dallara ayrılır. Bir dilimin tüm derslerini ya da tek tek dersleri 'girdim' diye işaretleyebilirsin; bir dilimdeki teoriklerin en az %70'ine, uygulamaların en az %80'ine girmezsen o dilimden kalırsın; sınıra yaklaşınca uyarı alırsın." },
   { sayfa: "/secmeliler", hedef: "nav-/secmeliler", baslik: "Seçmeliler", metin: "Seçmeli derslerini buradan seçersin." },
   { sayfa: "/secmeliler", hedef: "secmeli-grup", baslik: "Seçmeli grupları", metin: "Her gruptan bir ders seç; seçtiğin ders her hafta takvimine otomatik eklenir. İstemediğin grubu takvimden gizleyebilirsin." },
   { sayfa: "/destek", hedef: "nav-/destek", baslik: "Destek", metin: "Sorun, öneri veya şikayetlerini buradan iletirsin." },
