@@ -62,11 +62,9 @@ function tehlikeHesapla(os: DersOlayi[], katilim: Record<string, true>): Tehlike
   if (devamsizlikKaldi(kacan, os.length)) return "kaldi";
   return devamsizlikUyari(kacan, os.length) ? "uyari" : "temiz";
 }
-/** Dilimin tehlikesi: kendi ortalaması ya da içindeki herhangi bir ders riskliyse işaret çıkar. */
+/** Dilimin tehlikesi: içindeki herhangi bir ana dal riskliyse işaret çıkar (dilimin kendi ortalaması değil). */
 function dilimTehlike(dl: Dilim, katilim: Record<string, true>): Tehlike {
-  const tumOlay = [...dl.dallar.values()].flatMap((d) => [...d.konular.values()].flat());
-  let worst = tehlikeHesapla(tumOlay, katilim);
-  if (worst === "kaldi") return worst;
+  let worst: Tehlike = "temiz";
   for (const d of dl.dallar.values()) {
     const t = tehlikeHesapla([...d.konular.values()].flat(), katilim);
     if (t === "kaldi") return "kaldi";
