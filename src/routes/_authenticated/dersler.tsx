@@ -53,7 +53,29 @@ function agacKur(olaylar: DersOlayi[]): Dilim[] {
 
 const kisaTarih = (d: Date) => d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", weekday: "short" });
 
-function Istatistik({ olaylar, katilim, tur }: { olaylar: DersOlayi[]; katilim: Record<string, true>; tur?: OlayTuru }) {
+/** Bir ders grubunun devamsızlık durumu: %30 üstü kalma, %20 üstü uyarı. */
+type Tehlike = "kaldi" | "uyari" | "temiz";
+function tehlikeHesapla(os: DersOlayi[], katilim: Record<string, true>): Tehlike {
+  const yapilan = os.filter((o) => gecti(o));
+  if (!yapilan.length) return "temiz";
+  const kacan = yapilan.length - yapilan.filter((o) => katilim[o.key]).length;
+  if (devamsizlikKaldi(kacan, os.length)) return "kaldi";
+  return devamsizlikUyari(kacan, os.length) ? "uyari" : "temiz";
+}
+/** Dilimin tehlikesi: kendi ortalaması ya da içindeki herhangi bir ders riskliyse işaret çıkar. */
+function dilimTehlike(dl: Dilim, katilim: Record<string, true>): Tehlike {
+  const tumOlay = [...dl.dallar.values()].flatMap((d) => [...d.konular.values()].flat());
+  let worst = tehlikeHesapla(tumOlay, katilim);
+  if (worst === "kaldi") return worst;
+  for (const d of dl.dallar.values()) {
+    const t = tehlikeHesapla([...d.konular.values()].flat(), katilim);
+    if (t === "kaldi") return "kaldi";
+    if (t === "uyari") worst = "uyari";
+  }
+  return worst;
+}
+
+function Istatistik({ olaylar, katilim, tur, vurgu }: { olaylar: DersOlayi[]; katilim: Record<string, true>; tur?: OlayTuru; vurgu?: Tehlike }) {
   const yapilan = olaylar.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
   if (!yapilan.length) return <span className="text-[11px] text-muted-foreground">{olaylar.length} oturum · henüz başlamadı</span>;
@@ -62,7 +84,7 @@ function Istatistik({ olaylar, katilim, tur }: { olaylar: DersOlayi[]; katilim: 
   const kaldi = Boolean(tur) && devamsizlikKaldi(kacan, olaylar.length);
   const uyari = Boolean(tur) && devamsizlikUyari(kacan, olaylar.length);
   const hak = kalanHak(kacan, olaylar.length);
-  const renk = kaldi ? "font-semibold text-destructive" : uyari ? "font-semibold text-bekliyor" : "text-muted-foreground";
+  const renk = kaldi || vurgu === "kaldi" ? "font-semibold text-destructive" : uyari || vurgu === "uyari" ? "font-semibold text-bekliyor" : "text-muted-foreground";
   return (
     <span className={`text-[11px] ${renk}`}>
       {girilen}/{yapilan.length} girildi · devamsızlık {kacan}/{olaylar.length} (%{Math.round(oran * 100)})
@@ -134,6 +156,7 @@ function Dersler() {
             .sort((a, b) => (a.tur === b.tur ? a.ad.localeCompare(b.ad, "tr") : a.tur === "ders" ? -1 : 1));
           if (!dallar.length) return null;
           const tumu = dallar.flatMap((d) => d.liste.flatMap(([, os]) => os));
+          const tehlike = dilimTehlike(dl, katilim);
           const acikDl = acik.has(dl.ad) || Boolean(q);
           const uyariKapali = kapali.includes(dl.ad);
           let sonTur: OlayTuru | null = null;
@@ -143,8 +166,19 @@ function Dersler() {
                 <button onClick={() => ac(dl.ad)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${acikDl ? "rotate-180" : ""}`} />
                   <div className="min-w-0">
-                    <p className="font-bold">{dl.ad}</p>
-                    <Istatistik olaylar={tumu} katilim={katilim} />
+                    <p className="flex items-center gap-2 font-bold">
+                      <span className="truncate">{dl.ad}</span>
+                      {tehlike !== "temiz" ? (
+                        <span
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            tehlike === "kaldi" ? "bg-destructive/15 text-destructive" : "bg-bekliyor/15 text-bekliyor"
+                          }`}
+                        >
+                          {tehlike === "kaldi" ? "🚫 devamsızlık" : "⚠️ devamsızlık"}
+                        </span>
+                      ) : null}
+                    </p>
+                    <Istatistik olaylar={tumu} katilim={katilim} vurgu={tehlike} />
                   </div>
                 </button>
                 <button
