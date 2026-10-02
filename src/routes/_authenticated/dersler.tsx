@@ -53,46 +53,52 @@ function agacKur(olaylar: DersOlayi[]): Dilim[] {
 
 const kisaTarih = (d: Date) => d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", weekday: "short" });
 
-/** Bir ders grubunun devamsızlık durumu: %30 üstü kalma, %20 üstü uyarı. */
+/** Dilim bazında devamsızlık: teoriklerin %70'ine, uygulamaların %80'ine girmek gerekir. */
 type Tehlike = "kaldi" | "uyari" | "temiz";
-function tehlikeHesapla(os: DersOlayi[], katilim: Record<string, true>): Tehlike {
+function durum(os: DersOlayi[], katilim: Record<string, true>, tur: OlayTuru) {
   const yapilan = os.filter((o) => gecti(o));
-  if (!yapilan.length) return "temiz";
-  const kacan = yapilan.length - yapilan.filter((o) => katilim[o.key]).length;
-  if (devamsizlikKaldi(kacan, os.length)) return "kaldi";
-  return devamsizlikUyari(kacan, os.length) ? "uyari" : "temiz";
+  const girilen = yapilan.filter((o) => katilim[o.key]).length;
+  const kacan = yapilan.length - girilen;
+  const t: Tehlike = !yapilan.length ? "temiz" : devamsizlikKaldi(kacan, os.length, tur) ? "kaldi" : devamsizlikUyari(kacan, os.length, tur) ? "uyari" : "temiz";
+  return { yapilan: yapilan.length, girilen, kacan, toplam: os.length, t };
 }
-/** Dilimin tehlikesi: içindeki herhangi bir ana dal riskliyse işaret çıkar (dilimin kendi ortalaması değil). */
+function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
+  return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
+}
 function dilimTehlike(dl: Dilim, katilim: Record<string, true>): Tehlike {
-  let worst: Tehlike = "temiz";
-  for (const d of dl.dallar.values()) {
-    const t = tehlikeHesapla([...d.konular.values()].flat(), katilim);
-    if (t === "kaldi") return "kaldi";
-    if (t === "uyari") worst = "uyari";
-  }
-  return worst;
+  const ts = (["ders", "uygulama"] as const).map((tur) => durum(dilimOlaylari(dl, tur), katilim, tur).t);
+  return ts.includes("kaldi") ? "kaldi" : ts.includes("uyari") ? "uyari" : "temiz";
 }
 
-function Istatistik({ olaylar, katilim, tur, vurgu }: { olaylar: DersOlayi[]; katilim: Record<string, true>; tur?: OlayTuru; vurgu?: Tehlike }) {
+/** Dilim başlığında teorik / uygulama satırı (kalma kuralı burada). */
+function DilimSatiri({ os, katilim, tur }: { os: DersOlayi[]; katilim: Record<string, true>; tur: OlayTuru }) {
+  if (!os.length) return null;
+  const d = durum(os, katilim, tur);
+  const ad = tur === "uygulama" ? "Uygulama" : "Teorik";
+  const gerek = tur === "uygulama" ? 80 : 70;
+  if (!d.yapilan) return <span className="block text-[11px] text-muted-foreground">{ad}: {d.toplam} oturum · henüz başlamadı</span>;
+  const hak = kalanHak(d.kacan, d.toplam, tur);
+  const renk = d.t === "kaldi" ? "font-semibold text-destructive" : d.t === "uyari" ? "font-semibold text-bekliyor" : "text-muted-foreground";
+  return (
+    <span className={`block text-[11px] ${renk}`}>
+      {ad}: {d.girilen}/{d.yapilan} girildi · devamsızlık {d.kacan}/{d.toplam} (%{Math.round((d.kacan / d.toplam) * 100)})
+      {d.t === "kaldi"
+        ? ` · 🚫 %${gerek} sağlanamadı, bu dilimden kaldın`
+        : d.t === "uyari"
+          ? ` · ⚠️ sınıra ${Math.max(hak, 0)} oturum kaldı`
+          : ` · ${Math.max(hak, 0)} hak kaldı`}
+    </span>
+  );
+}
+
+function Istatistik({ olaylar, katilim }: { olaylar: DersOlayi[]; katilim: Record<string, true> }) {
   const yapilan = olaylar.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
   if (!yapilan.length) return <span className="text-[11px] text-muted-foreground">{olaylar.length} oturum · henüz başlamadı</span>;
   const kacan = yapilan.length - girilen;
-  const oran = kacan / olaylar.length;
-  const kaldi = Boolean(tur) && devamsizlikKaldi(kacan, olaylar.length);
-  const uyari = Boolean(tur) && devamsizlikUyari(kacan, olaylar.length);
-  const hak = kalanHak(kacan, olaylar.length);
-  const renk = kaldi || vurgu === "kaldi" ? "font-semibold text-destructive" : uyari || vurgu === "uyari" ? "font-semibold text-bekliyor" : "text-muted-foreground";
   return (
-    <span className={`text-[11px] ${renk}`}>
-      {girilen}/{yapilan.length} girildi · devamsızlık {kacan}/{olaylar.length} (%{Math.round(oran * 100)})
-      {tur
-        ? kaldi
-          ? " · 🚫 %30 aşıldı, bu dersten kaldın"
-          : uyari
-            ? ` · ⚠️ %20 aşıldı · %30 sınırına ${Math.max(hak, 0)} oturum kaldı`
-            : ` · ${Math.max(hak, 0)} hak kaldı`
-        : ""}
+    <span className="text-[11px] text-muted-foreground">
+      {girilen}/{yapilan.length} girildi · kaçırılan {kacan}/{olaylar.length}
     </span>
   );
 }
@@ -140,7 +146,7 @@ function Dersler() {
           className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
         <p className="px-1 text-[11px] text-muted-foreground">
-          Bir dersin (dilimdeki anabilim dalı) oturumlarının %30'undan fazlasını kaçırırsan o dersten kalırsın; yani en az %70'ine girmen gerekir. Kaçırmalar %20'yi geçince uyarı alırsın — amaç %30'a varmadan fark etmen. Oran o dersin bütün oturumlarına göre hesaplanır.
+          Devamsızlık dilim bazında hesaplanır: bir dilimdeki teorik derslerin en az %70'ine, uygulamaların en az %80'ine girmen gerekir; aksi halde o dilimden kalırsın. Sınıra yaklaşınca (teorikte %20, uygulamada %10 kaçırınca) uyarı alırsın. Oran dilimin bütün oturumlarına göre hesaplanır.
         </p>
         {!agac.length ? (
           <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
@@ -176,7 +182,8 @@ function Dersler() {
                         </span>
                       ) : null}
                     </p>
-                    <Istatistik olaylar={tumu} katilim={katilim} vurgu={tehlike} />
+                    <DilimSatiri os={dilimOlaylari(dl, "ders")} katilim={katilim} tur="ders" />
+                    <DilimSatiri os={dilimOlaylari(dl, "uygulama")} katilim={katilim} tur="uygulama" />
                   </div>
                 </button>
                 <button
@@ -206,7 +213,7 @@ function Dersler() {
                           <div className="flex items-center gap-2 px-3 py-2">
                             <button onClick={() => ac(dalKey)} className="min-w-0 flex-1 text-left">
                               <p className="text-sm font-semibold">{d.ad}</p>
-                              <Istatistik olaylar={os} katilim={katilim} tur={d.tur} />
+                              <Istatistik olaylar={os} katilim={katilim} />
                             </button>
                             <TopluTus olaylar={os} katilim={katilim} ayarla={ayarla} />
                           </div>
