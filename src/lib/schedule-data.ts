@@ -92,6 +92,9 @@ export interface UygulamaOlayi {
   yer: string;
   dilim: string;
   gruplar: string[]; // "A", "D1" ...
+  /** Admin tarafından elle değiştirilen tür / ana dal. */
+  tur?: DersTuru | undefined;
+  dal?: string | undefined;
 }
 
 /** Uygulama hücresindeki grup ("A" tüm grup, "D1" yalnızca d1 alt grubu) öğrenciye uyuyor mu? */
@@ -437,7 +440,8 @@ export function haftaninOlaylari(
         id: u.id,
         courseName: `${u.ad} Uygulaması`,
         instructor: u.hoca,
-        courseType: /pd[oö]/i.test(u.ad) ? "pbl" : "pratik",
+        courseType: u.tur ?? (/pd[oö]/i.test(u.ad) ? "pbl" : "pratik"),
+        dal: u.dal || undefined,
         dayOfWeek: ((new Date(`${u.date}T00:00:00`).getDay() + 6) % 7) + 1,
         date: u.date,
         startTime: u.startTime,
