@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
-import type { Ders } from "@/lib/schedule-data";
+import { DERS_TURU_ETIKET, type Ders, type DersTuru } from "@/lib/schedule-data";
+import { dilimDal } from "@/lib/dilim";
 
 const GUNLER = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 const girdi = "w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm";
@@ -20,6 +21,12 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [hafta, setHafta] = useState(ilk);
   const [duzen, setDuzen] = useState<Ders | null>(null);
+  const [toplu, setToplu] = useState(false);
+  const secenek = useMemo(() => {
+    const dl = new Set<string>(), da = new Set<string>();
+    for (const d of dersler) { const x = dilimDal(d); dl.add(x.dilim); da.add(x.dal); }
+    return { dilimler: [...dl].sort((a, b) => a.localeCompare(b, "tr")), dallar: [...da].sort((a, b) => a.localeCompare(b, "tr")) };
+  }, [dersler]);
 
   const gunler = Array.from({ length: 7 }, (_, i) => { const d = new Date(hafta); d.setDate(d.getDate() + i); return d; });
   const tarihSet = gunler.map(iso);
@@ -45,8 +52,13 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
         <button onClick={() => setHafta(pazartesi(new Date()))} className="rounded-md border border-border px-3 py-1 text-sm hover:bg-accent">Bu hafta</button>
         <input type="date" value={iso(hafta)} onChange={(e) => e.target.value && setHafta(pazartesi(new Date(e.target.value + "T00:00")))} className="rounded-md border border-input bg-background px-2 py-1 text-sm" />
         <span className="text-sm text-muted-foreground">{gunler[0]!.toLocaleDateString("tr-TR", { day: "numeric", month: "long" })} – {gunler[6]!.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} · {haftaDersleri.length} ders</span>
+        <button onClick={() => setToplu((v) => !v)} className={`rounded-md border px-3 py-1 text-sm ${toplu ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}>Toplu düzenle</button>
         <span className="ml-auto text-xs text-muted-foreground">Boş alana tıkla: ders ekle · Derse tıkla: düzenle</span>
       </div>
+
+      {toplu && <TopluDuzen dersler={dersler} onDegis={onDegis} secenek={secenek} />}
+      <datalist id="pt-dilimler">{secenek.dilimler.map((x) => <option key={x} value={x} />)}</datalist>
+      <datalist id="pt-dallar">{secenek.dallar.map((x) => <option key={x} value={x} />)}</datalist>
 
       <div className="overflow-x-auto rounded-xl border border-border">
         <div className="grid min-w-[900px]" style={{ gridTemplateColumns: "48px repeat(7, 1fr)" }}>
@@ -98,6 +110,7 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
 function DersFormu({ ders, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; yeniMi: boolean; kapat: () => void; kaydet: (d: Ders) => void; sil: () => void; kopya: () => void }) {
   const [d, setD] = useState(ders);
   const k = <K extends keyof Ders>(a: K, v: Ders[K]) => setD({ ...d, [a]: v });
+  const oto = dilimDal({ ...d, dilim: undefined, dal: undefined });
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={kapat}>
       <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -115,6 +128,16 @@ function DersFormu({ ders, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; ye
           <label className="text-xs">Derslik<input className={girdi} value={d.defaultClassroom} onChange={(e) => k("defaultClassroom", e.target.value)} /></label>
           <label className="text-xs">Hoca<input className={girdi} value={d.instructor} onChange={(e) => k("instructor", e.target.value)} /></label>
         </div>
+        <div className="grid grid-cols-3 gap-2">
+          <label className="text-xs">Tür
+            <select className={girdi} value={d.courseType} onChange={(e) => k("courseType", e.target.value as DersTuru)}>
+              {(Object.keys(DERS_TURU_ETIKET) as DersTuru[]).map((t) => <option key={t} value={t}>{DERS_TURU_ETIKET[t]}</option>)}
+            </select>
+          </label>
+          <label className="text-xs">Dilim<input list="pt-dilimler" className={girdi} value={d.dilim ?? ""} placeholder={oto.dilim} onChange={(e) => k("dilim", e.target.value || undefined)} /></label>
+          <label className="text-xs">Ana dal<input list="pt-dallar" className={girdi} value={d.dal ?? ""} placeholder={oto.dal} onChange={(e) => k("dal", e.target.value || undefined)} /></label>
+        </div>
+        <p className="text-[11px] text-muted-foreground">Dilim / ana dal boş kalırsa dosyadan otomatik okunur (soluk yazan).</p>
         <label className="block text-xs">Not<input className={girdi} value={d.notes} onChange={(e) => k("notes", e.target.value)} /></label>
         <div className="flex flex-wrap gap-2 pt-1">
           <button onClick={() => kaydet(d)} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Tamam</button>
@@ -123,6 +146,58 @@ function DersFormu({ ders, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; ye
         </div>
         <p className="text-[11px] text-muted-foreground">Değişiklikler yukarıdaki "Kaydet" ile kaydedilir.</p>
       </div>
+    </div>
+  );
+}
+
+/** Aynı ada / dilime / ana dala sahip bütün derslerin türünü, dilimini veya ana dalını tek seferde değiştir. */
+function TopluDuzen({ dersler, onDegis, secenek }: { dersler: Ders[]; onDegis: (d: Ders[]) => void; secenek: { dilimler: string[]; dallar: string[] } }) {
+  const [alan, setAlan] = useState<"ad" | "dilim" | "dal">("ad");
+  const [ara, setAra] = useState("");
+  const [tur, setTur] = useState<DersTuru | "">("");
+  const [dilim, setDilim] = useState("");
+  const [dal, setDal] = useState("");
+  const q = ara.toLocaleLowerCase("tr-TR").trim();
+  const eslesen = q
+    ? dersler.filter((d) => {
+        const x = dilimDal(d);
+        const v = alan === "ad" ? d.courseName : alan === "dilim" ? x.dilim : x.dal;
+        return v.toLocaleLowerCase("tr-TR").includes(q);
+      })
+    : [];
+  const uygula = () => {
+    if (!eslesen.length || (!tur && !dilim.trim() && !dal.trim())) return;
+    if (!confirm(`${eslesen.length} ders değişecek. Emin misin?`)) return;
+    const ids = new Set(eslesen.map((d) => d.id));
+    onDegis(dersler.map((d) => (ids.has(d.id) ? { ...d, ...(tur ? { courseType: tur } : {}), ...(dilim.trim() ? { dilim: dilim.trim() } : {}), ...(dal.trim() ? { dal: dal.trim() } : {}) } : d)));
+    setAra(""); setTur(""); setDilim(""); setDal("");
+  };
+  return (
+    <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+      <p className="text-sm font-semibold">Toplu düzenle</p>
+      <div className="grid gap-2 sm:grid-cols-[140px_1fr]">
+        <select className={girdi} value={alan} onChange={(e) => setAlan(e.target.value as typeof alan)}>
+          <option value="ad">Ders adı içeren</option>
+          <option value="dilim">Dilimi</option>
+          <option value="dal">Ana dalı</option>
+        </select>
+        <input className={girdi} value={ara} onChange={(e) => setAra(e.target.value)} list={alan === "dilim" ? "pt-dilimler" : alan === "dal" ? "pt-dallar" : undefined} placeholder="Ara…" />
+      </div>
+      <div className="grid gap-2 sm:grid-cols-3">
+        <select className={girdi} value={tur} onChange={(e) => setTur(e.target.value as DersTuru | "")}>
+          <option value="">Tür: değiştirme</option>
+          {(Object.keys(DERS_TURU_ETIKET) as DersTuru[]).map((t) => <option key={t} value={t}>{DERS_TURU_ETIKET[t]}</option>)}
+        </select>
+        <input className={girdi} list="pt-dilimler" value={dilim} onChange={(e) => setDilim(e.target.value)} placeholder="Yeni dilim (boş = değiştirme)" />
+        <input className={girdi} list="pt-dallar" value={dal} onChange={(e) => setDal(e.target.value)} placeholder="Yeni ana dal (boş = değiştirme)" />
+      </div>
+      <div className="flex items-center gap-2">
+        <button onClick={uygula} disabled={!eslesen.length} className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">Uygula</button>
+        <span className="text-xs text-muted-foreground">{q ? `${eslesen.length} ders eşleşti` : "Önce ara"} · {secenek.dilimler.length} dilim, {secenek.dallar.length} ana dal var</span>
+      </div>
+      {eslesen.length ? (
+        <p className="max-h-20 overflow-auto text-[11px] text-muted-foreground">{[...new Set(eslesen.map((d) => d.courseName))].slice(0, 30).join(" · ")}</p>
+      ) : null}
     </div>
   );
 }
