@@ -19,6 +19,10 @@ const dilimAdi = (s: string) => {
 
 /** Ders notunun ilk parçası "HÜCRE DİLİMİ / ANATOMİ AD. - ..." → dilim + ana dal. */
 export function dilimDal(d: Ders): { dilim: string; dal: string } {
+  if (d.dilim?.trim() || d.dal?.trim()) {
+    const oto = dilimDal({ ...d, dilim: undefined, dal: undefined });
+    return { dilim: d.dilim?.trim() ? dilimAdi(d.dilim) : oto.dilim, dal: d.dal?.trim() || oto.dal };
+  }
   const bolum = (d.notes.split(" · ")[0] ?? "").trim();
   const i = bolum.indexOf("/");
   if (i >= 0) {
@@ -51,6 +55,6 @@ export function olayKategori(o: DersOlayi): { dilim: string; dal: string; tur: O
   // Online dersler tek bölüm; her dersin devamı ayrı.
   if (onlineMi(o)) return { dilim: ONLINE_DILIM, dal: d.courseName.trim(), tur };
   // Uygulamalar dilimlerinin altında, listedeki adıyla (örn. "Anatomi Uygulaması").
-  if (tur === "uygulama") return { dilim, dal: d.courseName.replace(/\s*\((telafi|repeat)\)$/i, "").trim(), tur };
+  if (tur === "uygulama" && !d.dal?.trim()) return { dilim, dal: d.courseName.replace(/\s*\((telafi|repeat)\)$/i, "").trim(), tur };
   return { dilim, dal, tur };
 }
