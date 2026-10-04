@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { gecmisYaz } from "./gecmis";
 import { PROGRAM_ALANLARI, programAnahtari, type Dil } from "./program";
 
 export const ANAHTARLAR = {
@@ -150,6 +151,7 @@ export function genelKaydet(anahtar: keyof typeof GENEL_ALANLAR) {
       .from("global_data")
       .upsert({ anahtar, veri: veri as Json, updated_by: uid, updated_at: new Date().toISOString() });
     if (error) throw error;
+    void gecmisYaz(anahtar === "amfi" ? "Amfi programı kaydedildi" : "Genel seçmeliler kaydedildi");
   });
 }
 
