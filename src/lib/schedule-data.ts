@@ -26,6 +26,9 @@ export interface Ders {
   semester: string;
   notes: string;
   electiveId?: string;
+  /** Admin tarafından elle atanan dilim / ana dal (nottan okunanın yerine geçer). */
+  dilim?: string | undefined;
+  dal?: string | undefined;
 }
 
 export interface Secmeli {
