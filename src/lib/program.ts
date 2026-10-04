@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { gecmisYaz } from "./gecmis";
 import type { Ders, Ogrenci, UygulamaOlayi } from "./schedule-data";
 
 export type Dil = "tr" | "en";
@@ -33,6 +34,7 @@ export async function donemleriKaydet(liste: Donem[]) {
     .from("global_data")
     .upsert({ anahtar: "donemler", veri: { liste } as unknown as Json, updated_at: new Date().toISOString() });
   if (error) throw error;
+  void gecmisYaz("Dönem listesi güncellendi", liste.map((d) => d.ad).join(", "));
 }
 
 export async function programGetir(donemId: string, dil: Dil): Promise<ProgramVerisi> {
@@ -47,9 +49,11 @@ export async function programKaydet(donemId: string, dil: Dil, veri: ProgramVeri
     updated_at: new Date().toISOString(),
   });
   if (error) throw error;
+  void gecmisYaz(`Program kaydedildi (${dil.toUpperCase()})`, `${programAnahtari(donemId, dil)} · ${veri.dersler?.length ?? 0} ders · ${veri.uygulamalar?.length ?? 0} uygulama · ${Object.keys(veri.ogrenciler ?? {}).length} öğrenci`);
 }
 
 export async function donemSil(donemId: string, liste: Donem[]) {
   await donemleriKaydet(liste.filter((d) => d.id !== donemId));
   await supabase.from("global_data").delete().in("anahtar", [programAnahtari(donemId, "tr"), programAnahtari(donemId, "en")]);
+  void gecmisYaz("Dönem silindi", liste.find((d) => d.id === donemId)?.ad ?? donemId);
 }

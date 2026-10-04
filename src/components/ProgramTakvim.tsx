@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { DERS_TURU_ETIKET, type Ders, type DersTuru } from "@/lib/schedule-data";
-import { dilimDal } from "@/lib/dilim";
+import { DIGER, dilimDal } from "@/lib/dilim";
 
 const GUNLER = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 const girdi = "w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm";
@@ -240,6 +240,18 @@ function DilimYonetimi({ dersler, onDegis, ekstra, setEkstra }: {
     if (!hedef || hedef === dilim) return;
     onDegis(dersler.map((d) => { const x = dilimDal(d); return x.dilim === dilim && x.dal === dal ? { ...d, dilim: hedef, dal } : d; }));
   };
+  const dilimSil = (dilim: string, n: number) => {
+    if (!n) { setEkstra({ ...ekstra, dilimler: ekstra.dilimler.filter((x) => x !== dilim) }); return; }
+    const secim = prompt(`"${dilim}" dilimini sil (${n} ders):\n1 = Sadece dilimi kaldır, dersler "${DIGER}" altına geçsin\n2 = Dilimi içindeki derslerle birlikte sil\nNumarayı yaz:`)?.trim();
+    if (secim === "1") onDegis(dersler.map((d) => (dilimDal(d).dilim === dilim ? { ...d, dilim: DIGER } : d)));
+    else if (secim === "2" && confirm(`${n} ders kalıcı olarak silinecek. Emin misin?`)) onDegis(dersler.filter((d) => dilimDal(d).dilim !== dilim));
+  };
+  const dalSil = (dilim: string, dal: string, n: number) => {
+    const secim = prompt(`"${dal}" ana dalını sil (${n} ders):\n1 = Sadece ana dalı kaldır, dersler "Genel" altına geçsin\n2 = Ana dalı dersleriyle birlikte sil\nNumarayı yaz:`)?.trim();
+    const eslesir = (d: Ders) => { const x = dilimDal(d); return x.dilim === dilim && x.dal === dal; };
+    if (secim === "1") onDegis(dersler.map((d) => (eslesir(d) ? { ...d, dal: "Genel" } : d)));
+    else if (secim === "2" && confirm(`${n} ders kalıcı olarak silinecek. Emin misin?`)) onDegis(dersler.filter((d) => !eslesir(d)));
+  };
   const dalEkle = (dilim: string) => {
     const ad = prompt(`${dilim} için yeni ana dal adı:`)?.trim();
     if (ad) setEkstra({ ...ekstra, dallar: [...new Set([...ekstra.dallar, ad])] });
@@ -254,7 +266,7 @@ function DilimYonetimi({ dersler, onDegis, ekstra, setEkstra }: {
           className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground"
         >Dilim ekle</button>
       </div>
-      <p className="text-[11px] text-muted-foreground">Yeni eklenen dilim / ana dal, bir derse atanıp "Kaydet"e basılınca kalıcı olur. Ders atamak için derse tıkla ya da "Toplu düzenle"yi kullan.</p>
+      <p className="text-[11px] text-muted-foreground">Yeni eklenen dilim / ana dal, bir derse atanıp "Kaydet"e basılınca kalıcı olur. Ders atamak için derse tıkla ya da "Toplu düzenle"yi kullan. Yanlışlıkla silersen alttaki "Geri al" ile dönebilirsin.</p>
       <ul className="max-h-80 space-y-1 overflow-auto">
         {agac.map(([dilim, dallar]) => (
           <li key={dilim} className="rounded-lg bg-surface px-2 py-1.5">
@@ -264,6 +276,7 @@ function DilimYonetimi({ dersler, onDegis, ekstra, setEkstra }: {
               </button>
               <button onClick={() => dilimAdlandir(dilim)} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-accent">Yeniden adlandır</button>
               <button onClick={() => dalEkle(dilim)} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-accent">+ Ana dal</button>
+              <button onClick={() => dilimSil(dilim, [...dallar.values()].reduce((a, b) => a + b, 0))} className="rounded border border-destructive/40 px-2 py-0.5 text-xs text-destructive hover:bg-destructive/10">Sil</button>
             </div>
             {acik === dilim ? (
               <ul className="mt-1 space-y-0.5 pl-3">
@@ -272,6 +285,7 @@ function DilimYonetimi({ dersler, onDegis, ekstra, setEkstra }: {
                     <span className="min-w-0 flex-1 truncate">{dal} <span className="text-muted-foreground">({n})</span></span>
                     <button onClick={() => dalAdlandir(dilim, dal)} className="rounded border border-border px-1.5 py-0.5 hover:bg-accent">Adlandır</button>
                     <button onClick={() => dalTasi(dilim, dal)} className="rounded border border-border px-1.5 py-0.5 hover:bg-accent">Başka dilime taşı</button>
+                    <button onClick={() => dalSil(dilim, dal, n)} className="rounded border border-destructive/40 px-1.5 py-0.5 text-destructive hover:bg-destructive/10">Sil</button>
                   </li>
                 ))}
                 {!dallar.size ? <li className="text-xs text-muted-foreground">Henüz ders yok</li> : null}

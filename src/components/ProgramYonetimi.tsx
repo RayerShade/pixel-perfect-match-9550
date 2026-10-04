@@ -136,6 +136,18 @@ const UYG_SUTUN: Sutun<UygulamaOlayi>[] = [
   },
   { ad: "Yer", al: (r) => r.yer, koy: (r, v) => ({ ...r, yer: v }), gen: "8rem" },
   { ad: "Hoca", al: (r) => r.hoca, koy: (r, v) => ({ ...r, hoca: v }), gen: "8rem" },
+  { ad: "Dilim", al: (r) => r.dilim, koy: (r, v) => ({ ...r, dilim: v }), gen: "10rem" },
+  { ad: "Ana dal", al: (r) => r.dal ?? "", koy: (r, v) => ({ ...r, dal: v || undefined }), gen: "9rem" },
+  {
+    ad: "Tür (pratik/pbl/teorik/sinav)",
+    al: (r) => r.tur ?? "",
+    koy: (r, v) => {
+      const t = v.trim().toLocaleLowerCase("tr-TR");
+      const tur = (["teorik", "pratik", "pbl", "secmeli", "sinav"] as const).find((x) => x === t || (t.length >= 2 && x.startsWith(t)));
+      return { ...r, tur: tur ?? (t ? r.tur : undefined) };
+    },
+    gen: "6rem",
+  },
 ];
 
 function DosyaTusu({ etiket, onDosya, kaynak }: { etiket: string; onDosya: (f: File) => Promise<void>; kaynak?: { anahtar: string; tur: SheetsTur } | undefined }) {
@@ -187,6 +199,8 @@ export function ProgramYonetimi() {
   const [kirli, setKirli] = useState(false);
   const [bolum, setBolum] = useState<Bolum>("dersler");
   const [yeniAd, setYeniAd] = useState("");
+  const [gecmis, setGecmis] = useState<ProgramVerisi[]>([]);
+  const [kopyaHedef, setKopyaHedef] = useState<{ donemId: string; dil: Dil } | null>(null);
 
   useEffect(() => {
     if (!donemId && donemler[0]) setDonemId(donemler[0].id);
@@ -194,11 +208,13 @@ export function ProgramYonetimi() {
   useEffect(() => {
     setProg(null);
     setKirli(false);
+    setGecmis([]);
     if (donemId) void programGetir(donemId, dil).then(setProg);
   }, [donemId, dil]);
 
   const donemYenile = () => qc.invalidateQueries({ queryKey: ["donemler"] });
   const guncelle = (p: Partial<ProgramVerisi>) => {
+    if (prog) setGecmis((g) => [...g.slice(-29), prog]);
     setProg((x) => ({ ...(x ?? {}), ...p }));
     setKirli(true);
   };
@@ -409,6 +425,42 @@ export function ProgramYonetimi() {
                   yeni={() => ({ no: "", ad: "", soyad: "", grup: "", altGrup: "" })}
                 />
               )}
+
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border p-3 text-xs">
+                <span className="font-semibold">Bu programı kopyala:</span>
+                <select
+                  className={girdi}
+                  value={kopyaHedef ? `${kopyaHedef.donemId}:${kopyaHedef.dil}` : ""}
+                  onChange={(e) => { const [d, l] = e.target.value.split(":"); setKopyaHedef(d ? { donemId: d, dil: l as Dil } : null); }}
+                >
+                  <option value="">Hedef dönem / dil seç…</option>
+                  {donemler.flatMap((d) => (["tr", "en"] as const).map((l) => (
+                    <option key={`${d.id}:${l}`} value={`${d.id}:${l}`} disabled={d.id === donemId && l === dil}>{d.ad} · {DIL_ETIKET[l]}</option>
+                  )))}
+                </select>
+                <button
+                  disabled={!kopyaHedef}
+                  onClick={async () => {
+                    if (!kopyaHedef || !prog) return;
+                    const ad = `${donemler.find((d) => d.id === kopyaHedef.donemId)?.ad ?? ""} · ${DIL_ETIKET[kopyaHedef.dil]}`;
+                    if (!confirm(`"${ad}" programının üzerine yazılacak (yıllık program, uygulamalar, öğrenci listesi). Emin misin?`)) return;
+                    try {
+                      await programKaydet(kopyaHedef.donemId, kopyaHedef.dil, prog);
+                      toast.success(`${ad} programına kopyalandı.`);
+                      setKopyaHedef(null);
+                    } catch (e) { toast.error(e instanceof Error ? e.message : "Kopyalanamadı."); }
+                  }}
+                  className="rounded-lg border border-border px-2.5 py-1.5 font-semibold hover:bg-accent disabled:opacity-50"
+                >Kopyala</button>
+                <span className="text-muted-foreground">Kaydedilmemiş değişiklikler de kopyalanır.</span>
+              </div>
+
+              {gecmis.length ? (
+                <button
+                  onClick={() => { const son = gecmis[gecmis.length - 1]!; setGecmis((g) => g.slice(0, -1)); setProg(son); setKirli(true); }}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2 text-sm font-semibold hover:bg-accent"
+                >↶ Son değişikliği geri al ({gecmis.length})</button>
+              ) : null}
 
               <button
                 disabled={!kirli}

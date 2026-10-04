@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_gecmis: {
+        Row: {
+          created_at: string
+          detay: string
+          id: string
+          islem: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detay?: string
+          id?: string
+          islem: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          detay?: string
+          id?: string
+          islem?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bildirimler: {
         Row: {
           baslik: string

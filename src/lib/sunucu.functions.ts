@@ -7,6 +7,12 @@ export const TABLOLAR = { profiles: "id", user_data: "user_id", user_roles: "id"
 const tabloSema = z.enum(["profiles", "user_data", "user_roles", "global_data"]);
 const KOVA = "ogrenci-dosyalari";
 
+async function logla(ctx: unknown, islem: string, detay = "") {
+  const c = ctx as { userId: string };
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("admin_gecmis").insert({ user_id: c.userId, islem, detay: detay.slice(0, 2000) });
+}
+
 async function yetkili(ctx: { supabase: { rpc: (f: "orijinal_admin_mi") => PromiseLike<{ data: unknown }> } }) {
   const { data } = await ctx.supabase.rpc("orijinal_admin_mi");
   if (!data) throw new Error("Yalnızca süper admin.");
@@ -50,6 +56,7 @@ export const kullaniciIslem = createServerFn({ method: "POST" })
     }
     const { error } = await db.auth.admin.updateUserById(data.userId, g);
     if (error) throw new Error(error.message);
+    await logla(context, `Kullanıcı: ${data.islem}`, data.userId);
     return { ok: true };
   });
 
@@ -72,6 +79,7 @@ export const satirKaydet = createServerFn({ method: "POST" })
     if (data.satir[pk] == null && data.tablo !== "user_roles") throw new Error(`${pk} gerekli.`);
     const { error } = await db.from(data.tablo).upsert(data.satir as never, { onConflict: pk });
     if (error) throw new Error(error.message);
+    await logla(context, `Tablo satırı kaydedildi: ${data.tablo}`, String(data.satir[pk] ?? ""));
     return { ok: true };
   });
 
@@ -82,6 +90,7 @@ export const satirSil = createServerFn({ method: "POST" })
     const db = await yetkili(context as never);
     const { error } = await db.from(data.tablo).delete().eq(TABLOLAR[data.tablo] as never, data.anahtar as never);
     if (error) throw new Error(error.message);
+    await logla(context, `Tablo satırı silindi: ${data.tablo}`, data.anahtar);
     return { ok: true };
   });
 
@@ -113,6 +122,7 @@ export const dosyaIslem = createServerFn({ method: "POST" })
     if (data.islem === "sil") {
       const { error } = await s.remove([data.yol]);
       if (error) throw new Error(error.message);
+      await logla(context, "Dosya silindi", data.yol);
       return { url: null };
     }
     const { data: u, error } = await s.createSignedUrl(data.yol, 60, { download: true });
@@ -155,6 +165,7 @@ export const kullaniciEkIslem = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const db = await yetkili(context as never);
     if (data.userId === context.userId) throw new Error("Kendi hesabına uygulanamaz.");
+    await logla(context, `Kullanıcı: ${data.islem}`, data.userId);
     if (data.islem === "sil") {
       const { error } = await db.auth.admin.deleteUser(data.userId);
       if (error) throw new Error(error.message);
@@ -198,6 +209,7 @@ export const kullaniciOlustur = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     const id = u.user.id;
+    await logla(context, "Kullanıcı oluşturuldu", data.email);
     await db.from("profiles").upsert({ id, email: data.email, ad_soyad: data.adSoyad, ogrenci_no: data.ogrenciNo }, { onConflict: "id" });
     await db.from("user_data").upsert({ user_id: id }, { onConflict: "user_id" });
     return { id };
@@ -216,6 +228,7 @@ export const kullaniciDuzenle = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await yetkili(context as never);
+    await logla(context, "Kullanıcı düzenlendi", `${data.userId}${data.email ? " · e-posta" : ""}${data.sifre ? " · şifre" : ""}${data.ogrenciNo !== undefined ? " · numara" : ""}`);
     if (data.userId === context.userId && (data.email || data.sifre)) throw new Error("Kendi e-posta/şifreni buradan değiştiremezsin.");
     const g: Record<string, unknown> = {};
     if (data.email) g["email"] = data.email;
@@ -272,5 +285,6 @@ export const yedekGeriYukle = createServerFn({ method: "POST" })
       if (error) throw new Error(`${t}: ${error.message}`);
       sonuc[t] = rows.length;
     }
+    await logla(context, "Yedekten geri yüklendi", JSON.stringify(sonuc));
     return sonuc;
   });
