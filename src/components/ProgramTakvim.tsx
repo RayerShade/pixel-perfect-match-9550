@@ -22,11 +22,13 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
   const [hafta, setHafta] = useState(ilk);
   const [duzen, setDuzen] = useState<Ders | null>(null);
   const [toplu, setToplu] = useState(false);
+  const [yonet, setYonet] = useState(false);
+  const [ekstra, setEkstra] = useState<{ dilimler: string[]; dallar: string[] }>({ dilimler: [], dallar: [] });
   const secenek = useMemo(() => {
-    const dl = new Set<string>(), da = new Set<string>();
+    const dl = new Set<string>(ekstra.dilimler), da = new Set<string>(ekstra.dallar);
     for (const d of dersler) { const x = dilimDal(d); dl.add(x.dilim); da.add(x.dal); }
     return { dilimler: [...dl].sort((a, b) => a.localeCompare(b, "tr")), dallar: [...da].sort((a, b) => a.localeCompare(b, "tr")) };
-  }, [dersler]);
+  }, [dersler, ekstra]);
 
   const gunler = Array.from({ length: 7 }, (_, i) => { const d = new Date(hafta); d.setDate(d.getDate() + i); return d; });
   const tarihSet = gunler.map(iso);
@@ -53,9 +55,11 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
         <input type="date" value={iso(hafta)} onChange={(e) => e.target.value && setHafta(pazartesi(new Date(e.target.value + "T00:00")))} className="rounded-md border border-input bg-background px-2 py-1 text-sm" />
         <span className="text-sm text-muted-foreground">{gunler[0]!.toLocaleDateString("tr-TR", { day: "numeric", month: "long" })} – {gunler[6]!.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} · {haftaDersleri.length} ders</span>
         <button onClick={() => setToplu((v) => !v)} className={`rounded-md border px-3 py-1 text-sm ${toplu ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}>Toplu düzenle</button>
+        <button onClick={() => setYonet((v) => !v)} className={`rounded-md border px-3 py-1 text-sm ${yonet ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}>Dilim / ana dal</button>
         <span className="ml-auto text-xs text-muted-foreground">Boş alana tıkla: ders ekle · Derse tıkla: düzenle</span>
       </div>
 
+      {yonet && <DilimYonetimi dersler={dersler} onDegis={onDegis} ekstra={ekstra} setEkstra={setEkstra} />}
       {toplu && <TopluDuzen dersler={dersler} onDegis={onDegis} secenek={secenek} />}
       <datalist id="pt-dilimler">{secenek.dilimler.map((x) => <option key={x} value={x} />)}</datalist>
       <datalist id="pt-dallar">{secenek.dallar.map((x) => <option key={x} value={x} />)}</datalist>
@@ -198,6 +202,84 @@ function TopluDuzen({ dersler, onDegis, secenek }: { dersler: Ders[]; onDegis: (
       {eslesen.length ? (
         <p className="max-h-20 overflow-auto text-[11px] text-muted-foreground">{[...new Set(eslesen.map((d) => d.courseName))].slice(0, 30).join(" · ")}</p>
       ) : null}
+    </div>
+  );
+}
+
+/** Dilim ve ana dalları listele, yeniden adlandır, yeni ekle. */
+function DilimYonetimi({ dersler, onDegis, ekstra, setEkstra }: {
+  dersler: Ders[]; onDegis: (d: Ders[]) => void;
+  ekstra: { dilimler: string[]; dallar: string[] }; setEkstra: (e: { dilimler: string[]; dallar: string[] }) => void;
+}) {
+  const [yeniDilim, setYeniDilim] = useState("");
+  const [acik, setAcik] = useState<string | null>(null);
+  const agac = useMemo(() => {
+    const m = new Map<string, Map<string, number>>();
+    for (const d of dersler) {
+      const x = dilimDal(d);
+      const dl = m.get(x.dilim) ?? new Map<string, number>();
+      dl.set(x.dal, (dl.get(x.dal) ?? 0) + 1);
+      m.set(x.dilim, dl);
+    }
+    for (const e of ekstra.dilimler) if (!m.has(e)) m.set(e, new Map());
+    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], "tr"));
+  }, [dersler, ekstra]);
+  const dilimAdlandir = (eski: string) => {
+    const yeni = prompt(`"${eski}" diliminin yeni adı:`, eski)?.trim();
+    if (!yeni || yeni === eski) return;
+    onDegis(dersler.map((d) => (dilimDal(d).dilim === eski ? { ...d, dilim: yeni } : d)));
+    setEkstra({ ...ekstra, dilimler: ekstra.dilimler.map((x) => (x === eski ? yeni : x)) });
+  };
+  const dalAdlandir = (dilim: string, eski: string) => {
+    const yeni = prompt(`"${eski}" ana dalının yeni adı (${dilim} içinde):`, eski)?.trim();
+    if (!yeni || yeni === eski) return;
+    onDegis(dersler.map((d) => { const x = dilimDal(d); return x.dilim === dilim && x.dal === eski ? { ...d, dal: yeni } : d; }));
+  };
+  const dalTasi = (dilim: string, dal: string) => {
+    const hedef = prompt(`"${dal}" ana dalını hangi dilime taşıyalım?`, dilim)?.trim();
+    if (!hedef || hedef === dilim) return;
+    onDegis(dersler.map((d) => { const x = dilimDal(d); return x.dilim === dilim && x.dal === dal ? { ...d, dilim: hedef, dal } : d; }));
+  };
+  const dalEkle = (dilim: string) => {
+    const ad = prompt(`${dilim} için yeni ana dal adı:`)?.trim();
+    if (ad) setEkstra({ ...ekstra, dallar: [...new Set([...ekstra.dallar, ad])] });
+  };
+  return (
+    <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+      <p className="text-sm font-semibold">Dilimler ve ana dallar</p>
+      <div className="flex gap-2">
+        <input className={girdi} value={yeniDilim} onChange={(e) => setYeniDilim(e.target.value)} placeholder="Yeni dilim adı (örn. DOLAŞIM DİLİMİ)" />
+        <button
+          onClick={() => { const a = yeniDilim.trim().toLocaleUpperCase("tr-TR"); if (a) { setEkstra({ ...ekstra, dilimler: [...new Set([...ekstra.dilimler, a])] }); setYeniDilim(""); } }}
+          className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground"
+        >Dilim ekle</button>
+      </div>
+      <p className="text-[11px] text-muted-foreground">Yeni eklenen dilim / ana dal, bir derse atanıp "Kaydet"e basılınca kalıcı olur. Ders atamak için derse tıkla ya da "Toplu düzenle"yi kullan.</p>
+      <ul className="max-h-80 space-y-1 overflow-auto">
+        {agac.map(([dilim, dallar]) => (
+          <li key={dilim} className="rounded-lg bg-surface px-2 py-1.5">
+            <div className="flex items-center gap-2">
+              <button onClick={() => setAcik(acik === dilim ? null : dilim)} className="min-w-0 flex-1 truncate text-left text-sm font-semibold">
+                {dilim} <span className="text-xs font-normal text-muted-foreground">· {dallar.size} ana dal · {[...dallar.values()].reduce((a, b) => a + b, 0)} ders</span>
+              </button>
+              <button onClick={() => dilimAdlandir(dilim)} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-accent">Yeniden adlandır</button>
+              <button onClick={() => dalEkle(dilim)} className="rounded border border-border px-2 py-0.5 text-xs hover:bg-accent">+ Ana dal</button>
+            </div>
+            {acik === dilim ? (
+              <ul className="mt-1 space-y-0.5 pl-3">
+                {[...dallar.entries()].sort((a, b) => a[0].localeCompare(b[0], "tr")).map(([dal, n]) => (
+                  <li key={dal} className="flex items-center gap-2 text-xs">
+                    <span className="min-w-0 flex-1 truncate">{dal} <span className="text-muted-foreground">({n})</span></span>
+                    <button onClick={() => dalAdlandir(dilim, dal)} className="rounded border border-border px-1.5 py-0.5 hover:bg-accent">Adlandır</button>
+                    <button onClick={() => dalTasi(dilim, dal)} className="rounded border border-border px-1.5 py-0.5 hover:bg-accent">Başka dilime taşı</button>
+                  </li>
+                ))}
+                {!dallar.size ? <li className="text-xs text-muted-foreground">Henüz ders yok</li> : null}
+              </ul>
+            ) : null}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
