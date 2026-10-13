@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function logla(userId: string, islem: string, detay = "") {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("admin_gecmis").insert({ user_id: userId, islem, detay: detay.slice(0, 2000) });
+}
+
 export const hesapSil = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
@@ -12,6 +17,7 @@ export const hesapSil = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw new Error(error.message);
+    await logla(context.userId, "Admin: hesap silindi", data.userId);
     return { ok: true };
   });
 
@@ -41,6 +47,7 @@ export const hesapGuncelle = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     if (data.email) await supabaseAdmin.from("profiles").update({ email: data.email }).eq("id", data.userId);
+    await logla(context.userId, "Admin: hesap güncellendi", `${data.userId}${data.email ? " · e-posta" : ""}${data.sifre ? " · şifre" : ""}`);
     return { ok: true };
   });
 
@@ -69,5 +76,71 @@ export const hesapOlustur = createServerFn({ method: "POST" })
     await supabaseAdmin.from("profiles").upsert({ id, email: data.email, ad_soyad: data.adSoyad, ogrenci_no: data.ogrenciNo });
     await supabaseAdmin.from("user_data").upsert({ user_id: id });
     await supabaseAdmin.from("user_roles").upsert({ user_id: id, role: "user" }, { onConflict: "user_id,role" });
+    await logla(context.userId, "Admin: hesap oluşturuldu", data.email);
     return { ok: true };
+  });
+
+type KatilimSatiri = { anahtar: string; tarih: string | null; ders: string | null; saat: string | null };
+
+/** Admin: bir öğrencinin devamsızlık ("derse girdim") işaretlerini okunur biçimde getirir. */
+export const ogrenciKatilimGetir = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!admin) throw new Error("Bu işlem için admin yetkisi gerekli.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: ud } = await supabaseAdmin.from("user_data").select("ayarlar").eq("user_id", data.userId).maybeSingle();
+    const ayar = (ud?.ayarlar ?? {}) as Record<string, unknown>;
+    const katilim = (ayar["katilim"] ?? {}) as Record<string, unknown>;
+    const harita = new Map<string, { ad: string; date?: string; gun?: number; saat: string }>();
+    if (ayar["donemId"] && ayar["dil"]) {
+      const { data: g } = await supabaseAdmin.from("global_data").select("veri").eq("anahtar", `program:${ayar["donemId"]}:${ayar["dil"]}`).maybeSingle();
+      const v = (g?.veri ?? {}) as { dersler?: { id: string; courseName: string; date?: string; dayOfWeek: number; startTime: string; endTime: string }[]; uygulamalar?: { id: string; ad: string; date: string; startTime: string; endTime: string }[] };
+      for (const d of v.dersler ?? []) harita.set(d.id, { ad: d.courseName, ...(d.date ? { date: d.date } : {}), gun: d.dayOfWeek, saat: `${d.startTime}–${d.endTime}` });
+      for (const u of v.uygulamalar ?? []) harita.set(u.id, { ad: `${u.ad} Uygulaması`, date: u.date, saat: `${u.startTime}–${u.endTime}` });
+    }
+    const satirlar: KatilimSatiri[] = Object.keys(katilim).filter((k) => katilim[k] === true).map((anahtar) => {
+      const m = anahtar.match(/^(\d{4}-\d{2}-\d{2})-(.+)$/);
+      const d = m ? harita.get(m[2]!) : undefined;
+      if (!m || !d) return { anahtar, tarih: null, ders: null, saat: null };
+      let tarih = d.date ?? null;
+      if (!tarih && d.gun) {
+        const x = new Date(`${m[1]}T00:00:00Z`);
+        x.setUTCDate(x.getUTCDate() + d.gun - 1);
+        tarih = x.toISOString().slice(0, 10);
+      }
+      return { anahtar, tarih, ders: d.ad, saat: d.saat };
+    });
+    satirlar.sort((a, b) => (b.tarih ?? "").localeCompare(a.tarih ?? "") || a.anahtar.localeCompare(b.anahtar));
+    return { satirlar };
+  });
+
+/** Admin: işaretleri kaldırır / geri ekler. Yalnızca ayarlar.katilim değişir, diğer ayarlara dokunulmaz. */
+export const ogrenciKatilimKaydet = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      userId: z.string().uuid(),
+      kaldir: z.array(z.string().min(1).max(200)).max(5000).default([]),
+      ekle: z.array(z.string().min(1).max(200)).max(5000).default([]),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!admin) throw new Error("Bu işlem için admin yetkisi gerekli.");
+    if (!data.kaldir.length && !data.ekle.length) return { ok: true, adet: 0 };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: ud, error: e1 } = await supabaseAdmin.from("user_data").select("ayarlar").eq("user_id", data.userId).maybeSingle();
+    if (e1) throw new Error(e1.message);
+    if (!ud) throw new Error("Öğrencinin kayıtlı verisi yok.");
+    const ayar = { ...((ud.ayarlar ?? {}) as Record<string, unknown>) };
+    const k = { ...((ayar["katilim"] ?? {}) as Record<string, true>) };
+    for (const a of data.kaldir) delete k[a];
+    for (const a of data.ekle) k[a] = true;
+    ayar["katilim"] = k;
+    const { error } = await supabaseAdmin.from("user_data").update({ ayarlar: ayar as never, updated_at: new Date().toISOString() }).eq("user_id", data.userId);
+    if (error) throw new Error(error.message);
+    await logla(context.userId, "Devamsızlık işaretleri düzenlendi", `${data.userId} · ${data.kaldir.length} kaldırıldı · ${data.ekle.length} eklendi`);
+    return { ok: true, adet: data.kaldir.length + data.ekle.length };
   });

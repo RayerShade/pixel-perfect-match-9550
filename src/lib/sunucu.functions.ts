@@ -269,6 +269,7 @@ export const tamYedek = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       out[t] = data;
     }
+    await logla(context, "Tam yedek indirildi");
     return JSON.stringify(out);
   });
 
