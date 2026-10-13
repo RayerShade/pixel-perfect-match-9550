@@ -337,6 +337,10 @@ function Kullanicilar() {
                     <div className="flex items-end sm:col-span-3"><button type="submit" className={ana}>Kaydet</button></div>
                   </form>
                 ) : null}
+                <details>
+                  <summary className="cursor-pointer text-xs font-semibold text-primary">Devamsızlık işaretlerini yönet</summary>
+                  <div className="mt-2"><DevamAc userId={u.id} /></div>
+                </details>
               </div>
             </details>
           );
