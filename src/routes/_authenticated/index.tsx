@@ -112,6 +112,8 @@ function Takvim() {
       : gorunum === "hafta"
         ? weekLabel(monday)
         : `${AYLAR[imlec.getMonth()]} ${imlec.getFullYear()}`;
+  const guncellemeZamani = (zaman?: string) =>
+    zaman ? new Date(zaman).toLocaleString("tr-TR", { dateStyle: "medium", timeStyle: "short" }) : "Henüz güncellenmedi";
 
   return (
     <AppShell baslik="Ders Takvimi" aciklama={ayarlar.donem}>
@@ -195,6 +197,11 @@ function Takvim() {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 rounded-xl bg-accent/60 px-3 py-2 text-[11px] text-muted-foreground">
+          <span><strong className="font-semibold text-foreground">Amfi bilgisi:</strong> {guncellemeZamani(veri.guncellemeler?.amfi)}</span>
+          <span><strong className="font-semibold text-foreground">Ders programı:</strong> {guncellemeZamani(veri.guncellemeler?.program)}</span>
         </div>
 
         {bekleyen > 0 ? (

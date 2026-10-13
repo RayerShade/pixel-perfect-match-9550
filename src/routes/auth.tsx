@@ -22,6 +22,9 @@ export const Route = createFileRoute("/auth")({
 
 type Mod = "giris" | "kayit" | "sifre";
 
+// Geçici olarak herkese açık. Yalnızca okul e-postasına dönmek için true yapman yeterli.
+const OKUL_EPOSTASI_ZORUNLU = false;
+
 function AuthSayfasi() {
   const navigate = useNavigate();
   const [hatirla, setHatirla] = useState(true);
@@ -57,7 +60,7 @@ function AuthSayfasi() {
         const { error } = await supabase.auth.signInWithPassword({ email, password: sifre });
         if (error) throw new Error(error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı." : error.message);
       } else if (mod === "kayit") {
-        if (!email.trim().toLowerCase().endsWith("@ogr.iu.edu.tr")) throw new Error("Sadece @ogr.iu.edu.tr uzantılı İÜ öğrenci e-postasıyla kayıt olunabilir.");
+        if (OKUL_EPOSTASI_ZORUNLU && !email.trim().toLowerCase().endsWith("@ogr.iu.edu.tr")) throw new Error("Sadece @ogr.iu.edu.tr uzantılı İÜ öğrenci e-postasıyla kayıt olunabilir.");
         if (!no.trim()) throw new Error("Öğrenci numarası gerekli.");
         if (sorgu.sonuc?.kayitli) throw new Error("Bu numara zaten başka bir hesaba kayıtlı.");
         const { error } = await supabase.auth.signUp({
