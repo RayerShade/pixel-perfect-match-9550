@@ -195,7 +195,7 @@ export function derslikListesi(veri: YuklenenVeri | undefined, ekstra: string[] 
  * diğer bütün haftalar korunur. Aynı Sheets bağlantısının içeriği yeni haftayla değiştiğinde eski haftalar kaybolmaz.
  */
 export function amfiArsivBirlestir(
-  eski: { amfi?: HaftalikAmfiKaydi[] | null; secmeliOlaylari?: SecmeliOlay[] | null; amfiAdlari?: Record<string, string[]> | null },
+  eski: { amfi?: HaftalikAmfiKaydi[] | null | undefined; secmeliOlaylari?: SecmeliOlay[] | null | undefined; amfiAdlari?: Record<string, string[]> | null | undefined },
   yeni: { kayitlar: HaftalikAmfiKaydi[]; secmeliler: SecmeliOlay[]; amfiAdlari: Record<string, string[]> },
 ) {
   const haftalar = new Set(yeni.kayitlar.map((k) => k.week));
