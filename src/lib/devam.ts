@@ -4,14 +4,6 @@ import { olayKategori, type OlayTuru } from "./dilim";
 import { haftaninOlaylari, type DersOlayi, type Ogrenci, type YuklenenVeri } from "./schedule-data";
 import type { Ayarlar } from "./store";
 
-/** Kalma eşiği (dilim bazında): teoriklerin en az %70'ine, uygulamaların en az %80'ine girmek gerekir. */
-export const KALMA_SINIRI: Record<OlayTuru, number> = { ders: 0.3, uygulama: 0.2 };
-/** Uyarı eşiği: kalma sınırına varmadan önce öğrenci uyarılır. */
-export const UYARI_SINIRI: Record<OlayTuru, number> = { ders: 0.2, uygulama: 0.1 };
-export const devamsizlikUyari = (kacan: number, toplam: number, tur: OlayTuru = "ders") => toplam > 0 && kacan / toplam > UYARI_SINIRI[tur];
-export const devamsizlikKaldi = (kacan: number, toplam: number, tur: OlayTuru = "ders") => toplam > 0 && kacan / toplam > KALMA_SINIRI[tur];
-/** Kalma sınırına ulaşmadan önce kaç oturum daha kaçırılabilir. */
-export const kalanHak = (kacan: number, toplam: number, tur: OlayTuru = "ders") => Math.floor(toplam * KALMA_SINIRI[tur]) - kacan;
 export type { OlayTuru };
 
 /** Programın tüm haftalarındaki olaylar (takvimle aynı anahtarlarla). */
@@ -54,8 +46,6 @@ export interface DevamGrubu {
   girilen: number;
   toplam: number;
   oran: number;
-  uyari: boolean;
-  kaldi: boolean;
 }
 
 export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>, simdi = new Date()): DevamGrubu[] {
@@ -64,7 +54,7 @@ export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>
     const k = olayKategori(o);
     if (!k) continue;
     const id = `${k.dilim}|${k.tur}`;
-    const g = m.get(id) ?? { ...k, dal: k.tur === "uygulama" ? "uygulamalar" : "teorik dersler", yapilan: 0, girilen: 0, toplam: 0, oran: 1, uyari: false, kaldi: false };
+    const g = m.get(id) ?? { ...k, dal: k.tur === "uygulama" ? "uygulamalar" : "teorik dersler", yapilan: 0, girilen: 0, toplam: 0, oran: 1 };
     g.toplam++;
     if (gecti(o, simdi)) {
       g.yapilan++;
@@ -75,7 +65,7 @@ export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>
   return [...m.values()].map((g) => {
     const kacan = g.yapilan - g.girilen;
     const oran = g.toplam ? kacan / g.toplam : 0;
-    return { ...g, oran, uyari: devamsizlikUyari(kacan, g.toplam, g.tur), kaldi: devamsizlikKaldi(kacan, g.toplam, g.tur) };
+    return { ...g, oran };
   });
 }
 
