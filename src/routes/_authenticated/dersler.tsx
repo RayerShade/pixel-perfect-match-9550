@@ -70,32 +70,6 @@ function DilimSatiri({ os, katilim, tur }: { os: DersOlayi[]; katilim: Record<st
 function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
   return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
 }
-function dilimTehlike(dl: Dilim, katilim: Record<string, true>): Tehlike {
-  const ts = (["ders", "uygulama"] as const).map((tur) => durum(dilimOlaylari(dl, tur), katilim, tur).t);
-  return ts.includes("kaldi") ? "kaldi" : ts.includes("uyari") ? "uyari" : "temiz";
-}
-
-/** Dilim başlığında teorik / uygulama satırı (kalma kuralı burada). */
-function DilimSatiri({ os, katilim, tur }: { os: DersOlayi[]; katilim: Record<string, true>; tur: OlayTuru }) {
-  if (!os.length) return null;
-  const d = durum(os, katilim, tur);
-  const ad = tur === "uygulama" ? "Uygulama" : "Teorik";
-  const gerek = tur === "uygulama" ? 80 : 70;
-  if (!d.yapilan) return <span className="block text-[11px] text-muted-foreground">{ad}: {d.toplam} oturum · henüz başlamadı</span>;
-  const hak = kalanHak(d.kacan, d.toplam, tur);
-  const renk = d.t === "kaldi" ? "font-semibold text-destructive" : d.t === "uyari" ? "font-semibold text-bekliyor" : "text-muted-foreground";
-  return (
-    <span className={`block text-[11px] ${renk}`}>
-      {ad}: {d.girilen}/{d.yapilan} girildi · devamsızlık {d.kacan}/{d.toplam} (%{Math.round((d.kacan / d.toplam) * 100)})
-      {d.t === "kaldi"
-        ? ` · 🚫 %${gerek} sağlanamadı, bu dilimden kaldın`
-        : d.t === "uyari"
-          ? ` · ⚠️ sınıra ${Math.max(hak, 0)} oturum kaldı`
-          : ` · ${Math.max(hak, 0)} hak kaldı`}
-    </span>
-  );
-}
-
 function Istatistik({ olaylar, katilim }: { olaylar: DersOlayi[]; katilim: Record<string, true> }) {
   const yapilan = olaylar.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
