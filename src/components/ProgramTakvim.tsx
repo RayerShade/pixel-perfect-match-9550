@@ -142,7 +142,7 @@ function DersFormu({ ders, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; ye
         <p id="pt-derslik-ipucu" className="-mt-2 text-[11px] text-muted-foreground">Listede yoksa istediğin dersliği yazabilirsin.</p>
         <label className="flex items-center gap-2 text-xs">
           <input type="checkbox" checked={!!d.sinifKesin} disabled={!d.defaultClassroom.trim()} onChange={(e) => k("sinifKesin", e.target.checked || undefined)} />
-          Derslik kesinleşti (öğrenci takviminde altın renkte görünür)
+          Yönetici derslik onayı
         </label>
         <div className="grid grid-cols-3 gap-2">
           <label className="text-xs">Tür
