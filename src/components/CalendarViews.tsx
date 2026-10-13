@@ -9,7 +9,7 @@ import {
   toMinutes,
   AYLAR,
 } from "@/lib/date-utils";
-import { KESIN_SINIFI, TUR_NOKTA, TUR_SINIFI } from "./ders-stil";
+import { TUR_NOKTA, TUR_SINIFI } from "./ders-stil";
 
 const SAAT_YUKSEKLIGI = 62; // px per hour
 
@@ -60,8 +60,8 @@ function Blok({
   return (
     <button
       onClick={() => onSec(olay)}
-      className={`flex h-full w-full flex-col overflow-hidden rounded-lg px-1.5 py-1 text-left transition-shadow hover:shadow-card ${olay.kesin ? KESIN_SINIFI : TUR_SINIFI[olay.ders.courseType]}`}
-      aria-label={`${olay.ders.courseName}${olay.amfi ? `, ${olay.amfi}` : ""}${olay.kesin ? ", derslik kesinleşti" : ""}`}
+      className={`flex h-full w-full flex-col overflow-hidden rounded-lg px-1.5 py-1 text-left transition-shadow hover:shadow-card ${TUR_SINIFI[olay.ders.courseType]}`}
+      aria-label={`${olay.ders.courseName}${olay.amfi ? `, ${olay.amfi}` : ""}`}
     >
       <span className="truncate text-[11px] font-bold leading-tight sm:text-xs">
         {girdi ? "✓ " : ""}{olay.ders.courseName}
@@ -71,7 +71,7 @@ function Blok({
       ) : null}
       <span className="truncate text-[10px] font-medium opacity-90">
         {olay.amfi ?? "⚠️ Eşleşme bekliyor"}
-        {olay.kesin ? " · ✓ Derslik kesinleşti" : olay.kaynak === "yillik" && olay.amfi && !/online/i.test(olay.amfi) ? " · yıllık prog." : ""}
+        {olay.kaynak === "yillik" && olay.amfi && !/online/i.test(olay.amfi) ? " · yıllık prog." : ""}
       </span>
       {!kompakt ? (
         <span className="mt-auto truncate text-[10px] opacity-70">
@@ -294,8 +294,7 @@ export function GunGorunumu({
             <p className="text-foreground">{o.ders.startTime}</p>
             <p>{o.ders.endTime}</p>
           </div>
-          <div className={`min-w-0 rounded-xl px-3 py-2 ${o.kesin ? KESIN_SINIFI : TUR_SINIFI[o.ders.courseType]}`}>
-            {o.kesin ? <span className="mb-0.5 inline-block rounded bg-altin px-1.5 text-[10px] font-bold text-background">Derslik kesinleşti</span> : null}
+          <div className={`min-w-0 rounded-xl px-3 py-2 ${TUR_SINIFI[o.ders.courseType]}`}>
             <p className="truncate text-sm font-bold">{katilim[o.key] ? "✓ " : ""}{o.ders.courseName}</p>
             <p className="truncate text-xs opacity-80">{o.ders.instructor}</p>
             <p className="truncate text-xs font-medium">
