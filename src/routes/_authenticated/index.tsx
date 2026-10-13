@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -19,7 +19,7 @@ import {
 import { addDays, isoDate, formatLong, sameDay, startOfWeek, weekLabel, AYLAR, GUN_KISA } from "@/lib/date-utils";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 import { useKatilim } from "@/lib/katilim";
-import { devamHesapla, tumOlaylar } from "@/lib/devam";
+
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -87,7 +87,7 @@ function Takvim() {
   );
 
   const bekleyen = olaylar.filter((o) => o.amfi === null).length;
-  const { katilim, ayarla, kapali } = useKatilim();
+  const { katilim, ayarla } = useKatilim();
   const isaretle = (liste: DersOlayi[]) => {
     const bugunSonu = new Date(bugun.getFullYear(), bugun.getMonth(), bugun.getDate(), 23, 59);
     const uygun = liste.filter((o) => !o.ozelId && o.date.getTime() <= bugunSonu.getTime());
