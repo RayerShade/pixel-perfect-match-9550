@@ -8,6 +8,13 @@
       "when": 1791124482485,
       "tag": "0000_admin_gecmis",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791913312892,
+      "tag": "0001_restrict_global_data_read_keys",
+      "breakpoints": true
     }
   ]
 }
