@@ -6,6 +6,8 @@ import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
 import { genelSecmeliOku } from "@/lib/secmeli-import";
 import { haftalikAmfiOku, yillikProgramOku } from "@/lib/excel-import";
 import { useYuklenenVeri } from "@/lib/store";
+import { supabase } from "@/integrations/supabase/client";
+import { amfiArsivBirlestir, amfiArsivOzeti, type YuklenenVeri } from "@/lib/schedule-data";
 import { useAuth } from "@/lib/auth";
 import { dosyaBulutaKaydet, dosyaBuluttanSil, dosyaGuvenli } from "@/lib/dosya-bulut";
 
@@ -115,28 +117,31 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
       <YuklemeKarti
         baslik="Haftalık amfi programı"
         kaynak={{ anahtar: "amfi", tur: "amfi" }}
-        aciklama="Tarih, saat, ders ve amfi/derslik sütunlarını okur; sadece amfi bilgisini günceller. Her hafta yeni dosya ekleyebilirsin, eski haftalar korunur."
+        aciklama="Tarih, saat, ders ve amfi/derslik sütunlarını okur; yalnızca dosyadaki haftaların amfilerini günceller. Aynı Google Sheets bağlantısı her hafta değişse bile önceki haftalar arşivde saklanır ve takvimde görünmeye devam eder."
         ikon={<FileSpreadsheet className="h-4 w-4" />}
         durum={
           veri.amfi?.length
-            ? `${veri.amfiDosyalari?.length ?? 1} dosya · ${new Set(veri.amfi.map((k) => k.week)).size} hafta · ${veri.amfi.length} kayıt`
+            ? `Arşiv: ${amfiArsivOzeti(veri.amfi).hafta} hafta · ${veri.amfi.length} kayıt (eski haftalar saklanır)`
             : null
         }
         onDosya={async (f) => {
           const { kayitlar: yeni, secmeliler, amfiAdlari } = await haftalikAmfiOku(f);
           if (!yeni.length && !secmeliler.length)
             throw new Error("Kayıt bulunamadı. Başlıkta 'Tarih', 'Saat' ve 'Amfi/Derslik' sütunları olmalı.");
+          // Sunucudaki güncel arşivi baz al (otomatik Sheets kontrolü bu arada yeni hafta eklemiş olabilir).
+          const { data: guncel } = await supabase.from("global_data").select("veri").eq("anahtar", "amfi").maybeSingle();
+          const taban = (guncel?.veri as Partial<YuklenenVeri> | null) ?? veri;
+          const birlesik = amfiArsivBirlestir(
+            { amfi: taban.amfi ?? veri.amfi, secmeliOlaylari: taban.secmeliOlaylari ?? veri.secmeliOlaylari, amfiAdlari: taban.amfiAdlari ?? veri.amfiAdlari },
+            { kayitlar: yeni, secmeliler, amfiAdlari },
+          );
           const haftalar = new Set(yeni.map((k) => k.week));
-          const eski = (veri.amfi ?? []).filter((k) => !haftalar.has(k.week));
-          const tarihler = new Set(secmeliler.map((o) => o.date));
-          const eskiSec = (veri.secmeliOlaylari ?? []).filter((o) => !tarihler.has(o.date));
           kaydet({
-            amfi: [...eski, ...yeni],
-            secmeliOlaylari: [...eskiSec, ...secmeliler],
-            amfiAdlari: { ...(veri.amfiAdlari ?? {}), ...amfiAdlari },
+            ...birlesik,
             amfiDosyalari: [...(veri.amfiDosyalari ?? []).filter((d) => d !== f.name), f.name],
           });
-          return `${yeni.length} kayıt · ${haftalar.size} hafta · ${secmeliler.length} seçmeli ders bulundu.`;
+          const oz = amfiArsivOzeti(birlesik.amfi);
+          return `${yeni.length} kayıt · ${haftalar.size} hafta güncellendi · arşivde toplam ${oz.hafta} hafta / ${oz.kayit} kayıt.`;
         }}
         onSil={() => kaydet({ amfi: null, secmeliOlaylari: null, amfiAdlari: null, amfiDosyalari: undefined })}
       />
