@@ -162,6 +162,8 @@ export interface YuklenenVeri {
   amfiAdlari?: Record<string, string[]> | null | undefined;
   /** Genel seçmeli ders amfi programı (öncelikli kaynak) */
   genelSecmeliler?: GenelSecmeli[] | null | undefined;
+  /** Ortak veri kaynaklarının veritabanındaki son güncellenme zamanları. */
+  guncellemeler?: { amfi?: string; program?: string } | undefined;
 }
 
 export interface GenelSecmeli {
