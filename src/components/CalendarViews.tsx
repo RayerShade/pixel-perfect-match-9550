@@ -57,10 +57,12 @@ function Blok({
   kompakt?: boolean;
   girdi?: boolean;
 }) {
+  const kesin = Boolean(olay.amfi && (olay.kaynak === "haftalik" || olay.kaynak === "manuel"));
   return (
     <button
       onClick={() => onSec(olay)}
-      className={`flex h-full w-full flex-col overflow-hidden rounded-lg px-1.5 py-1 text-left transition-shadow hover:shadow-card ${TUR_SINIFI[olay.ders.courseType]}`}
+      title={kesin ? "Derslik kesinleşti" : undefined}
+      className={`flex h-full w-full flex-col overflow-hidden rounded-lg px-1.5 py-1 text-left transition-shadow hover:shadow-card ${kesin ? "border border-amber-400 bg-amber-100 text-amber-950 ring-1 ring-amber-300 dark:bg-amber-950/50 dark:text-amber-100" : TUR_SINIFI[olay.ders.courseType]}`}
     >
       <span className="truncate text-[11px] font-bold leading-tight sm:text-xs">
         {girdi ? "✓ " : ""}{olay.ders.courseName}
@@ -70,7 +72,7 @@ function Blok({
       ) : null}
       <span className="truncate text-[10px] font-medium opacity-90">
         {olay.amfi ?? "⚠️ Eşleşme bekliyor"}
-        {olay.kaynak === "yillik" && olay.amfi && !/online/i.test(olay.amfi) ? " · yıllık prog." : ""}
+        {kesin ? " · ✓ kesin" : olay.kaynak === "yillik" && olay.amfi && !/online/i.test(olay.amfi) ? " · yıllık prog." : ""}
       </span>
       {!kompakt ? (
         <span className="mt-auto truncate text-[10px] opacity-70">
@@ -293,11 +295,11 @@ export function GunGorunumu({
             <p className="text-foreground">{o.ders.startTime}</p>
             <p>{o.ders.endTime}</p>
           </div>
-          <div className={`min-w-0 rounded-xl px-3 py-2 ${TUR_SINIFI[o.ders.courseType]}`}>
+          <div className={`min-w-0 rounded-xl px-3 py-2 ${o.amfi && (o.kaynak === "haftalik" || o.kaynak === "manuel") ? "border border-amber-400 bg-amber-100 text-amber-950 dark:bg-amber-950/50 dark:text-amber-100" : TUR_SINIFI[o.ders.courseType]}`}>
             <p className="truncate text-sm font-bold">{katilim[o.key] ? "✓ " : ""}{o.ders.courseName}</p>
             <p className="truncate text-xs opacity-80">{o.ders.instructor}</p>
             <p className="truncate text-xs font-medium">
-              {o.amfi ?? "⚠️ Eşleşme bekliyor"}
+              {o.amfi ?? "⚠️ Eşleşme bekliyor"} {o.amfi && (o.kaynak === "haftalik" || o.kaynak === "manuel") ? "· ✓ Derslik kesinleşti" : ""}
             </p>
           </div>
         </button>
