@@ -9,7 +9,7 @@ import { VeriYukleme } from "@/components/VeriYukleme";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
 import { HesapDuzenle } from "@/components/HesapDuzenle";
 import { supabase } from "@/integrations/supabase/client";
-import { hesapOlustur, hesapSil } from "@/lib/admin.functions";
+import { hesapOlustur, hesapSil, katilimAyarla, katilimGetir } from "@/lib/admin.functions";
 import { useAuth } from "@/lib/auth";
 import { useYuklenenVeri } from "@/lib/store";
 import { SECMELILER, secmeliGruplari } from "@/lib/schedule-data";
@@ -213,6 +213,7 @@ function Admin() {
                       <Bilgi etiket="Kayıt tarihi" deger={new Date(h.created_at).toLocaleString("tr-TR")} />
                       {h.guncelleme ? <Bilgi etiket="Son güncelleme" deger={new Date(h.guncelleme).toLocaleString("tr-TR")} /> : null}
                       <GrupDuzenle userId={h.id} ayarlar={h.ayarlar} onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} />
+                      <KatilimDuzenle userId={h.id} />
                       <div>
                         <p className="font-semibold text-muted-foreground">Seçtiği seçmeliler</p>
                         {h.secmeliler.length ? (
@@ -371,5 +372,50 @@ function YeniHesap({ onOlustu }: { onOlustu: () => void }) {
         </form>
       ) : null}
     </section>
+  );
+}
+
+
+function KatilimDuzenle({ userId }: { userId: string }) {
+  const getir = useServerFn(katilimGetir);
+  const ayarla = useServerFn(katilimAyarla);
+  const [acik, setAcik] = useState(false);
+  const q = useQuery({ queryKey: ["admin-katilim", userId], queryFn: () => getir({ data: { userId } }), enabled: acik });
+  const degistir = async (key: string, girdi: boolean) => {
+    const mesaj = girdi ? "Bu devam işareti eklensin mi?" : "Bu devam işareti silinsin mi?";
+    if (!confirm(mesaj)) return;
+    try {
+      await ayarla({ data: { userId, key, girdi } });
+      toast.success(girdi ? "Devam işareti eklendi." : "Devam işareti silindi.");
+      await q.refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Devam kaydı güncellenemedi.");
+    }
+  };
+  const anahtarBilgisi = (key: string) => {
+    const m = key.match(/^(\d{4}-\d{2}-\d{2})-(.+)$/);
+    return m ? { hafta: new Date(`${m[1]}T00:00:00`).toLocaleDateString("tr-TR"), ders: m[2] } : { hafta: null, ders: key };
+  };
+  return (
+    <div className="rounded-lg border border-border bg-background/50 p-2">
+      <button onClick={() => setAcik((x) => !x)} className="font-semibold text-muted-foreground hover:text-foreground">
+        Devamsızlık kayıtlarını {acik ? "gizle" : "yönet"}
+      </button>
+      {acik ? (
+        <div className="mt-2 space-y-2">
+          {q.isLoading ? <p>Yükleniyor…</p> : null}
+          {q.error ? <p className="text-destructive">Devamsızlık kayıtları alınamadı.</p> : null}
+          {!q.isLoading && !(q.data?.katilim.length) ? <p className="text-muted-foreground">İşaretlenmiş ders yok.</p> : null}
+          {(q.data?.katilim ?? []).map((key) => {
+            const b = anahtarBilgisi(key);
+            return <div key={key} className="flex flex-wrap items-center gap-2 rounded bg-accent/50 p-2">
+              <span className="font-medium">{b.hafta ? `${b.hafta} haftası` : "Tarih çözümlenemedi"}</span>
+              <span className="min-w-0 flex-1 break-all text-muted-foreground">{b.ders}</span>
+              <button onClick={() => void degistir(key, false)} className="rounded border border-destructive/40 px-2 py-1 text-destructive hover:bg-destructive/10">İşareti sil</button>
+            </div>;
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
