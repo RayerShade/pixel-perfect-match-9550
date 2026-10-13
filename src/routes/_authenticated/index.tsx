@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -19,7 +19,7 @@ import {
 import { addDays, isoDate, formatLong, sameDay, startOfWeek, weekLabel, AYLAR, GUN_KISA } from "@/lib/date-utils";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 import { useKatilim } from "@/lib/katilim";
-import { devamHesapla, tumOlaylar } from "@/lib/devam";
+
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -87,7 +87,7 @@ function Takvim() {
   );
 
   const bekleyen = olaylar.filter((o) => o.amfi === null).length;
-  const { katilim, ayarla, kapali } = useKatilim();
+  const { katilim, ayarla } = useKatilim();
   const isaretle = (liste: DersOlayi[]) => {
     const bugunSonu = new Date(bugun.getFullYear(), bugun.getMonth(), bugun.getDate(), 23, 59);
     const uygun = liste.filter((o) => !o.ozelId && o.date.getTime() <= bugunSonu.getTime());
@@ -99,11 +99,6 @@ function Takvim() {
     ayarla(uygun.map((o) => o.key), !hepsi);
   };
   const gunIsaretle = (g: Date) => isaretle(olaylar.filter((o) => sameDay(o.date, g)));
-  const { kalanlar, uyarilar } = useMemo(() => {
-    const tum = tumOlaylar(veri, secmeliler, manuel, ogrenci, ayarlar);
-    const gs = devamHesapla(tum, ayarlar.katilim ?? {}).filter((g) => !kapali.includes(g.dilim));
-    return { kalanlar: gs.filter((g) => g.kaldi), uyarilar: gs.filter((g) => g.uyari && !g.kaldi) };
-  }, [veri, secmeliler, manuel, ogrenci, ayarlar, kapali]);
 
   const kaydir = (yon: number) => {
     if (gorunum === "gun") setImlec((d) => addDays(d, yon));
@@ -209,19 +204,6 @@ function Takvim() {
           </p>
         ) : null}
 
-        {kalanlar.length ? (
-          <Link to="/dersler" className="mt-3 block rounded-xl bg-destructive/15 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/20">
-            🚫 Devamsızlıktan kaldığın dilimler: {kalanlar.slice(0, 3).map((g) => `${g.dilim} (${g.dal})`).join(", ")}
-            {kalanlar.length > 3 ? ` ve ${kalanlar.length - 3} tane daha` : ""} — teoriklerin %70'ine / uygulamaların %80'ine girmen gerekiyordu. Ayrıntı için dokun.
-          </Link>
-        ) : null}
-
-        {uyarilar.length ? (
-          <Link to="/dersler" className="mt-3 block rounded-xl bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/15">
-            ⚠️ Devamsızlık: {uyarilar.slice(0, 3).map((g) => `${g.dilim} (${g.dal})`).join(", ")}
-            {uyarilar.length > 3 ? ` ve ${uyarilar.length - 3} tane daha` : ""} — kalma sınırına yaklaşıyorsun (teorik en az %70, uygulama en az %80). Ayrıntı için dokun.
-          </Link>
-        ) : null}
 
         {gorunum === "hafta" ? (
           <div className="mt-3 flex justify-end">

@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { BellOff, Bell, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ogrenciBul, type DersOlayi } from "@/lib/schedule-data";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 import { useKatilim } from "@/lib/katilim";
 import { ONLINE_DILIM, SECMELI_DILIM, olayKategori, type OlayTuru } from "@/lib/dilim";
-import { devamsizlikKaldi, devamsizlikUyari, gecti, kalanHak, tumOlaylar } from "@/lib/devam";
+import { gecti, tumOlaylar } from "@/lib/devam";
 
 export const Route = createFileRoute("/_authenticated/dersler")({
   head: () => ({
@@ -53,44 +53,23 @@ function agacKur(olaylar: DersOlayi[]): Dilim[] {
 
 const kisaTarih = (d: Date) => d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", weekday: "short" });
 
-/** Dilim bazında devamsızlık: teoriklerin %70'ine, uygulamaların %80'ine girmek gerekir. */
-type Tehlike = "kaldi" | "uyari" | "temiz";
-function durum(os: DersOlayi[], katilim: Record<string, true>, tur: OlayTuru) {
+/** Dilim başlığında yalnızca devam sayıları gösterilir; hak/kalma uyarısı yoktur. */
+function DilimSatiri({ os, katilim, tur }: { os: DersOlayi[]; katilim: Record<string, true>; tur: OlayTuru }) {
+  if (!os.length) return null;
   const yapilan = os.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
   const kacan = yapilan.length - girilen;
-  const t: Tehlike = !yapilan.length ? "temiz" : devamsizlikKaldi(kacan, os.length, tur) ? "kaldi" : devamsizlikUyari(kacan, os.length, tur) ? "uyari" : "temiz";
-  return { yapilan: yapilan.length, girilen, kacan, toplam: os.length, t };
-}
-function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
-  return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
-}
-function dilimTehlike(dl: Dilim, katilim: Record<string, true>): Tehlike {
-  const ts = (["ders", "uygulama"] as const).map((tur) => durum(dilimOlaylari(dl, tur), katilim, tur).t);
-  return ts.includes("kaldi") ? "kaldi" : ts.includes("uyari") ? "uyari" : "temiz";
-}
-
-/** Dilim başlığında teorik / uygulama satırı (kalma kuralı burada). */
-function DilimSatiri({ os, katilim, tur }: { os: DersOlayi[]; katilim: Record<string, true>; tur: OlayTuru }) {
-  if (!os.length) return null;
-  const d = durum(os, katilim, tur);
   const ad = tur === "uygulama" ? "Uygulama" : "Teorik";
-  const gerek = tur === "uygulama" ? 80 : 70;
-  if (!d.yapilan) return <span className="block text-[11px] text-muted-foreground">{ad}: {d.toplam} oturum · henüz başlamadı</span>;
-  const hak = kalanHak(d.kacan, d.toplam, tur);
-  const renk = d.t === "kaldi" ? "font-semibold text-destructive" : d.t === "uyari" ? "font-semibold text-bekliyor" : "text-muted-foreground";
   return (
-    <span className={`block text-[11px] ${renk}`}>
-      {ad}: {d.girilen}/{d.yapilan} girildi · devamsızlık {d.kacan}/{d.toplam} (%{Math.round((d.kacan / d.toplam) * 100)})
-      {d.t === "kaldi"
-        ? ` · 🚫 %${gerek} sağlanamadı, bu dilimden kaldın`
-        : d.t === "uyari"
-          ? ` · ⚠️ sınıra ${Math.max(hak, 0)} oturum kaldı`
-          : ` · ${Math.max(hak, 0)} hak kaldı`}
+    <span className="block text-[11px] text-muted-foreground">
+      {yapilan.length ? `${ad}: ${girilen}/${yapilan.length} girildi · kaçırılan ${kacan}` : `${ad}: ${os.length} oturum · henüz başlamadı`}
     </span>
   );
 }
 
+function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
+  return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
+}
 function Istatistik({ olaylar, katilim }: { olaylar: DersOlayi[]; katilim: Record<string, true> }) {
   const yapilan = olaylar.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
@@ -125,7 +104,7 @@ function Dersler() {
   const { ayarlar } = useAyarlar();
   const { secili } = useSecmeliler();
   const { manuel } = useManuelAmfiler();
-  const { katilim, ayarla, kapali, uyariKapat } = useKatilim();
+  const { katilim, ayarla } = useKatilim();
   const [arama, setArama] = useState("");
   const [acik, setAcik] = useState<Set<string>>(new Set());
   const ac = (k: string) => setAcik((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; });
@@ -146,7 +125,7 @@ function Dersler() {
           className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
         <p className="px-1 text-[11px] text-muted-foreground">
-          Devamsızlık dilim bazında hesaplanır: bir dilimdeki teorik derslerin en az %70'ine, uygulamaların en az %80'ine girmen gerekir; aksi halde o dilimden kalırsın. Sınıra yaklaşınca (teorikte %20, uygulamada %10 kaçırınca) uyarı alırsın. Oran dilimin bütün oturumlarına göre hesaplanır.
+          Geçmiş derslere katıldığını işaretleyebilir; her başlık altında girdiğin ve kaçırdığın ders sayısını görebilirsin.
         </p>
         {!agac.length ? (
           <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
@@ -160,9 +139,7 @@ function Dersler() {
             .sort((a, b) => (a.tur === b.tur ? a.ad.localeCompare(b.ad, "tr") : a.tur === "ders" ? -1 : 1));
           if (!dallar.length) return null;
           const tumu = dallar.flatMap((d) => d.liste.flatMap(([, os]) => os));
-          const tehlike = dilimTehlike(dl, katilim);
           const acikDl = acik.has(dl.ad) || Boolean(q);
-          const uyariKapali = kapali.includes(dl.ad);
           let sonTur: OlayTuru | null = null;
           return (
             <section key={dl.ad} data-tur="dilim" className="overflow-hidden rounded-2xl border border-border bg-surface">
@@ -172,26 +149,10 @@ function Dersler() {
                   <div className="min-w-0">
                     <p className="flex items-center gap-2 font-bold">
                       <span className="truncate">{dl.ad}</span>
-                      {tehlike !== "temiz" ? (
-                        <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                            tehlike === "kaldi" ? "bg-destructive/15 text-destructive" : "bg-bekliyor/15 text-bekliyor"
-                          }`}
-                        >
-                          {tehlike === "kaldi" ? "🚫 devamsızlık" : "⚠️ devamsızlık"}
-                        </span>
-                      ) : null}
                     </p>
                     <DilimSatiri os={dilimOlaylari(dl, "ders")} katilim={katilim} tur="ders" />
                     <DilimSatiri os={dilimOlaylari(dl, "uygulama")} katilim={katilim} tur="uygulama" />
                   </div>
-                </button>
-                <button
-                  onClick={() => uyariKapat(dl.ad, !uyariKapali)}
-                  title={uyariKapali ? "Bu dilimin devamsızlık uyarılarını aç" : "Bu dilimin devamsızlık uyarılarını kapat"}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border text-muted-foreground hover:bg-accent"
-                >
-                  {uyariKapali ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
                 </button>
                 <TopluTus olaylar={tumu} katilim={katilim} ayarla={ayarla} />
               </div>
