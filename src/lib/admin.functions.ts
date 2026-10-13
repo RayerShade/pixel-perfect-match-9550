@@ -71,3 +71,42 @@ export const hesapOlustur = createServerFn({ method: "POST" })
     await supabaseAdmin.from("user_roles").upsert({ user_id: id, role: "user" }, { onConflict: "user_id,role" });
     return { ok: true };
   });
+
+
+async function adminYetkisi(context: { supabase: { rpc: (f: "has_role", a: { _user_id: string; _role: "admin" }) => PromiseLike<{ data: unknown }> }; userId: string }) {
+  const { data } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+  if (!data) throw new Error("Bu işlem için admin yetkisi gerekli.");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
+/** Adminin yalnızca öğrencinin devam işaretlerini okuması için daraltılmış uç nokta. */
+export const katilimGetir = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await adminYetkisi(context as never);
+    const { data: row, error } = await db.from("user_data").select("ayarlar").eq("user_id", data.userId).maybeSingle();
+    if (error) throw new Error(error.message);
+    const ayarlar = (row?.ayarlar ?? {}) as Record<string, unknown>;
+    return { katilim: Object.keys((ayarlar["katilim"] ?? {}) as Record<string, unknown>).filter((key) => Boolean((ayarlar["katilim"] as Record<string, unknown>)[key])) };
+  });
+
+/** Admin devam işaretini değiştirir; ayarların geri kalanını aynen korur. */
+export const katilimAyarla = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ userId: z.string().uuid(), key: z.string().min(1).max(500), girdi: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await adminYetkisi(context as never);
+    const { data: row, error: okuHata } = await db.from("user_data").select("ayarlar").eq("user_id", data.userId).maybeSingle();
+    if (okuHata) throw new Error(okuHata.message);
+    const ayarlar = { ...((row?.ayarlar ?? {}) as Record<string, unknown>) };
+    const katilim = { ...((ayarlar["katilim"] ?? {}) as Record<string, boolean>) };
+    if (data.girdi) katilim[data.key] = true;
+    else delete katilim[data.key];
+    ayarlar["katilim"] = katilim;
+    const { error } = await db.from("user_data").upsert({ user_id: data.userId, ayarlar: ayarlar as never, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+    if (error) throw new Error(error.message);
+    await db.from("admin_gecmis").insert({ user_id: context.userId, islem: "Devamsızlık kaydı düzenlendi", detay: `${data.userId} · ${data.girdi ? "işaretlendi" : "silindi"} · ${data.key}`.slice(0, 2000) });
+    return { ok: true };
+  });
