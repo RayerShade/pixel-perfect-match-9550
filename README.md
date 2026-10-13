@@ -24,3 +24,12 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Optional: AI table parser fallback
+
+`src/lib/ai-tablo.functions.ts` (`aiSutunHaritasi`) is an admin-only, opt-in fallback that asks an OpenAI-compatible API for a **column map only** (max 15 rows sent, 300 tokens, 20 s timeout, zod-validated). It is never called on normal input and makes no request when unconfigured.
+
+Server-only environment variables:
+- `AI_TABLE_PARSER_API_KEY` (required to enable)
+- `AI_TABLE_PARSER_URL` (optional, default OpenAI chat completions)
+- `AI_TABLE_PARSER_MODEL` (optional, default `gpt-4o-mini`)

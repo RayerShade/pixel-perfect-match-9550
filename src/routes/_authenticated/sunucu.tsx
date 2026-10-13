@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Activity, LifeBuoy, CalendarRange, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
+import { Activity, History, LifeBuoy, CalendarRange, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
+import { IslemGecmisi, OgrenciDevam } from "@/components/SunucuEk";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
 import { useDonemler } from "@/components/DonemSecici";
@@ -47,7 +48,7 @@ function SunucuKapi() {
   );
 }
 
-type Sekme = "ozet" | "kullanicilar" | "destek" | "donem" | "veri" | "dosyalar" | "duyuru" | "yedek";
+type Sekme = "ozet" | "kullanicilar" | "destek" | "donem" | "veri" | "dosyalar" | "duyuru" | "yedek" | "gecmis";
 const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "ozet", ad: "Özet", ikon: Activity },
   { id: "kullanicilar", ad: "Kullanıcılar", ikon: Users },
@@ -57,6 +58,7 @@ const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "dosyalar", ad: "Dosyalar", ikon: FileSpreadsheet },
   { id: "duyuru", ad: "Duyuru", ikon: Megaphone },
   { id: "yedek", ad: "Yedek", ikon: HardDrive },
+  { id: "gecmis", ad: "İşlem Geçmişi", ikon: History },
 ];
 const btn = "inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-accent disabled:opacity-50";
 const ana = `${btn} border-primary bg-primary text-primary-foreground hover:bg-primary/90`;
@@ -103,7 +105,7 @@ function Sunucu() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl space-y-4 p-3 md:p-5">
-        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : <Yedek />}
+        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />}
       </main>
     </div>
   );
@@ -335,6 +337,10 @@ function Kullanicilar() {
                     <div className="flex items-end sm:col-span-3"><button type="submit" className={ana}>Kaydet</button></div>
                   </form>
                 ) : null}
+                <details>
+                  <summary className="cursor-pointer text-xs font-semibold text-primary">Devamsızlık işaretlerini yönet</summary>
+                  <div className="mt-2"><DevamAc userId={u.id} /></div>
+                </details>
               </div>
             </details>
           );
@@ -701,4 +707,9 @@ function DestekYonetim() {
       {talep ? <TalepSohbet talep={talep} yonetici onDegisti={yenile} /> : <p className="text-sm text-muted-foreground">Bir talep seç.</p>}
     </div>
   );
+}
+
+function DevamAc({ userId }: { userId: string }) {
+  const [ac, setAc] = useState(false);
+  return ac ? <OgrenciDevam userId={userId} /> : <button className={btn} onClick={() => setAc(true)}>Devam kayıtlarını yükle</button>;
 }
