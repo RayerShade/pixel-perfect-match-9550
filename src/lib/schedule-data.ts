@@ -29,6 +29,8 @@ export interface Ders {
   /** Admin tarafından elle atanan dilim / ana dal (nottan okunanın yerine geçer). */
   dilim?: string | undefined;
   dal?: string | undefined;
+  /** Admin dersliği elle kesinleştirdi (öğrenci takviminde altın renkte görünür). */
+  sinifKesin?: boolean | undefined;
 }
 
 export interface Secmeli {
@@ -171,7 +173,53 @@ export interface GenelSecmeli {
   tarihler: string[];
 }
 
+/** Admin derslik seçicisinde her zaman bulunan derslikler. */
+export const VARSAYILAN_DERSLIKLER: string[] = [
+  "Amfi 1", "Amfi 2", "Amfi 3", "Amfi 4", "Cerrahi Amfisi",
+  "Histoloji Laboratuvarı", "Anatomi Laboratuvarı", "Mikrobiyoloji Laboratuvarı",
+  "Biyokimya Laboratuvarı", "Patoloji Laboratuvarı",
+];
 const VARSAYILAN_AMFILER: string[] = [];
+
+/** Admin derslik listesi: varsayılanlar + arşivdeki tüm haftaların amfi/derslik adları + mevcut değerler. */
+export function derslikListesi(veri: YuklenenVeri | undefined, ekstra: string[] = []): string[] {
+  const s = new Set<string>(VARSAYILAN_DERSLIKLER);
+  Object.values(veri?.amfiAdlari ?? {}).flat().forEach((a) => a?.trim() && s.add(a.trim()));
+  (veri?.amfi ?? []).forEach((k) => k.amphitheater?.trim() && s.add(k.amphitheater.trim()));
+  ekstra.forEach((a) => a?.trim() && s.add(a.trim()));
+  return [...s].sort((a, b) => a.localeCompare(b, "tr", { numeric: true }));
+}
+
+/**
+ * Haftalık amfi arşivi: yeni okunan kayıtlar yalnızca KENDİ haftalarının (pazartesi) yerini alır,
+ * diğer bütün haftalar korunur. Aynı Sheets bağlantısının içeriği yeni haftayla değiştiğinde eski haftalar kaybolmaz.
+ */
+export function amfiArsivBirlestir(
+  eski: { amfi?: HaftalikAmfiKaydi[] | null; secmeliOlaylari?: SecmeliOlay[] | null; amfiAdlari?: Record<string, string[]> | null },
+  yeni: { kayitlar: HaftalikAmfiKaydi[]; secmeliler: SecmeliOlay[]; amfiAdlari: Record<string, string[]> },
+) {
+  const haftalar = new Set(yeni.kayitlar.map((k) => k.week));
+  Object.keys(yeni.amfiAdlari).forEach((h) => haftalar.add(h));
+  const pzt = (d: string) => {
+    const x = new Date(`${d}T00:00:00Z`);
+    x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7));
+    return x.toISOString().slice(0, 10);
+  };
+  yeni.secmeliler.forEach((o) => o.date && haftalar.add(pzt(o.date)));
+  const amfi = [...(eski.amfi ?? []).filter((k) => !haftalar.has(k.week)), ...yeni.kayitlar]
+    .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
+  const secmeliOlaylari = [...(eski.secmeliOlaylari ?? []).filter((o) => !haftalar.has(pzt(o.date))), ...yeni.secmeliler];
+  const amfiAdlari: Record<string, string[]> = { ...(eski.amfiAdlari ?? {}) };
+  for (const [h, l] of Object.entries(yeni.amfiAdlari)) amfiAdlari[h] = l;
+  return { amfi, secmeliOlaylari, amfiAdlari };
+}
+
+/** Arşiv özeti: kaç hafta, kaç kayıt. */
+export function amfiArsivOzeti(amfi: HaftalikAmfiKaydi[] | null | undefined) {
+  const haftalar = new Map<string, number>();
+  (amfi ?? []).forEach((k) => haftalar.set(k.week, (haftalar.get(k.week) ?? 0) + 1));
+  return { hafta: haftalar.size, kayit: amfi?.length ?? 0, liste: [...haftalar].sort((a, b) => a[0].localeCompare(b[0])) };
+}
 
 /** Eşleşme bekleyen dersler için amfi seçenekleri: önce o haftanın dosyası, yoksa tüm yüklenen haftalar. */
 export function amfiSecenekleri(veri: YuklenenVeri | undefined, mondayIso: string): string[] {
@@ -374,6 +422,8 @@ export interface DersOlayi {
   group: string;
   /** Amfi bilgisinin kaynağı */
   kaynak?: "haftalik" | "yillik" | "manuel";
+  /** Derslik kesinleşti: haftalık amfi programından ya da admin tarafından elle kesinleştirildi. */
+  kesin?: boolean;
   online?: boolean;
   /** Öğrencinin kendi eklediği dersin kimliği */
   ozelId?: string;
@@ -459,6 +509,7 @@ export function haftaninOlaylari(
         amfi: manuelAmfiler[key] ?? (amfiyeBak ? (kayit?.kayit.amphitheater || null) : u.yer),
         group: d.group,
         kaynak: manuelAmfiler[key] ? "manuel" : amfiyeBak ? "haftalik" : "yillik",
+        kesin: !manuelAmfiler[key] && amfiyeBak && !!kayit?.kayit.amphitheater,
       };
     });
 
@@ -516,6 +567,9 @@ export function haftaninOlaylari(
       amfi = kayit.status === "eslesti" ? kayit.amphitheater : null;
       kaynak = "haftalik";
     } else amfi = d.defaultClassroom || null;
+    const kesin =
+      (kaynak === "haftalik" && !!amfi) ||
+      (kaynak === "yillik" && !!d.sinifKesin && !!amfi && amfi === d.defaultClassroom);
 
     return {
       key,
@@ -524,6 +578,7 @@ export function haftaninOlaylari(
       amfi,
       group: d.group,
       kaynak,
+      kesin,
     };
   }).filter((o): o is DersOlayi => o !== null), ...uygOlaylari.filter((o) => telafiGoster || !telafiMi(o.ders))];
 }
