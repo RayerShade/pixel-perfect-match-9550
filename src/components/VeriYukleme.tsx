@@ -1,7 +1,7 @@
 import { SheetsTusu, type SheetsTur } from "@/components/SheetsTusu";
 import { SheetsTakip } from "@/components/SheetsTakip";
 import { useRef, useState } from "react";
-import { BookMarked, CalendarRange, FileSpreadsheet, FlaskConical, Trash2, Upload, Users } from "lucide-react";
+import { BookMarked, CalendarRange, ChevronDown, FileSpreadsheet, FlaskConical, Trash2, Upload, Users } from "lucide-react";
 import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
 import { genelSecmeliOku } from "@/lib/secmeli-import";
 import { haftalikAmfiOku, yillikProgramOku } from "@/lib/excel-import";
@@ -86,24 +86,33 @@ function YuklemeKarti({
 
 function AmfiArsivi({ veri }: { veri: YuklenenVeri }) {
   const ozet = amfiArsivOzeti(veri.amfi);
+  const [acik, setAcik] = useState(false);
   const [seciliHafta, setSeciliHafta] = useState("");
   if (!ozet.liste.length) return null;
   const hafta = seciliHafta || ozet.liste[ozet.liste.length - 1]![0];
   const kayitlar = (veri.amfi ?? []).filter((kayit) => kayit.week === hafta);
   return (
-    <section className="rounded-2xl border border-border bg-surface p-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div><h3 className="text-sm font-bold">Amfi programı arşivi</h3><p className="text-xs text-muted-foreground">Kaydedilmiş eski haftaları buradan görüntüleyebilirsin.</p></div>
-        <select value={hafta} onChange={(e) => setSeciliHafta(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium" aria-label="Arşiv haftası">
-          {[...ozet.liste].reverse().map(([tarih, sayi]) => <option key={tarih} value={tarih}>{new Date(`${tarih}T12:00:00`).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} haftası · {sayi} kayıt</option>)}
-        </select>
-      </div>
-      <div className="mt-3 overflow-x-auto rounded-xl border border-border">
-        <table className="min-w-full text-left text-xs">
-          <thead className="bg-accent text-muted-foreground"><tr><th className="px-3 py-2 font-semibold">Tarih / saat</th><th className="px-3 py-2 font-semibold">Ders</th><th className="px-3 py-2 font-semibold">Grup</th><th className="px-3 py-2 font-semibold">Amfi / derslik</th><th className="px-3 py-2 font-semibold">Kaynak</th></tr></thead>
-          <tbody>{kayitlar.map((kayit) => <tr key={kayit.id} className="border-t border-border/70"><td className="whitespace-nowrap px-3 py-2">{new Date(`${kayit.date}T12:00:00`).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })} · {kayit.startTime}–{kayit.endTime}</td><td className="px-3 py-2 font-medium">{kayit.courseName || "—"}</td><td className="px-3 py-2">{kayit.group || "—"}</td><td className="px-3 py-2">{kayit.amphitheater || kayit.classroom || "—"}</td><td className="px-3 py-2 text-muted-foreground">{kayit.sourceFile || "—"}</td></tr>)}</tbody>
-        </table>
-      </div>
+    <section className="overflow-hidden rounded-2xl border border-border bg-surface">
+      <button type="button" onClick={() => setAcik((onceki) => !onceki)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-accent/60" aria-expanded={acik}>
+        <span><span className="block text-sm font-bold">Amfi programı arşivi</span><span className="block text-xs text-muted-foreground">Eski haftaları görüntülemek için aç.</span></span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${acik ? "rotate-180" : ""}`} />
+      </button>
+      {acik ? (
+        <div className="border-t border-border p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-muted-foreground">Haftayı seç; satırlar yüklenen Excel tablosundaki gibi gösterilir.</p>
+            <select value={hafta} onChange={(e) => setSeciliHafta(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-xs font-medium" aria-label="Arşiv haftası">
+              {[...ozet.liste].reverse().map(([tarih, sayi]) => <option key={tarih} value={tarih}>{new Date(`${tarih}T12:00:00`).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} haftası · {sayi} satır</option>)}
+            </select>
+          </div>
+          <div className="mt-3 max-h-[32rem] overflow-auto border border-border">
+            <table className="min-w-full border-collapse text-left text-xs">
+              <thead className="sticky top-0 bg-accent text-muted-foreground"><tr><th className="border border-border px-3 py-2 font-semibold">Tarih</th><th className="border border-border px-3 py-2 font-semibold">Başlangıç</th><th className="border border-border px-3 py-2 font-semibold">Bitiş</th><th className="border border-border px-3 py-2 font-semibold">Ders</th><th className="border border-border px-3 py-2 font-semibold">Grup</th><th className="border border-border px-3 py-2 font-semibold">Amfi / derslik</th></tr></thead>
+              <tbody>{kayitlar.map((kayit) => <tr key={kayit.id} className="bg-surface hover:bg-accent/40"><td className="whitespace-nowrap border border-border px-3 py-2">{new Date(`${kayit.date}T12:00:00`).toLocaleDateString("tr-TR")}</td><td className="whitespace-nowrap border border-border px-3 py-2">{kayit.startTime || "—"}</td><td className="whitespace-nowrap border border-border px-3 py-2">{kayit.endTime || "—"}</td><td className="border border-border px-3 py-2 font-medium">{kayit.courseName || "—"}</td><td className="border border-border px-3 py-2">{kayit.group || "—"}</td><td className="border border-border px-3 py-2">{kayit.amphitheater || kayit.classroom || "—"}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -170,6 +179,22 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
         onSil={() => kaydet({ amfi: null, secmeliOlaylari: null, amfiAdlari: null, amfiDosyalari: undefined })}
       />
       ) : null}
+      {g ? (
+      <YuklemeKarti
+        baslik="Genel seçmeli ders programı"
+        kaynak={{ anahtar: "secmeli", tur: "secmeli" }}
+        aciklama="Tüm seçmeli derslerin adı, hocası, saati ve amfisi önce buradan alınır; eksik bilgiler haftalık amfi programından tamamlanır."
+        ikon={<BookMarked className="h-4 w-4" />}
+        durum={veri.genelSecmeliler?.length ? `${veri.secmeliDosya ?? "Seçmeli programı"} · ${veri.genelSecmeliler.length} seçmeli` : null}
+        onDosya={async (f) => {
+          const genelSecmeliler = await genelSecmeliOku(f);
+          if (!genelSecmeliler.length) throw new Error("Seçmeli bulunamadı. 'Dersin Adı', 'Saati' ve 'Amfisi' sütunları olmalı.");
+          kaydet({ genelSecmeliler, secmeliDosya: f.name });
+          return `${genelSecmeliler.length} seçmeli ders içe aktarıldı.`;
+        }}
+        onSil={() => kaydet({ genelSecmeliler: null, secmeliDosya: undefined })}
+      />
+      ) : null}
       {g ? <div className="sm:col-span-2"><AmfiArsivi veri={veri} /></div> : null}
        {k ? (
       <YuklemeKarti
@@ -204,22 +229,7 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
         onSil={() => { kaydet({ ogrenciler: null, ogrenciDosya: undefined }); bulut("ogrenci"); }}
       />
       ) : null}
-      {g ? (
-      <YuklemeKarti
-        baslik="Genel seçmeli ders programı"
-        kaynak={{ anahtar: "secmeli", tur: "secmeli" }}
-        aciklama="Tüm seçmeli derslerin adı, hocası, saati ve amfisi önce buradan alınır; eksik bilgiler haftalık amfi programından tamamlanır."
-        ikon={<BookMarked className="h-4 w-4" />}
-        durum={veri.genelSecmeliler?.length ? `${veri.secmeliDosya ?? "Seçmeli programı"} · ${veri.genelSecmeliler.length} seçmeli` : null}
-        onDosya={async (f) => {
-          const genelSecmeliler = await genelSecmeliOku(f);
-          if (!genelSecmeliler.length) throw new Error("Seçmeli bulunamadı. 'Dersin Adı', 'Saati' ve 'Amfisi' sütunları olmalı.");
-          kaydet({ genelSecmeliler, secmeliDosya: f.name });
-          return `${genelSecmeliler.length} seçmeli ders içe aktarıldı.`;
-        }}
-        onSil={() => kaydet({ genelSecmeliler: null, secmeliDosya: undefined })}
-      />
-      ) : null}
+      
       {g ? <div className="sm:col-span-2"><SheetsTakip anahtarlar={["amfi", "secmeli"]} /></div> : null}
     </div>
   );
