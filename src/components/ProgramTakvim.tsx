@@ -6,6 +6,7 @@ import { DIGER, dilimDal } from "@/lib/dilim";
 const GUNLER = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 const girdi = "w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm";
 const SAAT_BAS = 8, SAAT_BIT = 19, PX = 56; // saat başına piksel
+const VARSAYILAN_DERSLIKLER = ["Amfi 1", "Amfi 2", "Amfi 3", "Amfi 4", "Cerrahi Amfisi", "Histoloji Laboratuvarı", "Anatomi Laboratuvarı", "Mikrobiyoloji Laboratuvarı", "Biyokimya Laboratuvarı", "Patoloji Laboratuvarı"];
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const pazartesi = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
@@ -63,6 +64,7 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
       {toplu && <TopluDuzen dersler={dersler} onDegis={onDegis} secenek={secenek} />}
       <datalist id="pt-dilimler">{secenek.dilimler.map((x) => <option key={x} value={x} />)}</datalist>
       <datalist id="pt-dallar">{secenek.dallar.map((x) => <option key={x} value={x} />)}</datalist>
+      <datalist id="pt-derslikler">{[...new Set([...VARSAYILAN_DERSLIKLER, ...dersler.map((d) => d.defaultClassroom).filter(Boolean)])].sort((a, b) => a.localeCompare(b, "tr")).map((x) => <option key={x} value={x} />)}</datalist>
 
       <div className="overflow-x-auto rounded-xl border border-border">
         <div className="grid min-w-[900px]" style={{ gridTemplateColumns: "48px repeat(7, 1fr)" }}>
@@ -129,7 +131,7 @@ function DersFormu({ ders, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; ye
           <label className="text-xs">Bitiş<input type="time" className={girdi} value={d.endTime} onChange={(e) => k("endTime", e.target.value)} /></label>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-xs">Derslik<input className={girdi} value={d.defaultClassroom} onChange={(e) => k("defaultClassroom", e.target.value)} /></label>
+          <label className="text-xs">Derslik<input list="pt-derslikler" className={girdi} value={d.defaultClassroom} onChange={(e) => k("defaultClassroom", e.target.value)} placeholder="Listeden seç veya yaz" /></label>
           <label className="text-xs">Hoca<input className={girdi} value={d.instructor} onChange={(e) => k("instructor", e.target.value)} /></label>
         </div>
         <div className="grid grid-cols-3 gap-2">
