@@ -708,3 +708,8 @@ function DestekYonetim() {
     </div>
   );
 }
+
+function DevamAc({ userId }: { userId: string }) {
+  const [ac, setAc] = useState(false);
+  return ac ? <OgrenciDevam userId={userId} /> : <button className={btn} onClick={() => setAc(true)}>Devam kayıtlarını yükle</button>;
+}
