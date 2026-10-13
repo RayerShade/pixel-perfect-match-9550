@@ -15,3 +15,6 @@ export const TUR_NOKTA: Record<DersTuru, string> = {
   secmeli: "bg-secmeli",
   sinav: "bg-sinav",
 };
+
+/** Dersliği kesinleşmiş (haftalık amfi ya da admin onaylı) olaylar: altın/amber. */
+export const KESIN_SINIFI = "border-2 border-altin bg-altin/20 text-foreground";
