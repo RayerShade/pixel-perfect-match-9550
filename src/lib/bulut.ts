@@ -60,7 +60,7 @@ export async function buluttanYukle(userId: string, ogrenciNo: string, meta: Rec
   try {
     const [{ data: kisisel }, { data: genel }] = await Promise.all([
       supabase.from("user_data").select("*").eq("user_id", userId).maybeSingle(),
-      supabase.from("global_data").select("anahtar, veri"),
+      supabase.from("global_data").select("anahtar, veri, updated_at"),
     ]);
     const ayar = { ...((kisisel?.ayarlar as Record<string, unknown>) ?? {}) };
     const gizli = (ayar["__gizli"] as string[]) ?? [];
@@ -79,9 +79,11 @@ export async function buluttanYukle(userId: string, ogrenciNo: string, meta: Rec
       if (!ayar["dil"] && meta["dil"]) { ayar["dil"] = meta["dil"]; kaydet = true; }
     }
     const prog = ayar["donemId"] && ayar["dil"] ? programAnahtari(String(ayar["donemId"]), ayar["dil"] as Dil) : "";
-    const veri: Record<string, unknown> = { dersler: null, amfi: null };
+    const veri: Record<string, unknown> = { dersler: null, amfi: null, guncellemeler: {} };
     for (const g of genel ?? []) {
       if (g.anahtar === "amfi" || g.anahtar === "secmeli" || g.anahtar === prog) Object.assign(veri, (g.veri as object) ?? {});
+      if (g.anahtar === "amfi") (veri.guncellemeler as Record<string, string>).amfi = g.updated_at;
+      if (g.anahtar === prog) (veri.guncellemeler as Record<string, string>).program = g.updated_at;
     }
     localStorage.setItem(ANAHTARLAR.veri, JSON.stringify(veri));
     localStorage.setItem(ANAHTARLAR.ayarlar, JSON.stringify(ayar));
@@ -100,14 +102,16 @@ export async function buluttanYukle(userId: string, ogrenciNo: string, meta: Rec
 /** Öğrencinin dönem/dil seçimi değişince o programı indirir. */
 export async function programiYenile() {
   const ayar = oku(ANAHTARLAR.ayarlar, {}) as Record<string, unknown>;
-  const veri = sec(oku(ANAHTARLAR.veri, {}), PROGRAM_ALANLARI, true);
+  const onceki = oku(ANAHTARLAR.veri, {}) as Record<string, unknown>;
+  const veri = sec(onceki, PROGRAM_ALANLARI, true);
   if (ayar["donemId"] && ayar["dil"]) {
     const { data } = await supabase
       .from("global_data")
-      .select("veri")
+      .select("veri, updated_at")
       .eq("anahtar", programAnahtari(String(ayar["donemId"]), ayar["dil"] as Dil))
       .maybeSingle();
     Object.assign(veri, (data?.veri as object) ?? {});
+    veri["guncellemeler"] = { ...((onceki.guncellemeler as Record<string, string>) ?? {}), program: data?.updated_at };
   }
   if (!veri["dersler"]) veri["dersler"] = null;
   localStorage.setItem(ANAHTARLAR.veri, JSON.stringify(veri));
@@ -168,9 +172,13 @@ export function degisenAlanlar(patch: object) {
 export async function genelYenile() {
   const ayar = oku(ANAHTARLAR.ayarlar, {}) as Record<string, unknown>;
   const prog = ayar["donemId"] && ayar["dil"] ? programAnahtari(String(ayar["donemId"]), ayar["dil"] as Dil) : "";
-  const { data } = await supabase.from("global_data").select("anahtar, veri").in("anahtar", ["amfi", "secmeli", prog].filter(Boolean));
-  const veri: Record<string, unknown> = { ...sec(oku(ANAHTARLAR.veri, {}), GENEL_HEPSI, true), dersler: null, amfi: null };
-  for (const g of data ?? []) Object.assign(veri, (g.veri as object) ?? {});
+  const { data } = await supabase.from("global_data").select("anahtar, veri, updated_at").in("anahtar", ["amfi", "secmeli", prog].filter(Boolean));
+  const veri: Record<string, unknown> = { ...sec(oku(ANAHTARLAR.veri, {}), GENEL_HEPSI, true), dersler: null, amfi: null, guncellemeler: {} };
+  for (const g of data ?? []) {
+    Object.assign(veri, (g.veri as object) ?? {});
+    if (g.anahtar === "amfi") (veri.guncellemeler as Record<string, string>).amfi = g.updated_at;
+    if (g.anahtar === prog) (veri.guncellemeler as Record<string, string>).program = g.updated_at;
+  }
   localStorage.setItem(ANAHTARLAR.veri, JSON.stringify(veri));
   window.dispatchEvent(new Event("ders-takvim:veri"));
   window.dispatchEvent(new Event(BULUT_OLAY));
