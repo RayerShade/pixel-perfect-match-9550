@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
-import { DERS_TURU_ETIKET, type Ders, type DersTuru } from "@/lib/schedule-data";
+import { DERS_TURU_ETIKET, derslikListesi, type Ders, type DersTuru } from "@/lib/schedule-data";
+import { useYuklenenVeri } from "@/lib/store";
 import { DIGER, dilimDal } from "@/lib/dilim";
 
 const GUNLER = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
@@ -24,6 +25,8 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
   const [toplu, setToplu] = useState(false);
   const [yonet, setYonet] = useState(false);
   const [ekstra, setEkstra] = useState<{ dilimler: string[]; dallar: string[] }>({ dilimler: [], dallar: [] });
+  const { veri: genelVeri } = useYuklenenVeri();
+  const derslikler = useMemo(() => derslikListesi(genelVeri, dersler.map((d) => d.defaultClassroom)), [genelVeri, dersler]);
   const secenek = useMemo(() => {
     const dl = new Set<string>(ekstra.dilimler), da = new Set<string>(ekstra.dallar);
     for (const d of dersler) { const x = dilimDal(d); dl.add(x.dilim); da.add(x.dal); }
@@ -62,6 +65,7 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
       {yonet && <DilimYonetimi dersler={dersler} onDegis={onDegis} ekstra={ekstra} setEkstra={setEkstra} />}
       {toplu && <TopluDuzen dersler={dersler} onDegis={onDegis} secenek={secenek} />}
       <datalist id="pt-dilimler">{secenek.dilimler.map((x) => <option key={x} value={x} />)}</datalist>
+      <datalist id="pt-derslikler">{derslikler.map((x) => <option key={x} value={x} />)}</datalist>
       <datalist id="pt-dallar">{secenek.dallar.map((x) => <option key={x} value={x} />)}</datalist>
 
       <div className="overflow-x-auto rounded-xl border border-border">
@@ -129,9 +133,17 @@ function DersFormu({ ders, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; ye
           <label className="text-xs">Bitiş<input type="time" className={girdi} value={d.endTime} onChange={(e) => k("endTime", e.target.value)} /></label>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-xs">Derslik<input className={girdi} value={d.defaultClassroom} onChange={(e) => k("defaultClassroom", e.target.value)} /></label>
+          <label className="text-xs">Derslik
+            <input role="combobox" aria-autocomplete="list" aria-describedby="pt-derslik-ipucu" list="pt-derslikler" className={girdi} value={d.defaultClassroom}
+              placeholder="Listeden seç ya da yaz" onChange={(e) => setD({ ...d, defaultClassroom: e.target.value, ...(e.target.value ? {} : { sinifKesin: undefined }) })} />
+          </label>
           <label className="text-xs">Hoca<input className={girdi} value={d.instructor} onChange={(e) => k("instructor", e.target.value)} /></label>
         </div>
+        <p id="pt-derslik-ipucu" className="-mt-2 text-[11px] text-muted-foreground">Listede yoksa istediğin dersliği yazabilirsin.</p>
+        <label className="flex items-center gap-2 text-xs">
+          <input type="checkbox" checked={!!d.sinifKesin} disabled={!d.defaultClassroom.trim()} onChange={(e) => k("sinifKesin", e.target.checked || undefined)} />
+          Derslik kesinleşti (öğrenci takviminde altın renkte görünür)
+        </label>
         <div className="grid grid-cols-3 gap-2">
           <label className="text-xs">Tür
             <select className={girdi} value={d.courseType} onChange={(e) => k("courseType", e.target.value as DersTuru)}>
