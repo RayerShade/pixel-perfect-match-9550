@@ -84,6 +84,30 @@ function YuklemeKarti({
   );
 }
 
+function AmfiArsivi({ veri }: { veri: YuklenenVeri }) {
+  const ozet = amfiArsivOzeti(veri.amfi);
+  const [seciliHafta, setSeciliHafta] = useState("");
+  if (!ozet.liste.length) return null;
+  const hafta = seciliHafta || ozet.liste[ozet.liste.length - 1]![0];
+  const kayitlar = (veri.amfi ?? []).filter((kayit) => kayit.week === hafta);
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div><h3 className="text-sm font-bold">Amfi programı arşivi</h3><p className="text-xs text-muted-foreground">Kaydedilmiş eski haftaları buradan görüntüleyebilirsin.</p></div>
+        <select value={hafta} onChange={(e) => setSeciliHafta(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium" aria-label="Arşiv haftası">
+          {[...ozet.liste].reverse().map(([tarih, sayi]) => <option key={tarih} value={tarih}>{new Date(`${tarih}T12:00:00`).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} haftası · {sayi} kayıt</option>)}
+        </select>
+      </div>
+      <div className="mt-3 overflow-x-auto rounded-xl border border-border">
+        <table className="min-w-full text-left text-xs">
+          <thead className="bg-accent text-muted-foreground"><tr><th className="px-3 py-2 font-semibold">Tarih / saat</th><th className="px-3 py-2 font-semibold">Ders</th><th className="px-3 py-2 font-semibold">Grup</th><th className="px-3 py-2 font-semibold">Amfi / derslik</th><th className="px-3 py-2 font-semibold">Kaynak</th></tr></thead>
+          <tbody>{kayitlar.map((kayit) => <tr key={kayit.id} className="border-t border-border/70"><td className="whitespace-nowrap px-3 py-2">{new Date(`${kayit.date}T12:00:00`).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })} · {kayit.startTime}–{kayit.endTime}</td><td className="px-3 py-2 font-medium">{kayit.courseName || "—"}</td><td className="px-3 py-2">{kayit.group || "—"}</td><td className="px-3 py-2">{kayit.amphitheater || kayit.classroom || "—"}</td><td className="px-3 py-2 text-muted-foreground">{kayit.sourceFile || "—"}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) {
   const { veri, kaydet } = useYuklenenVeri();
   const { user } = useAuth();
@@ -146,7 +170,8 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
         onSil={() => kaydet({ amfi: null, secmeliOlaylari: null, amfiAdlari: null, amfiDosyalari: undefined })}
       />
       ) : null}
-      {k ? (
+      {g ? <div className="sm:col-span-2"><AmfiArsivi veri={veri} /></div> : null}
+       {k ? (
       <YuklemeKarti
         baslik="Uygulama tablosu"
         aciklama="Uygulama tarihleri, saatleri ve her uygulamaya giden grupları okur. Öğrenci numaran Ayarlar'da girildiyse sadece senin grubunun uygulamaları takvime eklenir."
