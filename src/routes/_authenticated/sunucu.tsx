@@ -11,7 +11,7 @@ import type { Hedef } from "@/lib/hedef";
 import { TalepListesi, TalepSohbet, useTalepler } from "@/components/Destek";
 import {
   TABLOLAR, dosyaIslem, dosyaListele, kullaniciDuzenle, kullaniciEkIslem, kullaniciIslem, kullaniciOlustur,
-  satirKaydet, satirSil, sunucuKullanicilar, sunucuOzet, tabloOku, tamYedek, yedekGeriYukle,
+  adminGecmisOku, satirKaydet, satirSil, sunucuKullanicilar, sunucuOzet, tabloOku, tamYedek, yedekGeriYukle,
 } from "@/lib/sunucu.functions";
 
 export const Route = createFileRoute("/_authenticated/sunucu")({
@@ -47,7 +47,7 @@ function SunucuKapi() {
   );
 }
 
-type Sekme = "ozet" | "kullanicilar" | "destek" | "donem" | "veri" | "dosyalar" | "duyuru" | "yedek";
+type Sekme = "ozet" | "kullanicilar" | "destek" | "donem" | "veri" | "dosyalar" | "duyuru" | "gecmis" | "yedek";
 const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "ozet", ad: "Özet", ikon: Activity },
   { id: "kullanicilar", ad: "Kullanıcılar", ikon: Users },
@@ -56,6 +56,7 @@ const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "veri", ad: "Veritabanı", ikon: Database },
   { id: "dosyalar", ad: "Dosyalar", ikon: FileSpreadsheet },
   { id: "duyuru", ad: "Duyuru", ikon: Megaphone },
+  { id: "gecmis", ad: "İşlem Geçmişi", ikon: Activity },
   { id: "yedek", ad: "Yedek", ikon: HardDrive },
 ];
 const btn = "inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-accent disabled:opacity-50";
@@ -103,7 +104,7 @@ function Sunucu() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl space-y-4 p-3 md:p-5">
-        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : <Yedek />}
+        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />}
       </main>
     </div>
   );
@@ -700,5 +701,38 @@ function DestekYonetim() {
       </div>
       {talep ? <TalepSohbet talep={talep} yonetici onDegisti={yenile} /> : <p className="text-sm text-muted-foreground">Bir talep seç.</p>}
     </div>
+  );
+}
+
+
+function IslemGecmisi() {
+  const f = useServerFn(adminGecmisOku);
+  const [ara, setAra] = useState("");
+  const [sayfa, setSayfa] = useState(0);
+  const q = useQuery({
+    queryKey: ["admin-gecmis", ara, sayfa],
+    queryFn: () => f({ data: { q: ara.trim() || undefined, sayfa } }),
+  });
+  const kayitlar = q.data?.kayitlar ?? [];
+  return (
+    <Kart baslik="İşlem Geçmişi" sag={<button className={btn} onClick={() => void q.refetch()}><RefreshCw className="h-3 w-3" /> Yenile</button>}>
+      <p className="mb-3 text-xs text-muted-foreground">Sunucu panelindeki yönetim işlemleri burada denetlenebilir. En yeni kayıtlar üstte gösterilir.</p>
+      <input value={ara} onChange={(e) => { setAra(e.target.value); setSayfa(0); }} placeholder="İşlem, ayrıntı veya kullanıcı ara" className={`${giris} mb-3 w-full max-w-md`} />
+      {q.isLoading ? <p className="text-sm text-muted-foreground">Yükleniyor…</p> : null}
+      {q.error ? <p className="text-sm text-destructive">Geçmiş alınamadı.</p> : null}
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full min-w-[640px] text-left text-xs">
+          <thead className="bg-accent text-muted-foreground"><tr><th className="p-2">Tarih</th><th className="p-2">Yönetici</th><th className="p-2">İşlem</th><th className="p-2">Ayrıntı</th></tr></thead>
+          <tbody>
+            {kayitlar.map((k) => <tr key={k.id} className="border-t border-border"><td className="whitespace-nowrap p-2">{tarih(k.created_at)}</td><td className="p-2">{k.kisi?.ad || k.kisi?.email || k.user_id}<span className="block text-[10px] text-muted-foreground">{k.kisi?.email && k.kisi.ad ? k.kisi.email : ""}</span></td><td className="p-2 font-medium">{k.islem}</td><td className="max-w-md break-words p-2 text-muted-foreground">{k.detay || "—"}</td></tr>)}
+            {!q.isLoading && !kayitlar.length ? <tr><td colSpan={4} className="p-5 text-center text-muted-foreground">Kayıt bulunamadı.</td></tr> : null}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+        <span>{q.data?.toplam ?? 0} kayıt</span>
+        <div className="flex gap-2"><button className={btn} disabled={!sayfa} onClick={() => setSayfa((s) => s - 1)}>Önceki</button><button className={btn} disabled={kayitlar.length < 100} onClick={() => setSayfa((s) => s + 1)}>Sonraki</button></div>
+      </div>
+    </Kart>
   );
 }
