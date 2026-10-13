@@ -52,6 +52,7 @@ export const kullaniciIslem = createServerFn({ method: "POST" })
       // Kısa bir yasak tüm oturumları geçersiz kılar, hemen kaldırılır.
       await db.auth.admin.updateUserById(data.userId, { ban_duration: "1s" });
       await db.auth.admin.updateUserById(data.userId, { ban_duration: "none" });
+      await logla(context, "Kullanıcı: cikisYaptir", data.userId);
       return { ok: true };
     }
     const { error } = await db.auth.admin.updateUserById(data.userId, g);
@@ -287,4 +288,27 @@ export const yedekGeriYukle = createServerFn({ method: "POST" })
     }
     await logla(context, "Yedekten geri yüklendi", JSON.stringify(sonuc));
     return sonuc;
+  });
+
+
+/** Süper admin için denetlenebilir işlem geçmişi. */
+export const adminGecmisOku = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ q: z.string().max(120).optional(), sayfa: z.number().int().min(0).max(10000).default(0) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await yetkili(context as never);
+    const limit = 100;
+    const from = data.sayfa * limit;
+    let sorgu = db.from("admin_gecmis").select("id, user_id, islem, detay, created_at", { count: "exact" }).order("created_at", { ascending: false }).range(from, from + limit - 1);
+    const q = data.q?.trim();
+    if (q) sorgu = sorgu.or(`islem.ilike.%${q}%,detay.ilike.%${q}%,user_id.ilike.%${q}%`);
+    const { data: kayitlar, error, count } = await sorgu;
+    if (error) throw new Error(error.message);
+    const ids = [...new Set((kayitlar ?? []).map((k: { user_id: string }) => k.user_id))];
+    const { data: profiller } = ids.length ? await db.from("profiles").select("id, ad_soyad, email").in("id", ids) : { data: [] };
+    const kisi = new Map((profiller ?? []).map((p: { id: string; ad_soyad: string | null; email: string | null }) => [p.id, { ad: p.ad_soyad, email: p.email }]));
+    return {
+      kayitlar: (kayitlar ?? []).map((k: { id: string; user_id: string; islem: string; detay: string | null; created_at: string }) => ({ ...k, kisi: kisi.get(k.user_id) ?? null })),
+      toplam: count ?? 0,
+    };
   });
