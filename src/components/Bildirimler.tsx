@@ -21,6 +21,7 @@ export function BildirimZili() {
   const qc = useQueryClient();
   const nav = useNavigate();
   const [acik, setAcik] = useState(false);
+  const [seciliBildirim, setSeciliBildirim] = useState<Bildirim | null>(null);
   const kutu = useRef<HTMLDivElement>(null);
   const key = ["bildirimler", user?.id];
   const { data: liste = [] } = useQuery({
@@ -55,9 +56,9 @@ export function BildirimZili() {
     await supabase.from("bildirimler").update({ okundu: true }).eq("user_id", user.id).eq("okundu", false);
     yenile();
   };
-  const tikla = async (b: Bildirim) => {
+  const bildirimiAc = async (b: Bildirim) => {
     if (!b.okundu) { await supabase.from("bildirimler").update({ okundu: true }).eq("id", b.id); yenile(); }
-    if (b.link) { setAcik(false); void nav({ to: b.link }); }
+    setSeciliBildirim(b);
   };
   const sil = async (id: string) => { await supabase.from("bildirimler").delete().eq("id", id); yenile(); };
 
@@ -96,7 +97,7 @@ export function BildirimZili() {
                 return (
                   <div key={b.id} className={`group flex gap-3 border-b border-border/60 px-4 py-3 last:border-0 ${b.okundu ? "" : "bg-accent/60"}`}>
                     <Ikon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <button onClick={() => void tikla(b)} className="min-w-0 flex-1 text-left">
+                    <button onClick={() => void bildirimiAc(b)} className="min-w-0 flex-1 text-left">
                       <p className="flex items-center gap-1.5 text-sm font-semibold">
                         {!b.okundu ? <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" /> : null}
                         <span className="truncate">{b.baslik}</span>
@@ -111,6 +112,43 @@ export function BildirimZili() {
                 );
               })
             )}
+          </div>
+        </div>
+      ) : null}
+      {seciliBildirim ? (
+        <div
+          className="fixed inset-0 z-[60] grid place-items-center bg-foreground/45 px-4 py-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="bildirim-baslik"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setSeciliBildirim(null); }}
+        >
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface shadow-xl">
+            <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
+              <div className="min-w-0">
+                <p id="bildirim-baslik" className="text-base font-bold">{seciliBildirim.baslik}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{new Date(seciliBildirim.created_at).toLocaleString("tr-TR")}</p>
+              </div>
+              <button onClick={() => setSeciliBildirim(null)} className="rounded-lg px-2 py-1 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
+                Kapat
+              </button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto px-5 py-4">
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{seciliBildirim.metin || "Bu bildirim için ek açıklama yok."}</p>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
+              {seciliBildirim.link ? (
+                <button
+                  onClick={() => { setSeciliBildirim(null); setAcik(false); void nav({ to: seciliBildirim.link! }); }}
+                  className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+                >
+                  İlgili sayfaya git
+                </button>
+              ) : null}
+              <button onClick={() => setSeciliBildirim(null)} className="rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">
+                Kapat
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
