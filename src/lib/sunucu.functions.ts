@@ -52,6 +52,7 @@ export const kullaniciIslem = createServerFn({ method: "POST" })
       // Kısa bir yasak tüm oturumları geçersiz kılar, hemen kaldırılır.
       await db.auth.admin.updateUserById(data.userId, { ban_duration: "1s" });
       await db.auth.admin.updateUserById(data.userId, { ban_duration: "none" });
+      await logla(context, "Kullanıcı: cikisYaptir", data.userId);
       return { ok: true };
     }
     const { error } = await db.auth.admin.updateUserById(data.userId, g);
@@ -268,6 +269,7 @@ export const tamYedek = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       out[t] = data;
     }
+    await logla(context, "Tam yedek indirildi");
     return JSON.stringify(out);
   });
 
@@ -287,4 +289,33 @@ export const yedekGeriYukle = createServerFn({ method: "POST" })
     }
     await logla(context, "Yedekten geri yüklendi", JSON.stringify(sonuc));
     return sonuc;
+  });
+
+/** İşlem geçmişi: yalnızca süper admin; en yeni önce, arama + sayfalama. */
+export const islemGecmisi = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ ara: z.string().trim().max(100).default(""), sayfa: z.number().int().min(0).max(1000).default(0), boyut: z.number().int().min(10).max(200).default(50) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const db = await yetkili(context as never);
+    let q = db.from("admin_gecmis").select("id, user_id, islem, detay, created_at", { count: "exact" }).order("created_at", { ascending: false });
+    if (data.ara) {
+      const a = data.ara.replace(/[%,()]/g, " ");
+      q = q.or(`islem.ilike.%${a}%,detay.ilike.%${a}%`);
+    }
+    const bas = data.sayfa * data.boyut;
+    const { data: rows, error, count } = await q.range(bas, bas + data.boyut - 1);
+    if (error) throw new Error(error.message);
+    const ids = [...new Set(((rows ?? []) as { user_id: string }[]).map((r) => r.user_id))];
+    const { data: profs } = ids.length ? await db.from("profiles").select("id, email, ad_soyad").in("id", ids) : { data: [] };
+    const pm = new Map(((profs ?? []) as { id: string; email: string | null; ad_soyad: string }[]).map((p) => [p.id, p]));
+    return {
+      toplam: (count as number | null) ?? 0,
+      kayitlar: ((rows ?? []) as { id: string; user_id: string; islem: string; detay: string; created_at: string }[]).map((r) => ({
+        ...r,
+        ad: pm.get(r.user_id)?.ad_soyad ?? "",
+        email: pm.get(r.user_id)?.email ?? "",
+      })),
+    };
   });

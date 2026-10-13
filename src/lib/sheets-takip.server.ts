@@ -3,7 +3,7 @@ import { exportUrl } from "./sheets-url";
 import { haftalikAmfiOku, yillikProgramOku } from "./excel-import";
 import { ogrenciListesiOku, uygulamaTablosuOku } from "./uygulama-import";
 import { genelSecmeliOku } from "./secmeli-import";
-import { grubaUyar, type Ders, type HaftalikAmfiKaydi, type Ogrenci, type UygulamaOlayi } from "./schedule-data";
+import { amfiArsivBirlestir, grubaUyar, type SecmeliOlay, type Ders, type HaftalikAmfiKaydi, type Ogrenci, type UygulamaOlayi } from "./schedule-data";
 
 type Admin = (typeof import("@/integrations/supabase/client.server"))["supabaseAdmin"];
 type Tur = "yillik" | "uygulama" | "ogrenci" | "amfi" | "secmeli";
@@ -164,15 +164,15 @@ async function kaynakIsle(admin: Admin, k: Kaynak): Promise<{ degisti: boolean; 
     veri = { ...eski, genelSecmeliler: l };
   } else {
     const r = yeni as Awaited<ReturnType<typeof haftalikAmfiOku>>;
-    const haftalar = new Set(r.kayitlar.map((x) => x.week));
-    const tarihler = new Set(r.secmeliler.map((o) => o.date));
     const eskiAmfi = (eski["amfi"] as HaftalikAmfiKaydi[]) ?? [];
     degisimler = amfiFarki(eskiAmfi, r.kayitlar);
+    // Yalnızca tablodaki haftalar değişir; aynı bağlantı yeni haftayla üzerine yazılsa bile eski haftalar arşivde kalır.
     veri = {
       ...eski,
-      amfi: [...eskiAmfi.filter((x) => !haftalar.has(x.week)), ...r.kayitlar],
-      secmeliOlaylari: [...(((eski["secmeliOlaylari"] as { date: string }[]) ?? []).filter((o) => !tarihler.has(o.date))), ...r.secmeliler],
-      amfiAdlari: { ...((eski["amfiAdlari"] as object) ?? {}), ...r.amfiAdlari },
+      ...amfiArsivBirlestir(
+        { amfi: eskiAmfi, secmeliOlaylari: eski["secmeliOlaylari"] as SecmeliOlay[] | null, amfiAdlari: eski["amfiAdlari"] as Record<string, string[]> | null },
+        r,
+      ),
     };
   }
   const { error } = await admin.from("global_data").upsert({ anahtar: k.anahtar, veri: veri as never, updated_at: simdi });
