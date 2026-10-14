@@ -20,7 +20,7 @@ import {
   type Dil,
   type ProgramVerisi,
 } from "@/lib/program";
-import type { Ders, Ogrenci, UygulamaOlayi } from "@/lib/schedule-data";
+import { programVerisiniTemizle, type Ders, type Ogrenci, type UygulamaOlayi } from "@/lib/schedule-data";
 
 const girdi = "rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm";
 
@@ -389,6 +389,19 @@ export function ProgramYonetimi() {
               </div>
 
               <SheetsTakip anahtarlar={[programAnahtari(donemId, dil)]} />
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-accent/40 p-3 text-xs">
+                <span>Excel yazım farklarını, ders türlerini, dilim/ana dal adlarını ve uygulama grup kodlarını otomatik temizle.</span>
+                <button
+                  onClick={() => {
+                    if (!prog) return;
+                    guncelle(programVerisiniTemizle(prog));
+                    toast.success("Program temizlendi. Kontrol edip Kaydet'e bas.");
+                  }}
+                  className="rounded-lg border border-border bg-surface px-3 py-1.5 font-semibold hover:bg-accent"
+                >
+                  Veriyi otomatik düzelt
+                </button>
+              </div>
 
               {bolum === "dersler" ? (
                 <ProgramTakvim
