@@ -476,9 +476,14 @@ function ingilizceLaboratuvariniSec(d: Ders, ogrenci?: Ogrenci): Ders | null {
   if (!hedef) return d;
   const eslesmeler = [...d.courseName.matchAll(/\(([^)]+)\)\s*[İIıi]\s*(\d+)/g)];
   if (!eslesmeler.length) return d;
+  const telafi = telafiMi(d);
+  // Telafi satırları tüm gruplar için tek oturum: hangi uygulamanın telafisi ve hangi grup açıklamada.
+  if (telafi) {
+    const satir = eslesmeler.map((m) => `${m[1]!.trim()} (İ${m[2]})`).join("; ");
+    return { ...d, courseName: "Laboratory Skills — Telafi", group: eslesmeler.map((m) => `İ${m[2]}`).join(", "), notes: [d.notes, `Telafiler: ${satir}`].filter(Boolean).join(" · ") };
+  }
   const secilen = eslesmeler.find((m) => `i${m[2]}` === hedef);
   if (!secilen) return null;
-  const telafi = telafiMi(d);
   return {
     ...d,
     courseName: `${secilen[1]!.trim()}${telafi ? " (Telafi)" : ""}`,
