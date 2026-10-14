@@ -17,3 +17,4 @@
 - All app pages live under `src/routes/_authenticated/`; only `/auth` and `/reset-password` are public.
 - Google Sheets sources are tracked in `sheets_kaynaklari`; `src/lib/sheets-takip.server.ts` re-downloads, diffs and notifies affected students, run hourly by pg_cron via `/api/public/sheets-kontrol` — keeps site in sync without admin re-uploads.
 - Attendance (`Ayarlar.katilim`, keyed by calendar event key) and per-dilim warning mutes live in user_data.ayarlar; dilim/ana dal derived in `src/lib/dilim.ts`, thresholds in `src/lib/devam.ts`.
+- Kurum e-postası zorunluluğu kalıcı bir koddur, `panel_ayar.okul_epostasi_zorunlu` anahtarıyla açılıp kapanır (`hesap_hazirla` anahtarı okur, `/sunucu` panelinden super admin çevirir, `src/lib/okul-epostasi.ts` aynı anahtarı kayıt ekranına taşır) — zorunluluk kaldırılırken kontrol kodu silinmez.
