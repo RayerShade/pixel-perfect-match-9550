@@ -1,6 +1,7 @@
 import { SheetsTusu, type SheetsTur } from "@/components/SheetsTusu";
 import { SheetsTakip } from "@/components/SheetsTakip";
 import { ProgramTakvim } from "@/components/ProgramTakvim";
+import { UygulamaToplu, VeriKontrol } from "@/components/VeriKontrol";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarRange, FlaskConical, Pencil, Plus, Save, Trash2, Upload, Users } from "lucide-react";
@@ -403,6 +404,8 @@ export function ProgramYonetimi() {
                 </button>
               </div>
 
+              <VeriKontrol dersler={prog.dersler ?? []} uygulamalar={prog.uygulamalar ?? []} onDegis={(p) => guncelle(p)} />
+
               {bolum === "dersler" ? (
                 <ProgramTakvim
                   dersler={prog.dersler ?? []}
@@ -422,12 +425,15 @@ export function ProgramYonetimi() {
                   })}
                 />
               ) : bolum === "uygulamalar" ? (
+                <div className="space-y-2">
+                <UygulamaToplu uygulamalar={prog.uygulamalar ?? []} onDegis={(uygulamalar) => guncelle({ uygulamalar })} />
                 <Tablo
                   satirlar={prog.uygulamalar ?? []}
                   sutunlar={UYG_SUTUN}
                   onDegis={(uygulamalar) => guncelle({ uygulamalar })}
                   yeni={() => ({ id: crypto.randomUUID(), date: "", startTime: "", endTime: "", ad: "", hoca: "", yer: "", dilim: "", gruplar: [] })}
                 />
+                </div>
               ) : (
                 <Tablo
                   satirlar={ogrListe}
