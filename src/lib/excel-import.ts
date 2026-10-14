@@ -1,4 +1,4 @@
-import type { Ders, DersTuru, HaftalikAmfiKaydi, SecmeliOlay } from "./schedule-data";
+import { dersAdiDuzelt, dersTuruDuzelt, programMetniDuzelt, programVerisiniTemizle, type Ders, type DersTuru, type HaftalikAmfiKaydi, type SecmeliOlay } from "./schedule-data";
 import { addDays, isoDate, startOfWeek } from "./date-utils";
 
 export const normalize = (s: string) =>
@@ -87,15 +87,7 @@ function gunNorm(v: unknown): number {
 }
 
 function turNorm(v: unknown, ad: string): DersTuru {
-  const n = normalize(`${v ?? ""} ${ad}`);
-  const adN = normalize(ad);
-  if (/sinav|kurul deg|degerlendirme/.test(n)) return "sinav";
-  if (/pdo|pbl|probleme dayali/.test(n)) return "pbl";
-  if (/secmeli/.test(n)) return "secmeli";
-  // Yıllık programda yalnızca açık uygulama satırları pratiktir. Örneğin
-  // "Uygulama Alanları" bir ders adı olabilir ve uygulama sayılmamalıdır.
-  if (/^laboratory skills\b/.test(adN) || adN === "uygulama" || /\bpratik\b/.test(n)) return "pratik";
-  return "teorik";
+  return dersTuruDuzelt(undefined, ad, String(v ?? ""));
 }
 
 type Satir = Record<string, unknown>;
@@ -173,14 +165,14 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
       ad = konu.slice(0, bol).trim();
       hoca = konu.slice(bol + 3).replace(/^\/\s*/, "").trim();
     }
-    ad = ad.replace(/^\d+\s*-\s*/, "");
-    const bolum = String(s["bolum"] ?? "").replace(/\s+/g, " ").trim();
+    ad = dersAdiDuzelt(ad);
+    const bolum = programMetniDuzelt(String(s["bolum"] ?? ""));
     const yer = yerCoz(String(s["amfi"] ?? ""));
     const notlar = [bolum, String(s["not"] ?? "").trim()].filter(Boolean).join(" · ");
     dersler.push({
       id: `x-${i}`,
       courseName: ad,
-      instructor: hoca,
+      instructor: programMetniDuzelt(hoca),
       courseType: yer.tur ?? turNorm(s["tur"], `${ad} ${bolum}`),
       dayOfWeek: gun,
       date: tarih || undefined,
@@ -192,7 +184,7 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
       notes: notlar,
     });
   });
-  return dersler;
+  return programVerisiniTemizle({ dersler }).dersler ?? [];
 }
 
 /** Hücre metnini sadeleştir: küçük harf, Türkçe karakterler düz, harf-rakam ayrık, tek boşluk. */
