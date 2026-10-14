@@ -506,7 +506,7 @@ function ingilizceLaboratuvariniSec(d: Ders, ogrenci?: Ogrenci): Ders | null {
   if (telafi) {
     const satir = eslesmeler.map((m) => `${m[1]!.trim()} (İ${m[2]})`).join("; ");
     // Telafi bütün gruplara açıktır: grup kısıtı koyma, hangi uygulamanın telafisi açıklamada yazar.
-    return { ...d, courseName: "Laboratory Skills — Telafi", group: undefined, notes: [d.notes, `Telafiler: ${satir}`].filter(Boolean).join(" · ") };
+    return { ...d, courseName: "Laboratory Skills — Telafi", group: "", notes: [d.notes, `Telafiler: ${satir}`].filter(Boolean).join(" · ") };
   }
   const secilen = eslesmeler.find((m) => `i${m[2]}` === hedef);
   if (!secilen) return null;
@@ -664,7 +664,7 @@ export function haftaninOlaylari(
       ...d,
       courseName: ing ? "Laboratory Skills — Telafi" : "Telafi Uygulaması",
       // Telafi bütün gruplara açıktır; tabloda yalnız bazı gruplar yazsa da herkes görür.
-      group: undefined,
+      group: "",
       defaultClassroom: d.defaultClassroom || [...new Set(ic.map((u) => u.yer).filter(Boolean))].join(" / "),
       notes: [d.notes, `${ing ? "Telafiler" : "Telafisi yapılanlar"}: ${satir}`].filter(Boolean).join(" · "),
     };
