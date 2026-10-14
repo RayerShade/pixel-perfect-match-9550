@@ -615,7 +615,7 @@ export function haftaninOlaylari(
       const amfiyeBak = !u.yer || /amfi program/i.test(normalizeTr(u.yer));
       const d: Ders = {
         id: u.id,
-        courseName: `${u.ad} Uygulaması`,
+        courseName: /uygulama|laboratuvar|lab\b/i.test(u.ad) ? u.ad : `${u.ad} Uygulaması`,
         instructor: u.hoca,
         courseType: uygulamaTuru(u),
         dilim: u.dilim || undefined,
