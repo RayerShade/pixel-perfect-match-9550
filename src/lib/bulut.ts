@@ -82,8 +82,8 @@ export async function buluttanYukle(userId: string, ogrenciNo: string, meta: Rec
     const veri: Record<string, unknown> = { dersler: null, amfi: null, guncellemeler: {} };
     for (const g of genel ?? []) {
       if (g.anahtar === "amfi" || g.anahtar === "secmeli" || g.anahtar === prog) Object.assign(veri, (g.veri as object) ?? {});
-      if (g.anahtar === "amfi") (veri.guncellemeler as Record<string, string>).amfi = g.updated_at;
-      if (g.anahtar === prog) (veri.guncellemeler as Record<string, string>).program = g.updated_at;
+      if (g.anahtar === "amfi") (veri["guncellemeler"] as Record<string, string>).amfi = g.updated_at;
+      if (g.anahtar === prog) (veri["guncellemeler"] as Record<string, string>).program = g.updated_at;
     }
     localStorage.setItem(ANAHTARLAR.veri, JSON.stringify(veri));
     localStorage.setItem(ANAHTARLAR.ayarlar, JSON.stringify(ayar));
@@ -111,7 +111,7 @@ export async function programiYenile() {
       .eq("anahtar", programAnahtari(String(ayar["donemId"]), ayar["dil"] as Dil))
       .maybeSingle();
     Object.assign(veri, (data?.veri as object) ?? {});
-    veri["guncellemeler"] = { ...((onceki.guncellemeler as Record<string, string>) ?? {}), program: data?.updated_at };
+    veri["guncellemeler"] = { ...((onceki["guncellemeler"] as Record<string, string>) ?? {}), program: data?.updated_at };
   }
   if (!veri["dersler"]) veri["dersler"] = null;
   localStorage.setItem(ANAHTARLAR.veri, JSON.stringify(veri));
@@ -176,8 +176,8 @@ export async function genelYenile() {
   const veri: Record<string, unknown> = { ...sec(oku(ANAHTARLAR.veri, {}), GENEL_HEPSI, true), dersler: null, amfi: null, guncellemeler: {} };
   for (const g of data ?? []) {
     Object.assign(veri, (g.veri as object) ?? {});
-    if (g.anahtar === "amfi") (veri.guncellemeler as Record<string, string>).amfi = g.updated_at;
-    if (g.anahtar === prog) (veri.guncellemeler as Record<string, string>).program = g.updated_at;
+    if (g.anahtar === "amfi") (veri["guncellemeler"] as Record<string, string>).amfi = g.updated_at;
+    if (g.anahtar === prog) (veri["guncellemeler"] as Record<string, string>).program = g.updated_at;
   }
   localStorage.setItem(ANAHTARLAR.veri, JSON.stringify(veri));
   window.dispatchEvent(new Event("ders-takvim:veri"));
