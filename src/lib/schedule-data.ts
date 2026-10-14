@@ -150,9 +150,22 @@ export interface UygulamaOlayi {
   dal?: string | undefined;
 }
 
-/** Uygulama hücresindeki grup ("A" tüm grup, "D1" yalnızca d1 alt grubu) öğrenciye uyuyor mu? */
-export const grubaUyar = (gruplar: string[], o: Ogrenci) =>
-  gruplar.some((g) => g[0] === o.grup && (g.length === 1 || o.altGrup.toUpperCase() === g));
+/** Uygulama hücresindeki grup ("A" tüm grup, "D1" yalnızca d1 alt grubu) öğrenciye uyuyor mu?
+ * Öğrenci listesinde grup bazen "A", bazen doğrudan "A1" geldiği için iki yazım da desteklenir.
+ */
+export const grubaUyar = (gruplar: string[], o: Ogrenci) => {
+  const temiz = (x: string) => x.replace(/\s+/g, "").toLocaleUpperCase("tr-TR");
+  const grup = temiz(o.grup);
+  const alt = temiz(o.altGrup);
+  const tam = alt && !alt.startsWith(grup) ? `${grup}${alt}` : alt || grup;
+  return gruplar.some((deger) => {
+    const g = temiz(deger);
+    if (!g) return false;
+    if (g === grup || g === alt || g === tam) return true;
+    // A grubu tüm A1/A2 alt gruplarına; A1 ise yalnız aynı alt gruba uyar.
+    return g.length === 1 ? grup.startsWith(g) : tam === g;
+  });
+};
 
 export function ogrenciBul(
   veri: YuklenenVeri | undefined,
