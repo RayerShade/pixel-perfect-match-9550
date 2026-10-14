@@ -49,7 +49,7 @@ export interface Kategori {
 
 /** Ders / uygulama sayılmayan etkinlikler: tören, sınav, tatil, oryantasyon vb. */
 const DERS_DEGIL =
-  /t[öo]ren|a[çc][ıi]l[ıi][şs]|kapan[ıi][şs]|ceremony|opening|closing|s[ıi]nav|\bexam|quiz|komite|\bbayram|arefe|tatil|holiday|oryantasyon|orientation|mezuniyet|graduation|yemin|kutlama|anma|\bsemineri?\b.*(?:tan[ıi]t)|de[ğg]erlendirme|feedback|geri bildirim|toplanmas/i;
+  /t[öo]ren|a[çc][ıi]l[ıi][şs]|kapan[ıi][şs]|ceremony|opening|closing|s[ıi]nav|\bexam|quiz|komite|\bbayram|arefe|tatil|holiday|oryantasyon|orientation|mezuniyet|graduation|yemin|kutlama|(?:^|\s)anma(?:\s|$)|\bsemineri?\b.*(?:tan[ıi]t)|de[ğg]erlendirme|feedback|geri bildirim|toplanmas/i;
 
 const katla = (s: string) =>
   s.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -80,7 +80,9 @@ export function olayKategori(o: DersOlayi): Kategori | null {
   const d = o.ders;
   if (o.ozelId || d.courseType === "sinav") return null;
   if (/\(seçilmedi\)/.test(d.courseName)) return null;
-  if (DERS_DEGIL.test(d.courseName)) return null;
+  // "Mikroskop Kullanma Beceri Uygulaması - Değerlendirme" gibi uygulamalar sayılır.
+  const uygAdi = (d.courseType === "pratik" || d.courseType === "pbl") && /uygulama|laboratory|lab\b/i.test(d.courseName);
+  if (DERS_DEGIL.test(uygAdi ? d.courseName.replace(/de[ğg]erlendirme|feedback/giu, "") : d.courseName)) return null;
   if (d.courseType === "secmeli" || d.electiveId || /seçmeli grubu/.test(d.notes))
     return { dilim: SECMELI_DILIM, dal: d.courseName.trim(), tur: "ders" };
   const tur: OlayTuru = d.courseType === "pratik" || d.courseType === "pbl" ? "uygulama" : "ders";

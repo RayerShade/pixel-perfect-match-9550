@@ -52,6 +52,9 @@ function agacKur(olaylar: DersOlayi[]): Dilim[] {
   return [...m.values()].sort((a, b) => sira(a) - sira(b) || a.ilk - b.ilk);
 }
 
+const telafiDal = (d: { tur: OlayTuru; ad: string }) => d.tur === "uygulama" && /telafi/i.test(d.ad);
+const bolumSira = (d: { tur: OlayTuru; ad: string }) => (d.tur === "ders" ? 0 : telafiDal(d) ? 2 : 1);
+
 const kisaTarih = (d: Date) => d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", weekday: "short" });
 
 /** Dilim başlığında yalnızca devam sayıları gösterilir; hak/kalma uyarısı yoktur. */
@@ -137,11 +140,11 @@ function Dersler() {
           const dallar = [...dl.dallar.values()]
             .map((d) => ({ ...d, liste: [...d.konular.entries()].filter(([ad, os]) => uyar(`${dl.ad} ${d.ad} ${ad} ${os[0]?.ders.instructor ?? ""}`)) }))
             .filter((d) => d.liste.length)
-            .sort((a, b) => (a.tur === b.tur ? a.ad.localeCompare(b.ad, "tr") : a.tur === "ders" ? -1 : 1));
+            .sort((a, b) => bolumSira(a) - bolumSira(b) || a.ad.localeCompare(b.ad, "tr"));
           if (!dallar.length) return null;
           const tumu = dallar.flatMap((d) => d.liste.flatMap(([, os]) => os));
           const acikDl = acik.has(dl.ad) || Boolean(q);
-          let sonTur: OlayTuru | null = null;
+          let sonTur: string | null = null;
           return (
             <section key={dl.ad} data-tur="dilim" className="overflow-hidden rounded-2xl border border-border bg-surface">
               <div className="flex items-center gap-2 p-4">
@@ -162,13 +165,14 @@ function Dersler() {
                   {dallar.map((d) => {
                     const dalKey = `${dl.ad}|${d.tur}|${d.ad}`;
                     const os = d.liste.flatMap(([, x]) => x);
-                    const baslikGoster = d.tur !== sonTur;
-                    sonTur = d.tur;
+                    const bolum = telafiDal(d) ? "telafi" : d.tur;
+                    const baslikGoster = bolum !== sonTur;
+                    sonTur = bolum;
                     return (
                       <div key={dalKey}>
                         {baslikGoster ? (
                           <p className="mb-1.5 mt-1 px-1 text-[11px] font-bold uppercase tracking-wide text-primary">
-                            {d.tur === "uygulama" ? "Uygulamalar" : "Teorik dersler"}
+                            {bolum === "telafi" ? "Telafi uygulamaları" : d.tur === "uygulama" ? "Uygulamalar" : "Teorik dersler"}
                           </p>
                         ) : null}
                         <div className="rounded-xl bg-accent/40">
