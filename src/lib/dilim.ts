@@ -13,7 +13,12 @@ export const baslikYap = (s: string) =>
 
 /** Dilim adını listede yazdığı gibi al (sadece boşlukları düzelt, "Dilimi" eki dahil). */
 const dilimAdi = (s: string) => {
-  const t = s.replace(/\s+/g, " ").trim().toLocaleUpperCase("tr-TR");
+  const t = s
+    .replace(/[‐‑–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .replace(/\s*-\s*\d{1,2}\s*$/u, "")
+    .trim()
+    .toLocaleUpperCase("tr-TR");
   return /^dikey koridor/.test(t.toLocaleLowerCase("tr-TR")) ? "Dikey Koridor" : t;
 };
 
@@ -21,7 +26,7 @@ const dilimAdi = (s: string) => {
 export function dilimDal(d: Ders): { dilim: string; dal: string } {
   if (d.dilim?.trim() || d.dal?.trim()) {
     const oto = dilimDal({ ...d, dilim: undefined, dal: undefined });
-    return { dilim: d.dilim?.trim() ? dilimAdi(d.dilim) : oto.dilim, dal: d.dal?.trim() || oto.dal };
+    return { dilim: d.dilim?.trim() ? dilimAdi(d.dilim) : oto.dilim, dal: d.dal?.replace(/[‐‑–—]/g, "-").replace(/\s*-\s*\d{1,2}\s*$/u, "").replace(/\s+/g, " ").trim() || oto.dal };
   }
   const bolum = (d.notes.split(" · ")[0] ?? "").trim();
   const i = bolum.indexOf("/");

@@ -63,6 +63,57 @@ export const SECMELILER: Secmeli[] = [];
 
 export const DERSLER: Ders[] = [];
 
+/** Excel kaynaklı küçük yazım farklarını tek ortak ada indirger. */
+export function programMetniDuzelt(deger: string): string {
+  return deger
+    .replace(/[‐‑–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .replace(/\s*\/\s*/g, " / ")
+    .trim();
+}
+
+/** Aynı dersin dosyada "Hareket", "Hareket-1" gibi ayrı görünmesini önler. */
+export function dersAdiDuzelt(ad: string): string {
+  return programMetniDuzelt(ad)
+    .replace(/\s*-\s*0*\d{1,2}\s*$/u, "")
+    .replace(/^\d+\s*[.)-]\s*/u, "")
+    .trim();
+}
+
+export function dersTuruDuzelt(tur: DersTuru | undefined, ad: string, baglam = ""): DersTuru {
+  const n = programMetniDuzelt(`${tur ?? ""} ${ad} ${baglam}`).toLocaleLowerCase("tr-TR");
+  if (/sınav|sinav|quiz|değerlendirme|degerlendirme/.test(n)) return "sinav";
+  if (/pdö|pdo|pbl|probleme dayalı|probleme dayali/.test(n)) return "pbl";
+  if (/seçmeli|secmeli/.test(n)) return "secmeli";
+  if (/uygulama|laboratuvar|lab\b|pratik|beceri|klinik|staj|atölye|atolye|saha|workshop|practical|simulation/.test(n)) return "pratik";
+  return tur === "pratik" || tur === "pbl" || tur === "secmeli" || tur === "sinav" ? tur : "teorik";
+}
+
+/** Adminin mevcut dosyayı yeniden yüklemeden temizlemesi için güvenli normalize işlemi. */
+export function programVerisiniTemizle<T extends { dersler?: Ders[] | null; uygulamalar?: UygulamaOlayi[] | null }>(veri: T): T {
+  const dersler = veri.dersler?.map((d) => ({
+    ...d,
+    courseName: dersAdiDuzelt(d.courseName),
+    instructor: programMetniDuzelt(d.instructor),
+    defaultClassroom: programMetniDuzelt(d.defaultClassroom),
+    group: programMetniDuzelt(d.group),
+    dilim: d.dilim ? programMetniDuzelt(d.dilim).replace(/\s*-\s*\d+$/u, "") : d.dilim,
+    dal: d.dal ? programMetniDuzelt(d.dal).replace(/\s*-\s*\d+$/u, "") : d.dal,
+    courseType: dersTuruDuzelt(d.courseType, d.courseName, `${d.notes} ${d.defaultClassroom}`),
+  }));
+  const uygulamalar = veri.uygulamalar?.map((u) => ({
+    ...u,
+    ad: dersAdiDuzelt(u.ad),
+    hoca: programMetniDuzelt(u.hoca),
+    yer: programMetniDuzelt(u.yer),
+    dilim: programMetniDuzelt(u.dilim).replace(/\s*-\s*\d+$/u, ""),
+    dal: u.dal ? programMetniDuzelt(u.dal).replace(/\s*-\s*\d+$/u, "") : u.dal,
+    gruplar: [...new Set(u.gruplar.map((g) => programMetniDuzelt(g).toLocaleUpperCase("tr-TR")).filter(Boolean))],
+    tur: dersTuruDuzelt(u.tur, u.ad, `${u.dilim} ${u.yer}`),
+  }));
+  return { ...veri, ...(dersler ? { dersler } : {}), ...(uygulamalar ? { uygulamalar } : {}) };
+}
+
 /**
  * Sample "weekly amphitheater file" output. In the real app this comes from the
  * uploaded Excel file; here it is derived deterministically from the week key so

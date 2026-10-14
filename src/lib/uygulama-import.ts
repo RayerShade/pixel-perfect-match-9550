@@ -1,12 +1,28 @@
 import { normalize, tarihNorm } from "./excel-import";
-import type { Ogrenci, UygulamaOlayi } from "./schedule-data";
+import { programMetniDuzelt, programVerisiniTemizle, type Ogrenci, type UygulamaOlayi } from "./schedule-data";
 
 async function satirlar(file: File): Promise<unknown[][]> {
   const XLSX = await import("xlsx");
   const wb = XLSX.read(await file.arrayBuffer());
   const out: unknown[][] = [];
-  for (const ad of wb.SheetNames)
-    out.push(...XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[ad]!, { header: 1, defval: "", raw: true }));
+  for (const ad of wb.SheetNames) {
+    const ws = wb.Sheets[ad]!;
+    if (!ws["!ref"]) continue;
+    const aralik = XLSX.utils.decode_range(ws["!ref"]);
+    const grid: unknown[][] = [];
+    for (let y = 0; y <= aralik.e.r; y++) {
+      const satir: unknown[] = [];
+      for (let x = 0; x <= aralik.e.c; x++) satir.push(ws[XLSX.utils.encode_cell({ r: y, c: x })]?.v ?? "");
+      grid.push(satir);
+    }
+    // Excel'deki birleştirilmiş başlıklar/saat-tarih hücreleri boş satırlara taşınır.
+    for (const merge of ws["!merges"] ?? []) {
+      const deger = grid[merge.s.r]?.[merge.s.c] ?? "";
+      for (let y = merge.s.r; y <= merge.e.r; y++)
+        for (let x = merge.s.c; x <= merge.e.c; x++) if (grid[y]) grid[y]![x] = deger;
+    }
+    out.push(...grid, []);
+  }
   return out;
 }
 
@@ -89,9 +105,11 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
   rows.forEach((r, ri) => {
     const a = metin(r[0]);
     const n = normalize(a);
-    if (/uygulama tarihi/.test(n)) {
-      const ust = rows[ri - 1] ?? [];
-      dilim = metin(ust[0]);
+    if (/uygulama.*tarihi|tarihi.*uygulama/.test(n)) {
+      let ust = rows[ri - 1] ?? [];
+      // Başlıkla tablo arasında boş satır varsa en yakın dolu dilim başlığını bul.
+      for (let j = ri - 1; j >= 0 && !metin(ust[0]); j--) ust = rows[j - 1] ?? [];
+      dilim = programMetniDuzelt(metin(ust[0]));
       sutunlar = [];
       sonTarih = null;
       for (let i = 2; i < r.length; i++) {
@@ -116,10 +134,10 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
     if (a) sonTarih = tarih;
     if (!tarih || !bas || tarih < "2025-01-01") return;
     for (const s of sutunlar) {
-      const g = metin(r[s.i]).toLocaleUpperCase("tr-TR");
+      const g = metin(r[s.i]).toLocaleUpperCase("tr-TR").replace(/\s+/g, "");
       // Hücre yalnız grup kodlarından oluşmalı (A, D1, EF, "A - B"); açıklama metinlerindeki harfler grup sayılmaz.
-      if (!/^[\sA-H\d,;\/+&-]*$/.test(g)) continue;
-      const gruplar = [...g.matchAll(/([A-H])(\d)?/g)].map((m) => m[0]);
+      if (!/^[A-ZÇĞİÖŞÜ\d,;\/+&-]*$/.test(g)) continue;
+      const gruplar = [...g.matchAll(/([A-ZÇĞİÖŞÜ])(\d{0,2})/g)].map((m) => `${m[1]}${m[2] ?? ""}`);
       if (!gruplar.length) continue;
       out.push({
         id: `uy-${tarih}-${bas}-${s.i}-${ri}`,
@@ -134,5 +152,5 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
       });
     }
   });
-  return out;
+  return programVerisiniTemizle({ uygulamalar: out }).uygulamalar ?? [];
 }
