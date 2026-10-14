@@ -109,7 +109,7 @@ export function dersTuruDuzelt(tur: DersTuru | undefined, ad: string, baglam = "
   if (/\bpdo\b|\bpbl\b|probleme dayali/.test(a)) return "pbl";
   if (/secmeli|elective/.test(n)) return "secmeli";
   if (pratikAdMi(ad)) return "pratik";
-  return tur === "secmeli" || tur === "sinav" || tur === "pbl" ? tur : "teorik";
+  return tur === "secmeli" ? tur : "teorik";
 }
 
 /** Uygulama tablosundaki her satır varsayılan olarak uygulamadır. */
