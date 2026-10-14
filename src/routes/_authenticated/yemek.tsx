@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, ChevronRight, ExternalLink, UtensilsCrossed } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { isoDate } from "@/lib/date-utils";
 import { yemekListesiGetir, type YemekGunu } from "@/lib/yemek.functions";
 
 export const Route = createFileRoute("/_authenticated/yemek")({
@@ -23,6 +24,10 @@ function Yemek() {
   const yil = imlec.getFullYear(), ay = imlec.getMonth() + 1;
   const q = useQuery({ queryKey: ["yemek-listesi", yil, ay], queryFn: () => getir({ data: { yil, ay } }), staleTime: 20 * 60_000 });
   const liste = (q.data?.gunler ?? []).filter((gun) => satirlar(gun, ogun).length);
+  const [bugun, setBugun] = useState("");
+  useEffect(() => setBugun(isoDate(new Date())), []);
+  const bugunKaydi = (q.data?.gunler ?? []).find((gun) => gun.tarih === bugun);
+  const bugunSatirlar = bugunKaydi ? satirlar(bugunKaydi, ogun) : [];
 
   return (
     <AppShell baslik="Yemek Listesi" aciklama="İÜ SKS kaynağından güncel menü">
@@ -50,16 +55,37 @@ function Yemek() {
             </button>
           ))}
         </div>
+        {!q.isLoading && !q.isError && bugun ? (
+          <div className={`mt-4 rounded-xl border p-3 ${bugunSatirlar.length ? "border-primary/40 bg-primary/5" : "border-border bg-accent/40"}`}>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Bugün</span>
+              <h3 className="text-sm font-bold capitalize">{gunAdi(bugun)}</h3>
+            </div>
+            {bugunSatirlar.length ? (
+              <ul className="mt-2 space-y-1 text-xs text-muted-foreground">{bugunSatirlar.map((satir, i) => <li key={i}>• {satir}</li>)}</ul>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground">Bugün için yayınlanmış bir {ogun === "kahvalti" ? "kahvaltı" : "yemek"} listesi yok.</p>
+            )}
+          </div>
+        ) : null}
         {q.isLoading ? <p className="py-10 text-center text-sm text-muted-foreground">Yemek listesi yükleniyor…</p> : null}
         {q.isError ? <p className="py-10 text-center text-sm text-destructive">SKS yemek listesi şu an alınamadı. Biraz sonra tekrar dene.</p> : null}
         {!q.isLoading && !q.isError && !liste.length ? <p className="py-10 text-center text-sm text-muted-foreground">Bu ay için yayınlanmış {ogun === "kahvalti" ? "kahvaltı" : "yemek"} listesi yok.</p> : null}
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {liste.map((gun) => (
-            <article key={gun.tarih} className="rounded-xl border border-border p-3">
-              <h3 className="text-sm font-bold capitalize">{gunAdi(gun.tarih)}</h3>
-              <ul className="mt-2 space-y-1 text-xs text-muted-foreground">{satirlar(gun, ogun).map((satir, i) => <li key={i}>• {satir}</li>)}</ul>
-            </article>
-          ))}
+          {liste.map((gun) => {
+            const buGunMu = !!bugun && gun.tarih === bugun;
+            const gecti = !!bugun && gun.tarih < bugun;
+            return (
+              <article key={gun.tarih} className={`rounded-xl border p-3 ${buGunMu ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30" : "border-border"} ${gecti ? "opacity-60" : ""}`}>
+                <h3 className="flex items-center gap-2 text-sm font-bold capitalize">
+                  {gunAdi(gun.tarih)}
+                  {buGunMu ? <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Bugün</span> : null}
+                  {gecti ? <span className="shrink-0 text-[10px] font-normal normal-case text-muted-foreground">geçti</span> : null}
+                </h3>
+                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">{satirlar(gun, ogun).map((satir, i) => <li key={i}>• {satir}</li>)}</ul>
+              </article>
+            );
+          })}
         </div>
         <a href="https://sks.istanbul.edu.tr/tr/yemek-listesi" target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">Resmi SKS sayfasını aç <ExternalLink className="h-3.5 w-3.5" /></a>
       </section>
