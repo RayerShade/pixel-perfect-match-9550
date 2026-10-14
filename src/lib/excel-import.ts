@@ -86,8 +86,18 @@ function gunNorm(v: unknown): number {
   return 0;
 }
 
-function turNorm(v: unknown, ad: string): DersTuru {
-  return dersTuruDuzelt(undefined, ad, String(v ?? ""));
+/** Dosyanın tür sütunu açıkça uygulama/lab/pdö/sınav diyorsa o tür. */
+function dosyaTuru(v: unknown): DersTuru | undefined {
+  const n = normalize(String(v ?? ""));
+  if (!n) return undefined;
+  if (/sinav|exam/.test(n)) return "sinav";
+  if (/pdo|pbl/.test(n)) return "pbl";
+  if (/uygulama|pratik|lab|practical/.test(n)) return "pratik";
+  return undefined;
+}
+
+function turNorm(v: unknown, ad: string, bolum: string): DersTuru {
+  return dosyaTuru(v) ?? dersTuruDuzelt(undefined, ad, `${bolum} ${String(v ?? "")}`);
 }
 
 type Satir = Record<string, unknown>;
@@ -173,7 +183,8 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
       id: `x-${i}`,
       courseName: ad,
       instructor: programMetniDuzelt(hoca),
-      courseType: yer.tur ?? turNorm(s["tur"], `${ad} ${bolum}`),
+      courseType: yer.tur ?? turNorm(s["tur"], ad, bolum),
+      ...(yer.tur || dosyaTuru(s["tur"]) ? { turElle: true } : {}),
       dayOfWeek: gun,
       date: tarih || undefined,
       startTime: bas,
