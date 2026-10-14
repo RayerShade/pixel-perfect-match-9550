@@ -58,10 +58,10 @@ const katla = (s: string) =>
 function uygulamaAdi(ad: string) {
   // "LABORATORY SKILLS (HISTOLOGY AND EMBRYOLOGY 1) - i1" → "Histology And Embryology — Laboratory Skills"
   const lab = ad.match(/^laboratory skills\s*(?:repeat\s*)?\(([^)]+)\)/i);
-  if (lab && !/telafi|repeat/i.test(lab[1]!)) return `${baslikYap(lab[1]!.replace(/\s*\d+\s*$/, ""))} — Laboratory Skills`;
+  if (lab && !/telafi|repeat/i.test(lab[1]!)) return `${lab[1]!.replace(/\s*\d+\s*$/, "").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())} — Laboratory Skills`;
   const t = ad
     .replace(/\s*\+\s*telafi.*$/iu, "")
-    .replace(/\s*-\s*telafi.*$/iu, "")
+    .replace(/\s*-?\s*\btelafi\b.*$/iu, "")
     .replace(/\s*\(.*\)\s*$/u, "")
     .replace(/\s+\d+(\s*\/\s*\d+)?\s*$/u, "")
     .replace(/\s+/g, " ")
