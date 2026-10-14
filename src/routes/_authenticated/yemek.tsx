@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, ChevronRight, ExternalLink, UtensilsCrossed } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { isoDate } from "@/lib/date-utils";
 import { yemekListesiGetir, type YemekGunu } from "@/lib/yemek.functions";
 
 export const Route = createFileRoute("/_authenticated/yemek")({
@@ -23,6 +24,10 @@ function Yemek() {
   const yil = imlec.getFullYear(), ay = imlec.getMonth() + 1;
   const q = useQuery({ queryKey: ["yemek-listesi", yil, ay], queryFn: () => getir({ data: { yil, ay } }), staleTime: 20 * 60_000 });
   const liste = (q.data?.gunler ?? []).filter((gun) => satirlar(gun, ogun).length);
+  const [bugun, setBugun] = useState("");
+  useEffect(() => setBugun(isoDate(new Date())), []);
+  const bugunKaydi = (q.data?.gunler ?? []).find((gun) => gun.tarih === bugun);
+  const bugunSatirlar = bugunKaydi ? satirlar(bugunKaydi, ogun) : [];
 
   return (
     <AppShell baslik="Yemek Listesi" aciklama="İÜ SKS kaynağından güncel menü">
