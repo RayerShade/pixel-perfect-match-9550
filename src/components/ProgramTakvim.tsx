@@ -146,7 +146,7 @@ function DersFormu({ ders, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; ye
         </label>
         <div className="grid grid-cols-3 gap-2">
           <label className="text-xs">Tür
-            <select className={girdi} value={d.courseType} onChange={(e) => onDegis({ ...d, courseType: e.target.value as DersTuru, turElle: true })}>
+            <select className={girdi} value={d.courseType} onChange={(e) => setD({ ...d, courseType: e.target.value as DersTuru, turElle: true })}>
               {(Object.keys(DERS_TURU_ETIKET) as DersTuru[]).map((t) => <option key={t} value={t}>{DERS_TURU_ETIKET[t]}</option>)}
             </select>
           </label>
