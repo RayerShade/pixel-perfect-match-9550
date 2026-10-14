@@ -464,6 +464,9 @@ export function aktifDersler(veri?: YuklenenVeri): Ders[] {
     .map((d) => ({ ...d, courseType: dersTuruDuzelt(d.courseType, d.courseName, `${d.notes} ${d.defaultClassroom}`, d.turElle) }));
 }
 
+/** Yalnız "telafi" olan genel uygulama satırı (konusu yazmayan). */
+const SAF_TELAFI = /^(uygulama|laboratory skills)\s*[(+\-]?\s*(telafi|telafİ|repeat)\s*\)?\s*$/iu;
+
 const telafiMi = (d: Ders) => /\btelafi\b|\brepeat\b|\bmake[ -]?up\b/i.test(`${d.courseName} ${d.notes}`);
 
 /** İngilizce yıllık programdaki "(Uygulama adı) İ1" parçalarından öğrencininkini seçer. */
@@ -613,7 +616,29 @@ export function haftaninOlaylari(
     .filter((d): d is Ders => d !== null)
     .filter((d) => telafiGoster || !telafiMi(d));
 
-  return [...yillikDersler.filter(
+  // Saf telafi satırı ("UYGULAMA (TELAFİ)", "LABORATORY SKILLS (Telafi)") ile aynı saatteki uygulama tablosu
+  // oturumları aslında o telafinin içeriğidir: tek olayda birleştir, hangi uygulama + hangi gruplar açıklamaya yazılır.
+  const tumUyg = (veri?.uygulamalar ?? []).filter((u) => new Set(u.gruplar).size === u.gruplar.length);
+  const birlesenUyg = new Set<string>();
+  const telafiDersler = yillikDersler.map((d) => {
+    if (!d.date || d.date < mondayIso || d.date > pazar || !SAF_TELAFI.test(d.courseName.trim())) return d;
+    const ic = tumUyg.filter((u) => u.date === d.date && u.startTime < d.endTime && (u.endTime || u.startTime) > d.startTime);
+    if (!ic.length) return d;
+    for (const u of ic) birlesenUyg.add(u.id);
+    const ozet = new Map<string, Set<string>>();
+    for (const u of ic) { const g = ozet.get(u.ad) ?? new Set(); u.gruplar.forEach((x) => g.add(x)); ozet.set(u.ad, g); }
+    const ing = /laboratory/i.test(d.courseName);
+    const satir = [...ozet].map(([ad, g]) => `${ad} (${[...g].join(", ")})`).join("; ");
+    return {
+      ...d,
+      courseName: ing ? "Laboratory Skills — Telafi" : "Telafi Uygulaması",
+      group: [...new Set(ic.flatMap((u) => u.gruplar))].join(", "),
+      defaultClassroom: d.defaultClassroom || [...new Set(ic.map((u) => u.yer).filter(Boolean))].join(" / "),
+      notes: [d.notes, `${ing ? "Telafiler" : "Telafisi yapılanlar"}: ${satir}`].filter(Boolean).join(" · "),
+    };
+  });
+
+  return [...telafiDersler.filter(
     (d) =>
       (!d.electiveId || seciliSecmeliler.includes(d.electiveId)) &&
       (!d.date || (d.date >= mondayIso && d.date <= pazar)) &&
@@ -675,7 +700,7 @@ export function haftaninOlaylari(
       kaynak,
       kesin,
     };
-  }).filter((o): o is DersOlayi => o !== null), ...uygOlaylari.filter((o) => telafiGoster || !telafiMi(o.ders))];
+  }).filter((o): o is DersOlayi => o !== null), ...uygOlaylari.filter((o) => !birlesenUyg.has(o.ders.id) && (telafiGoster || !telafiMi(o.ders)))];
 }
 
 const normalizeTr = (s: string) => s.toLocaleLowerCase("tr-TR").trim();
