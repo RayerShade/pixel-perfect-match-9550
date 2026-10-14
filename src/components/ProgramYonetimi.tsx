@@ -144,7 +144,7 @@ const UYG_SUTUN: Sutun<UygulamaOlayi>[] = [
     koy: (r, v) => {
       const t = v.trim().toLocaleLowerCase("tr-TR");
       const tur = (["teorik", "pratik", "pbl", "secmeli", "sinav"] as const).find((x) => x === t || (t.length >= 2 && x.startsWith(t)));
-      return { ...r, tur: tur ?? (t ? r.tur : undefined) };
+      return { ...r, tur: tur ?? (t ? r.tur : undefined), turElle: Boolean(tur) || undefined };
     },
     gen: "6rem",
   },

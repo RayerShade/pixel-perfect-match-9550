@@ -146,7 +146,7 @@ function DersFormu({ ders, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; ye
         </label>
         <div className="grid grid-cols-3 gap-2">
           <label className="text-xs">Tür
-            <select className={girdi} value={d.courseType} onChange={(e) => k("courseType", e.target.value as DersTuru)}>
+            <select className={girdi} value={d.courseType} onChange={(e) => onDegis({ ...d, courseType: e.target.value as DersTuru, turElle: true })}>
               {(Object.keys(DERS_TURU_ETIKET) as DersTuru[]).map((t) => <option key={t} value={t}>{DERS_TURU_ETIKET[t]}</option>)}
             </select>
           </label>
@@ -185,7 +185,7 @@ function TopluDuzen({ dersler, onDegis, secenek }: { dersler: Ders[]; onDegis: (
     if (!eslesen.length || (!tur && !dilim.trim() && !dal.trim())) return;
     if (!confirm(`${eslesen.length} ders değişecek. Emin misin?`)) return;
     const ids = new Set(eslesen.map((d) => d.id));
-    onDegis(dersler.map((d) => (ids.has(d.id) ? { ...d, ...(tur ? { courseType: tur } : {}), ...(dilim.trim() ? { dilim: dilim.trim() } : {}), ...(dal.trim() ? { dal: dal.trim() } : {}) } : d)));
+    onDegis(dersler.map((d) => (ids.has(d.id) ? { ...d, ...(tur ? { courseType: tur, turElle: true } : {}), ...(dilim.trim() ? { dilim: dilim.trim() } : {}), ...(dal.trim() ? { dal: dal.trim() } : {}) } : d)));
     setAra(""); setTur(""); setDilim(""); setDal("");
   };
   return (
