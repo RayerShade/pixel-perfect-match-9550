@@ -50,7 +50,6 @@ function Yemek() {
             </button>
           ))}
         </div>
-        {ogun === "aksam" ? <p className="mt-3 rounded-lg bg-accent/60 px-3 py-2 text-xs text-muted-foreground">Akşam için SKS’nin öğle yemeği listesi gösterilir.</p> : null}
         {q.isLoading ? <p className="py-10 text-center text-sm text-muted-foreground">Yemek listesi yükleniyor…</p> : null}
         {q.isError ? <p className="py-10 text-center text-sm text-destructive">SKS yemek listesi şu an alınamadı. Biraz sonra tekrar dene.</p> : null}
         {!q.isLoading && !q.isError && !liste.length ? <p className="py-10 text-center text-sm text-muted-foreground">Bu ay için yayınlanmış {ogun === "kahvalti" ? "kahvaltı" : "yemek"} listesi yok.</p> : null}
