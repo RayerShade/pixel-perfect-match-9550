@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { ogrenciBul, type DersOlayi } from "@/lib/schedule-data";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 import { useKatilim } from "@/lib/katilim";
-import { ONLINE_DILIM, SECMELI_DILIM, olayKategori, type OlayTuru } from "@/lib/dilim";
+import { ONLINE_DILIM, SECMELI_DILIM, kategoriHaritasi, type OlayTuru } from "@/lib/dilim";
 import { gecti, tumOlaylar } from "@/lib/devam";
 
 export const Route = createFileRoute("/_authenticated/dersler")({
@@ -35,8 +35,9 @@ interface Dilim {
 
 function agacKur(olaylar: DersOlayi[]): Dilim[] {
   const m = new Map<string, Dilim>();
+  const kat = kategoriHaritasi(olaylar);
   for (const o of olaylar) {
-    const k = olayKategori(o);
+    const k = kat.get(o.key);
     if (!k) continue;
     const dl = m.get(k.dilim) ?? { ad: k.dilim, ilk: o.date.getTime(), dallar: new Map() };
     dl.ilk = Math.min(dl.ilk, o.date.getTime());

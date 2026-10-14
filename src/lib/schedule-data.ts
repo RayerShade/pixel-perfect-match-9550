@@ -31,6 +31,8 @@ export interface Ders {
   dal?: string | undefined;
   /** Admin dersliği elle kesinleştirdi (öğrenci takviminde altın renkte görünür). */
   sinifKesin?: boolean | undefined;
+  /** Tür açıkça verildi (admin düzenlemesi ya da dosyanın tür sütunu); otomatik kural değiştirmez. */
+  turElle?: boolean | undefined;
 }
 
 export interface Secmeli {
@@ -80,13 +82,44 @@ export function dersAdiDuzelt(ad: string): string {
     .trim();
 }
 
-export function dersTuruDuzelt(tur: DersTuru | undefined, ad: string, baglam = ""): DersTuru {
-  const n = programMetniDuzelt(`${tur ?? ""} ${ad} ${baglam}`).toLocaleLowerCase("tr-TR");
-  if (/sınav|sinav|quiz|değerlendirme|degerlendirme/.test(n)) return "sinav";
-  if (/pdö|pdo|pbl|probleme dayalı|probleme dayali/.test(n)) return "pbl";
-  if (/seçmeli|secmeli/.test(n)) return "secmeli";
-  if (/uygulama|laboratuvar|lab\b|pratik|beceri|klinik|staj|atölye|atolye|saha|workshop|practical|simulation/.test(n)) return "pratik";
-  return tur === "pratik" || tur === "pbl" || tur === "secmeli" || tur === "sinav" ? tur : "teorik";
+const katla = (s: string) =>
+  s.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+
+/**
+ * Ders ADI gerçekten bir uygulama/laboratuvar oturumu mu?
+ * "Anatomi Uygulama 3", "UYGULAMA (TELAFİ)", "LABORATORY SKILLS (...)", "Dikiş Düğüm" → evet.
+ * "Psikolojinin Uygulama Alanları", "Tıpta Uygulaması", "Klinik anomaliler", "İletişim Becerileri" → hayır.
+ */
+export function pratikAdMi(ad: string): boolean {
+  const n = katla(ad);
+  return (
+    /^(uygulama|pratik|laboratuvar|laboratory skills|lab\b|practical|skills lab)/.test(n) ||
+    /\b(uygulama|pratik|lab|laboratuvar|laboratory)\s*(\d|\(|\+|-|\/|$)/.test(n) ||
+    /\bpratik\b|\blaboratory skills\b|dikis dugum/.test(n)
+  );
+}
+
+/**
+ * Tür kuralı. `elle` = tür admin tarafından (ya da dosyanın tür sütununda) açıkça verildi → dokunulmaz.
+ * Aksi halde tür yalnız ADDAN çıkarılır; derslik/not içindeki "Uygulama Salonu" gibi sözcükler türü değiştirmez.
+ */
+export function dersTuruDuzelt(tur: DersTuru | undefined, ad: string, baglam = "", elle = false): DersTuru {
+  if (elle && tur) return tur;
+  const a = katla(ad);
+  if (/sinav|quiz|\bexam\b|degerlendirme/.test(a)) return "sinav";
+  if (/\bpdo\b|\bpbl\b|probleme dayali/.test(a)) return "pbl";
+  if (/secmeli|elective/.test(a) || /zorunlu secmeli|secmeli grubu/.test(katla(baglam))) return "secmeli";
+  if (pratikAdMi(ad)) return "pratik";
+  return "teorik";
+}
+
+/** Uygulama tablosundaki her satır varsayılan olarak uygulamadır. */
+export function uygulamaTuru(u: { tur?: DersTuru | undefined; ad: string; turElle?: boolean | undefined }): DersTuru {
+  if (u.turElle && u.tur) return u.tur;
+  const a = katla(u.ad);
+  if (/sinav|\bexam\b/.test(a)) return "sinav";
+  if (/\bpdo\b|\bpbl\b|probleme dayali/.test(a)) return "pbl";
+  return "pratik";
 }
 
 /** Adminin mevcut dosyayı yeniden yüklemeden temizlemesi için güvenli normalize işlemi. */
@@ -99,7 +132,7 @@ export function programVerisiniTemizle<T extends { dersler?: Ders[] | null; uygu
     group: programMetniDuzelt(d.group),
     dilim: d.dilim ? programMetniDuzelt(d.dilim).replace(/\s*-\s*\d+$/u, "") : d.dilim,
     dal: d.dal ? programMetniDuzelt(d.dal).replace(/\s*-\s*\d+$/u, "") : d.dal,
-    courseType: dersTuruDuzelt(d.courseType, d.courseName, `${d.notes} ${d.defaultClassroom}`),
+    courseType: dersTuruDuzelt(d.courseType, d.courseName, `${d.notes} ${d.defaultClassroom}`, d.turElle),
   }));
   const uygulamalar = veri.uygulamalar?.map((u) => ({
     ...u,
@@ -109,7 +142,7 @@ export function programVerisiniTemizle<T extends { dersler?: Ders[] | null; uygu
     dilim: programMetniDuzelt(u.dilim).replace(/\s*-\s*\d+$/u, ""),
     dal: u.dal ? programMetniDuzelt(u.dal).replace(/\s*-\s*\d+$/u, "") : u.dal,
     gruplar: [...new Set(u.gruplar.map((g) => programMetniDuzelt(g).toLocaleUpperCase("tr-TR")).filter(Boolean))],
-    tur: dersTuruDuzelt(u.tur, u.ad, `${u.dilim} ${u.yer}`),
+    tur: uygulamaTuru(u),
   }));
   return { ...veri, ...(dersler ? { dersler } : {}), ...(uygulamalar ? { uygulamalar } : {}) };
 }
@@ -148,6 +181,7 @@ export interface UygulamaOlayi {
   /** Admin tarafından elle değiştirilen tür / ana dal. */
   tur?: DersTuru | undefined;
   dal?: string | undefined;
+  turElle?: boolean | undefined;
 }
 
 /** Uygulama hücresindeki grup ("A" tüm grup, "D1" yalnızca d1 alt grubu) öğrenciye uyuyor mu?
@@ -426,14 +460,8 @@ export function aktifDersler(veri?: YuklenenVeri): Ders[] {
   return (veri?.dersler ?? DERSLER)
     // Eski yüklemelerde kayıtlı kalmış mola satırlarını da anında temizle.
     .filter((d) => !/^(lunch(?: break)?|free(?: study)? time|break)(?:\b|\s|$)/i.test(d.courseName.trim()))
-    .map((d) => {
-      const ad = normalizeTr(d.courseName);
-      // "Uygulama Alanları" gibi ders adları uygulama değildir. Türkçede yalnız
-      // doğrudan UYGULAMA, İngilizcede LABORATORY SKILLS uygulama kabul edilir.
-      if (d.courseType === "pratik" && ad !== "uygulama" && !/^laboratory skills\b/i.test(ad) && !/\bpratik\b/i.test(ad))
-        return { ...d, courseType: "teorik" as const };
-      return d;
-    });
+    // Kayıtlı eski türler gevşek kuralla okunmuş olabilir; açıkça verilmedikçe addan yeniden hesaplanır.
+    .map((d) => ({ ...d, courseType: dersTuruDuzelt(d.courseType, d.courseName, `${d.notes} ${d.defaultClassroom}`, d.turElle) }));
 }
 
 const telafiMi = (d: Ders) => /\btelafi\b|\brepeat\b|\bmake[ -]?up\b/i.test(`${d.courseName} ${d.notes}`);
@@ -556,7 +584,8 @@ export function haftaninOlaylari(
         id: u.id,
         courseName: `${u.ad} Uygulaması`,
         instructor: u.hoca,
-        courseType: u.tur ?? (/pd[oö]/i.test(u.ad) ? "pbl" : "pratik"),
+        courseType: uygulamaTuru(u),
+        dilim: u.dilim || undefined,
         dal: u.dal || undefined,
         dayOfWeek: ((new Date(`${u.date}T00:00:00`).getDay() + 6) % 7) + 1,
         date: u.date,
