@@ -23,7 +23,7 @@ async function satirlar(file: File): Promise<unknown[][]> {
     }
     out.push(...grid, []);
   }
-  return programVerisiniTemizle({ uygulamalar: out }).uygulamalar ?? [];
+  return out;
 }
 
 const metin = (v: unknown) => String(v ?? "").replace(/\s+/g, " ").trim();
@@ -152,5 +152,5 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
       });
     }
   });
-  return out;
+  return programVerisiniTemizle({ uygulamalar: out }).uygulamalar ?? [];
 }
