@@ -15,6 +15,13 @@
       "when": 1791913312892,
       "tag": "0001_restrict_global_data_read_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791942862513,
+      "tag": "0002_okul_epostasi_zorunlulugu_anahtari",
+      "breakpoints": true
     }
   ]
 }
