@@ -1,3 +1,4 @@
+// @ts-nocheck -- bun test dosyası (bun:test türleri projede yok)
 import { describe, expect, it } from "bun:test";
 import { dersTuruDuzelt, uygulamaTuru } from "./schedule-data";
 
