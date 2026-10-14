@@ -59,15 +59,20 @@ function uygulamaAdi(ad: string) {
   // "LABORATORY SKILLS (HISTOLOGY AND EMBRYOLOGY 1) - i1" → "Histology And Embryology — Laboratory Skills"
   const lab = ad.match(/^laboratory skills\s*(?:repeat\s*)?\(([^)]+)\)/i);
   if (lab && !/telafi|repeat/i.test(lab[1]!)) return `${lab[1]!.replace(/\s*\d+\s*$/, "").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())} — Laboratory Skills`;
-  const t = ad
+  let t = ad
+    .replace(/\s*[İI]\s*\d+(\s*-\s*\d+)?\s*$/u, "")
     .replace(/\s*\+\s*telafi.*$/iu, "")
     .replace(/\s*-?\s*\btelafi\b.*$/iu, "")
     .replace(/\s*\(.*\)\s*$/u, "")
     .replace(/\s+\d+(\s*\/\s*\d+)?\s*$/u, "")
     .replace(/\s+/g, " ")
     .trim();
+  t = t.replace(/^[^(]*\)\s*/u, (m) => (m.includes("(") ? m : m.replace(/\)\s*$/, " "))).replace(/\s*\($/, "").replace(/\)/g, (m, i, str) => (str.slice(0, i).includes("(") ? m : "")).trim();
+  t = t.replace(/BIOCHEMISTY/i, "BIOCHEMISTRY");
+  // Tamamı büyük harf İngilizce adlar ("BIOPHYSICS") → "Biophysics"
+  if (/^[A-Z0-9 &\-—/().,]+$/.test(t) && /[A-Z]{3}/.test(t)) t = t.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase());
   const r = t.replace(/(uygulama)\s*$/iu, (m) => (m === m.toLocaleUpperCase("tr-TR") ? `${m}SI` : `${m}sı`));
-  return /^uygulamas[ıi]$/iu.test(r) ? "Genel uygulama" : r;
+  return /^uygulamas[ıi]$/iu.test(r) ? "Uygulama" : r;
 }
 
 /** Bir takvim olayının ait olduğu dilim / ana dal ve devam türü. Sayılmayacaksa null. (Ham ad, birleştirme yok.) */
@@ -82,6 +87,9 @@ export function olayKategori(o: DersOlayi): Kategori | null {
   const { dilim, dal } = dilimDal(d);
   if (onlineMi(o)) return { dilim: ONLINE_DILIM, dal: d.courseName.trim(), tur };
   if (tur === "uygulama" && !d.dal?.trim()) {
+    if (/telafi|repeat|make[ -]?up/iu.test(d.courseName) && /^(uygulama|laboratory skills|telafi)/iu.test(d.courseName.trim()) || /— telafi$/i.test(d.courseName))
+      return { dilim, dal: /laboratory|repeat/i.test(d.courseName) ? "Laboratory Skills — Telafi" : "Telafi uygulamaları", tur };
+    if (/^laboratory skills$/i.test(d.courseName.trim()) && dal === "Genel") return { dilim, dal: "Laboratory Skills", tur };
     // Genel "UYGULAMA" satırı: ana dalı biliniyorsa "Tıbbi Biyoloji Uygulaması" gibi adlandır.
     if (/^uygulama\b/.test(katla(d.courseName.trim())) && dal !== "Genel")
       return { dilim, dal: `${baslikYap(dal.replace(/\s*(anabilim dal[ıi]|a\.?\s?d\.?)\s*$/iu, ""))} Uygulaması`, tur };
