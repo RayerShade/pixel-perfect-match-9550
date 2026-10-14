@@ -180,6 +180,7 @@ function Kullanicilar() {
   const adminler = useMemo(() => new Set((rol.data ?? []).filter((r) => r.role === "admin").map((r) => r.user_id)), [rol.data]);
   const sup = useQuery({ queryKey: ["super-adminler"], queryFn: async () => (await supabase.from("super_adminler").select("user_id")).data ?? [] });
   const superler = useMemo(() => new Set((sup.data ?? []).map((r) => r.user_id)), [sup.data]);
+  const okul = useQuery({ queryKey: ["okul-epostasi-zorunlu"], queryFn: async () => (await supabase.rpc("okul_epostasi_zorunlu_mu")).data === true });
   const yenile = () => { void qc.invalidateQueries({ queryKey: ["sunucu-kul"] }); void qc.invalidateQueries({ queryKey: ["sunucu-tablo"] }); void qc.invalidateQueries({ queryKey: ["sunucu-ozet"] }); };
 
   const yeniKaydet = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -234,6 +235,16 @@ function Kullanicilar() {
     if (error) { hata(new Error(error.message)); return; }
     toast.success("Tamam"); void sup.refetch(); yenile();
   };
+  const okulAyarla = async () => {
+    const hedef = !okul.data;
+    if (!confirm(hedef
+      ? "Yeni hesaplar yalnızca @ogr.iu.edu.tr uzantılı e-postayla açılsın mı? (super adminler her zaman açıktan)"
+      : "Okul e-postası zorunluluğu kaldırılsın mı? Her e-posta ile hesap açılabilsin mi?")) return;
+    const { error } = await supabase.rpc("okul_epostasi_ayarla", { _ver: hedef });
+    if (error) { hata(new Error(error.message)); return; }
+    toast.success(hedef ? "Artık yalnızca okul e-postasıyla hesap açılabilir" : "Artık her e-posta ile hesap açılabilir");
+    void okul.refetch();
+  };
 
   const liste = (q.data ?? [])
     .filter((u) => {
@@ -253,6 +264,9 @@ function Kullanicilar() {
   return (
     <Kart baslik={`Kullanıcılar (${liste.length}/${q.data?.length ?? 0})`} sag={<>
       <button className={ana} onClick={() => setYeni((v) => !v)}>{yeni ? "Kapat" : "+ Yeni kullanıcı"}</button>
+      <button className={okul.data ? ana : btn} onClick={() => void okulAyarla()} disabled={okul.isLoading}>
+        Okul e-postası: {okul.isLoading ? "…" : okul.data ? "zorunlu" : "kapalı"}
+      </button>
       <button className={btn} onClick={csv}>CSV indir</button>
       <button className={btn} onClick={yenile}><RefreshCw className="h-3 w-3" />yenile</button>
     </>}>

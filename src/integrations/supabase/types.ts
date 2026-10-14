@@ -160,14 +160,17 @@ export type Database = {
       panel_ayar: {
         Row: {
           id: number
+          okul_epostasi_zorunlu: boolean
           sifre_hash: string
         }
         Insert: {
           id?: number
+          okul_epostasi_zorunlu?: boolean
           sifre_hash: string
         }
         Update: {
           id?: number
+          okul_epostasi_zorunlu?: boolean
           sifre_hash?: string
         }
         Relationships: []
@@ -377,6 +380,8 @@ export type Database = {
         Returns: boolean
       }
       ogrenci_sorgula: { Args: { _no: string }; Returns: Json }
+      okul_epostasi_ayarla: { Args: { _ver: boolean }; Returns: undefined }
+      okul_epostasi_zorunlu_mu: { Args: never; Returns: boolean }
       orijinal_admin_mi: { Args: never; Returns: boolean }
       panel_sifre_dene: { Args: { _sifre: string }; Returns: boolean }
       super_admin_ayarla: {
