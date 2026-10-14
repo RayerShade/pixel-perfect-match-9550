@@ -94,7 +94,7 @@ export function pratikAdMi(ad: string): boolean {
   const n = katla(ad);
   return (
     /^(uygulama|pratik|laboratuvar|laboratory skills|lab\b|practical|skills lab)/.test(n) ||
-    /\b(uygulama|uygulamasi|pratik|lab|laboratuvar|laboratuvari)\s*(\d|\(|\+|-|\/|$)/.test(n) ||
+    /\b(uygulama|pratik|lab|laboratuvar|laboratory)\s*(\d|\(|\+|-|\/|$)/.test(n) ||
     /\bpratik\b|\blaboratory skills\b|dikis dugum/.test(n)
   );
 }
@@ -106,12 +106,11 @@ export function pratikAdMi(ad: string): boolean {
 export function dersTuruDuzelt(tur: DersTuru | undefined, ad: string, baglam = "", elle = false): DersTuru {
   if (elle && tur) return tur;
   const a = katla(ad);
-  const n = katla(`${ad} ${baglam}`);
   if (/sinav|quiz|\bexam\b|degerlendirme/.test(a)) return "sinav";
   if (/\bpdo\b|\bpbl\b|probleme dayali/.test(a)) return "pbl";
-  if (/secmeli|elective/.test(n)) return "secmeli";
+  if (/secmeli|elective/.test(a) || /zorunlu secmeli|secmeli grubu/.test(katla(baglam))) return "secmeli";
   if (pratikAdMi(ad)) return "pratik";
-  return tur === "secmeli" ? tur : "teorik";
+  return "teorik";
 }
 
 /** Uygulama tablosundaki her satır varsayılan olarak uygulamadır. */

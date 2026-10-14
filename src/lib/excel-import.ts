@@ -184,7 +184,7 @@ export async function yillikProgramOku(file: File): Promise<Ders[]> {
       courseName: ad,
       instructor: programMetniDuzelt(hoca),
       courseType: yer.tur ?? turNorm(s["tur"], ad, bolum),
-      ...(yer.tur || dosyaTuru(s["tur"]) ? { turElle: true } : {}),
+      ...(yer.tur === "pratik" || dosyaTuru(s["tur"]) ? { turElle: true } : {}),
       dayOfWeek: gun,
       date: tarih || undefined,
       startTime: bas,
