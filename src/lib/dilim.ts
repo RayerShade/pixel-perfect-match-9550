@@ -67,7 +67,7 @@ function uygulamaAdi(ad: string) {
     .replace(/\s+/g, " ")
     .trim();
   const r = t.replace(/(uygulama)\s*$/iu, (m) => (m === m.toLocaleUpperCase("tr-TR") ? `${m}SI` : `${m}sı`));
-  return /^uygulamas[ıi]$/iu.test(r) ? "Genel uygulama" : r;
+  return /^uygulamas[ıi]$/iu.test(r) ? "Uygulama" : r;
 }
 
 /** Bir takvim olayının ait olduğu dilim / ana dal ve devam türü. Sayılmayacaksa null. (Ham ad, birleştirme yok.) */
@@ -82,6 +82,9 @@ export function olayKategori(o: DersOlayi): Kategori | null {
   const { dilim, dal } = dilimDal(d);
   if (onlineMi(o)) return { dilim: ONLINE_DILIM, dal: d.courseName.trim(), tur };
   if (tur === "uygulama" && !d.dal?.trim()) {
+    if (/telafi|repeat|make[ -]?up/iu.test(d.courseName) && /^(uygulama|laboratory skills|telafi)/iu.test(d.courseName.trim()))
+      return { dilim, dal: /laboratory|repeat/i.test(d.courseName) ? "Telafi (Laboratory Skills)" : "Telafi uygulamaları", tur };
+    if (/^laboratory skills$/i.test(d.courseName.trim()) && dal === "Genel") return { dilim, dal: "Laboratory Skills", tur };
     // Genel "UYGULAMA" satırı: ana dalı biliniyorsa "Tıbbi Biyoloji Uygulaması" gibi adlandır.
     if (/^uygulama\b/.test(katla(d.courseName.trim())) && dal !== "Genel")
       return { dilim, dal: `${baslikYap(dal.replace(/\s*(anabilim dal[ıi]|a\.?\s?d\.?)\s*$/iu, ""))} Uygulaması`, tur };
