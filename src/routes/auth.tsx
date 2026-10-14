@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import { NumaraBilgi, useNumaraSorgu } from "@/components/NumaraBilgi";
+import { okulEpostasiMi, okulEpostasiZorunluMu } from "@/lib/okul-epostasi";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -22,7 +23,8 @@ export const Route = createFileRoute("/auth")({
 
 type Mod = "giris" | "kayit" | "sifre";
 
-// Geçici olarak herkese açık. Yalnızca okul e-postasına dönmek için true yapman yeterli.
+// Zorunluluk artık sunucudaki anahtardan okunur (/sunucu panelinde çevrilir).
+// Bu sabit yalnızca anahtara ulaşılamazsa kullanılan güvenli varsayılan: false = herkese açık.
 const OKUL_EPOSTASI_ZORUNLU = false;
 
 function AuthSayfasi() {
@@ -34,6 +36,7 @@ function AuthSayfasi() {
   };
   const { user, hazir } = useAuth();
   const [mod, setMod] = useState<Mod>("giris");
+  const [okulZorunlu, setOkulZorunlu] = useState(OKUL_EPOSTASI_ZORUNLU);
   const [email, setEmail] = useState("");
   const [sifre, setSifre] = useState("");
   const [no, setNo] = useState("");
@@ -50,6 +53,13 @@ function AuthSayfasi() {
     if (h && hazir && !user) { setMesaj({ ok: false, t: h }); sessionStorage.removeItem("ders-takvim:giris-hata"); }
   }, [hazir, user]);
 
+  // Okul e-postası zorunluluğu sunucudaki anahtardan okunur (kapatılıp geri açılabilir).
+  useEffect(() => {
+    let iptal = false;
+    void okulEpostasiZorunluMu().then((v) => { if (!iptal) setOkulZorunlu(v); });
+    return () => { iptal = true; };
+  }, []);
+
   const gonder = async (e: FormEvent) => {
     e.preventDefault();
     setBekle(true);
@@ -60,7 +70,7 @@ function AuthSayfasi() {
         const { error } = await supabase.auth.signInWithPassword({ email, password: sifre });
         if (error) throw new Error(error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı." : error.message);
       } else if (mod === "kayit") {
-        if (OKUL_EPOSTASI_ZORUNLU && !email.trim().toLowerCase().endsWith("@ogr.iu.edu.tr")) throw new Error("Sadece @ogr.iu.edu.tr uzantılı İÜ öğrenci e-postasıyla kayıt olunabilir.");
+        if (okulZorunlu && !okulEpostasiMi(email)) throw new Error("Sadece @ogr.iu.edu.tr uzantılı İÜ öğrenci e-postasıyla kayıt olunabilir.");
         if (!no.trim()) throw new Error("Öğrenci numarası gerekli.");
         if (sorgu.sonuc?.kayitli) throw new Error("Bu numara zaten başka bir hesaba kayıtlı.");
         const { error } = await supabase.auth.signUp({
