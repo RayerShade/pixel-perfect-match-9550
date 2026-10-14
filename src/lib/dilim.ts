@@ -49,7 +49,7 @@ export interface Kategori {
 
 /** Ders / uygulama sayılmayan etkinlikler: tören, sınav, tatil, oryantasyon vb. */
 const DERS_DEGIL =
-  /t[öo]ren|a[çc][ıi]l[ıi][şs]|kapan[ıi][şs]|ceremony|opening|closing|s[ıi]nav|\bexam|quiz|komite|\bbayram|arefe|tatil|holiday|oryantasyon|orientation|mezuniyet|graduation|yemin|kutlama|anma|\bsemineri?\b.*(?:tan[ıi]t)|de[ğg]erlendirme|feedback|geri bildirim|toplanmas/i;
+  /t[öo]ren|a[çc][ıi]l[ıi][şs]|kapan[ıi][şs]|ceremony|opening|closing|s[ıi]nav|\bexam|quiz|komite|\bbayram|arefe|tatil|holiday|oryantasyon|orientation|mezuniyet|graduation|yemin|kutlama|(?:^|\s)anma(?:\s|$)|\bsemineri?\b.*(?:tan[ıi]t)|de[ğg]erlendirme|feedback|geri bildirim|toplanmas/i;
 
 const katla = (s: string) =>
   s.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
