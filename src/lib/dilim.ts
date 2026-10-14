@@ -3,6 +3,7 @@ import { onlineMi, type Ders, type DersOlayi } from "./schedule-data";
 export const ONLINE_DILIM = "Online Dersler";
 export const SECMELI_DILIM = "Seçmeli Dersler";
 export const DIGER = "Diğer";
+export const ENTEGRE_DAL = "Entegre Oturumlar";
 
 export const baslikYap = (s: string) =>
   s
@@ -97,6 +98,8 @@ export function olayKategori(o: DersOlayi): Kategori | null {
       return { dilim, dal: `${baslikYap(dal.replace(/\s*(anabilim dal[ıi]|a\.?\s?d\.?)\s*$/iu, ""))} Uygulaması`, tur };
     return { dilim, dal: uygulamaAdi(d.courseName), tur };
   }
+  if (tur === "ders" && !d.dal?.trim() && /^(entegre oturum|integrated session)/iu.test(d.courseName.trim()))
+    return { dilim, dal: ENTEGRE_DAL, tur };
   return { dilim, dal, tur };
 }
 

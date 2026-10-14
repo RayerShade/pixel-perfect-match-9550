@@ -19,6 +19,7 @@ import { Route as AuthenticatedDerslerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDestekRouteImport } from './routes/_authenticated/destek'
 import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authenticated/secmeliler'
 import { Route as AuthenticatedSunucuRouteImport } from './routes/_authenticated/sunucu'
+import { Route as AuthenticatedYemekRouteImport } from './routes/_authenticated/yemek'
 import { Route as ApiPublicSheetsKontrolRouteImport } from './routes/api/public/sheets-kontrol'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -72,6 +73,11 @@ const AuthenticatedSunucuRoute = AuthenticatedSunucuRouteImport.update({
   path: '/sunucu',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedYemekRoute = AuthenticatedYemekRouteImport.update({
+  id: '/yemek',
+  path: '/yemek',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicSheetsKontrolRoute = ApiPublicSheetsKontrolRouteImport.update({
   id: '/api/public/sheets-kontrol',
   path: '/api/public/sheets-kontrol',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/destek': typeof AuthenticatedDestekRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/sunucu': typeof AuthenticatedSunucuRoute
+  '/yemek': typeof AuthenticatedYemekRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/destek': typeof AuthenticatedDestekRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/sunucu': typeof AuthenticatedSunucuRoute
+  '/yemek': typeof AuthenticatedYemekRoute
   '/': typeof AuthenticatedIndexRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/_authenticated/destek': typeof AuthenticatedDestekRoute
   '/_authenticated/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/_authenticated/sunucu': typeof AuthenticatedSunucuRoute
+  '/_authenticated/yemek': typeof AuthenticatedYemekRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/destek'
     | '/secmeliler'
     | '/sunucu'
+    | '/yemek'
     | '/api/public/sheets-kontrol'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/destek'
     | '/secmeliler'
     | '/sunucu'
+    | '/yemek'
     | '/'
     | '/api/public/sheets-kontrol'
     | '/lovable/email/auth/preview'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/_authenticated/destek'
     | '/_authenticated/secmeliler'
     | '/_authenticated/sunucu'
+    | '/_authenticated/yemek'
     | '/_authenticated/'
     | '/api/public/sheets-kontrol'
     | '/lovable/email/auth/preview'
@@ -259,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSunucuRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/yemek': {
+      id: '/_authenticated/yemek'
+      path: '/yemek'
+      fullPath: '/yemek'
+      preLoaderRoute: typeof AuthenticatedYemekRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/sheets-kontrol': {
       id: '/api/public/sheets-kontrol'
       path: '/api/public/sheets-kontrol'
@@ -290,6 +309,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDestekRoute: typeof AuthenticatedDestekRoute
   AuthenticatedSecmelilerRoute: typeof AuthenticatedSecmelilerRoute
   AuthenticatedSunucuRoute: typeof AuthenticatedSunucuRoute
+  AuthenticatedYemekRoute: typeof AuthenticatedYemekRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
@@ -300,6 +320,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDestekRoute: AuthenticatedDestekRoute,
   AuthenticatedSecmelilerRoute: AuthenticatedSecmelilerRoute,
   AuthenticatedSunucuRoute: AuthenticatedSunucuRoute,
+  AuthenticatedYemekRoute: AuthenticatedYemekRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 
