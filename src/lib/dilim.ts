@@ -61,7 +61,7 @@ function uygulamaAdi(ad: string) {
     .replace(/\s+\d+(\s*\/\s*\d+)?\s*$/u, "")
     .replace(/\s+/g, " ")
     .trim();
-  return /\buygulama\s*$/i.test(katla(t)) ? t.replace(/uygulama\s*$/iu, (m) => (m[0] === "U" && m[1] === "Y" ? "UYGULAMASI" : "Uygulaması")) : t;
+  return t.replace(/(uygulama)\s*$/iu, (m) => (m === m.toLocaleUpperCase("tr-TR") ? `${m}SI` : `${m}sı`));
 }
 
 /** Bir takvim olayının ait olduğu dilim / ana dal ve devam türü. Sayılmayacaksa null. (Ham ad, birleştirme yok.) */

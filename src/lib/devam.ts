@@ -1,6 +1,6 @@
 import { kisiselUygula } from "@/components/OzelDersler";
 import { addDays, isoDate, startOfWeek } from "./date-utils";
-import { olayKategori, type OlayTuru } from "./dilim";
+import { kategoriHaritasi, type OlayTuru } from "./dilim";
 import { haftaninOlaylari, type DersOlayi, type Ogrenci, type YuklenenVeri } from "./schedule-data";
 import type { Ayarlar } from "./store";
 
@@ -50,8 +50,9 @@ export interface DevamGrubu {
 
 export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>, simdi = new Date()): DevamGrubu[] {
   const m = new Map<string, DevamGrubu>();
+  const kat = kategoriHaritasi(olaylar);
   for (const o of olaylar) {
-    const k = olayKategori(o);
+    const k = kat.get(o.key);
     if (!k) continue;
     const id = `${k.dilim}|${k.tur}`;
     const g = m.get(id) ?? { ...k, dal: k.tur === "uygulama" ? "uygulamalar" : "teorik dersler", yapilan: 0, girilen: 0, toplam: 0, oran: 1 };
