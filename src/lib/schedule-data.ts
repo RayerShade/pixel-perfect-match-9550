@@ -80,13 +80,45 @@ export function dersAdiDuzelt(ad: string): string {
     .trim();
 }
 
-export function dersTuruDuzelt(tur: DersTuru | undefined, ad: string, baglam = ""): DersTuru {
-  const n = programMetniDuzelt(`${tur ?? ""} ${ad} ${baglam}`).toLocaleLowerCase("tr-TR");
-  if (/sınav|sinav|quiz|değerlendirme|degerlendirme/.test(n)) return "sinav";
-  if (/pdö|pdo|pbl|probleme dayalı|probleme dayali/.test(n)) return "pbl";
-  if (/seçmeli|secmeli/.test(n)) return "secmeli";
-  if (/uygulama|laboratuvar|lab\b|pratik|beceri|klinik|staj|atölye|atolye|saha|workshop|practical|simulation/.test(n)) return "pratik";
-  return tur === "pratik" || tur === "pbl" || tur === "secmeli" || tur === "sinav" ? tur : "teorik";
+const katla = (s: string) =>
+  s.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+
+/**
+ * Ders ADI gerçekten bir uygulama/laboratuvar oturumu mu?
+ * "Anatomi Uygulama 3", "UYGULAMA (TELAFİ)", "LABORATORY SKILLS (...)", "Dikiş Düğüm" → evet.
+ * "Psikolojinin Uygulama Alanları", "Tıpta Uygulaması", "Klinik anomaliler", "İletişim Becerileri" → hayır.
+ */
+export function pratikAdMi(ad: string): boolean {
+  const n = katla(ad);
+  return (
+    /^(uygulama|pratik|laboratuvar|laboratory skills|lab\b|practical|skills lab)/.test(n) ||
+    /\b(uygulama|uygulamasi|pratik|lab|laboratuvar|laboratuvari)\s*(\d|\(|\+|-|\/|$)/.test(n) ||
+    /\bpratik\b|\blaboratory skills\b|dikis dugum/.test(n)
+  );
+}
+
+/**
+ * Tür kuralı. `elle` = tür admin tarafından (ya da dosyanın tür sütununda) açıkça verildi → dokunulmaz.
+ * Aksi halde tür yalnız ADDAN çıkarılır; derslik/not içindeki "Uygulama Salonu" gibi sözcükler türü değiştirmez.
+ */
+export function dersTuruDuzelt(tur: DersTuru | undefined, ad: string, baglam = "", elle = false): DersTuru {
+  if (elle && tur) return tur;
+  const a = katla(ad);
+  const n = katla(`${ad} ${baglam}`);
+  if (/sinav|quiz|\bexam\b|degerlendirme/.test(a)) return "sinav";
+  if (/\bpdo\b|\bpbl\b|probleme dayali/.test(a)) return "pbl";
+  if (/secmeli|elective/.test(n)) return "secmeli";
+  if (pratikAdMi(ad)) return "pratik";
+  return tur === "secmeli" || tur === "sinav" || tur === "pbl" ? tur : "teorik";
+}
+
+/** Uygulama tablosundaki her satır varsayılan olarak uygulamadır. */
+export function uygulamaTuru(u: { tur?: DersTuru | undefined; ad: string; turElle?: boolean | undefined }): DersTuru {
+  if (u.turElle && u.tur) return u.tur;
+  const a = katla(u.ad);
+  if (/sinav|\bexam\b/.test(a)) return "sinav";
+  if (/\bpdo\b|\bpbl\b|probleme dayali/.test(a)) return "pbl";
+  return "pratik";
 }
 
 /** Adminin mevcut dosyayı yeniden yüklemeden temizlemesi için güvenli normalize işlemi. */
