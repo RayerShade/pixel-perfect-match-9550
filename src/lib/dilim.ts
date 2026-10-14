@@ -56,12 +56,18 @@ const katla = (s: string) =>
 
 /** Uygulama dal adı: "Anatomi Uygulama 12 / 21" → "Anatomi Uygulaması". */
 function uygulamaAdi(ad: string) {
+  // "LABORATORY SKILLS (HISTOLOGY AND EMBRYOLOGY 1) - i1" → "Histology And Embryology — Laboratory Skills"
+  const lab = ad.match(/^laboratory skills\s*(?:repeat\s*)?\(([^)]+)\)/i);
+  if (lab && !/telafi|repeat/i.test(lab[1]!)) return `${baslikYap(lab[1]!.replace(/\s*\d+\s*$/, ""))} — Laboratory Skills`;
   const t = ad
-    .replace(/\s*\((telafi|repeat)\)\s*$/i, "")
+    .replace(/\s*\+\s*telafi.*$/iu, "")
+    .replace(/\s*-\s*telafi.*$/iu, "")
+    .replace(/\s*\(.*\)\s*$/u, "")
     .replace(/\s+\d+(\s*\/\s*\d+)?\s*$/u, "")
     .replace(/\s+/g, " ")
     .trim();
-  return t.replace(/(uygulama)\s*$/iu, (m) => (m === m.toLocaleUpperCase("tr-TR") ? `${m}SI` : `${m}sı`));
+  const r = t.replace(/(uygulama)\s*$/iu, (m) => (m === m.toLocaleUpperCase("tr-TR") ? `${m}SI` : `${m}sı`));
+  return /^uygulamas[ıi]$/iu.test(r) ? "Genel uygulama" : r;
 }
 
 /** Bir takvim olayının ait olduğu dilim / ana dal ve devam türü. Sayılmayacaksa null. (Ham ad, birleştirme yok.) */
@@ -166,6 +172,21 @@ export function kategoriHaritasi(olaylar: DersOlayi[]): Map<string, Kategori | n
       const bul = [...bilinen].find(([kk]) => benzer(kk, ip, true));
       if (ip && bul) k.dilim = bul[1];
     }
+  }
+  // Dilimi bulunamayanlar: aynı gün (yoksa aynı hafta) en çok görülen dilime alınır.
+  const gun = new Map<string, Map<string, number>>();
+  const ekle = (k: string, d: string) => { const m = gun.get(k) ?? new Map(); m.set(d, (m.get(d) ?? 0) + 1); gun.set(k, m); };
+  const haftaK = (o: DersOlayi) => { const t = new Date(o.date); t.setDate(t.getDate() - ((t.getDay() + 6) % 7)); return `h${t.toDateString()}`; };
+  for (const o of olaylar) {
+    const k = ham.get(o.key);
+    if (k && !SABIT.has(k.dilim)) { ekle(o.date.toDateString(), k.dilim); ekle(haftaK(o), k.dilim); }
+  }
+  const enCok = (m?: Map<string, number>) => (m ? [...m].sort((a, b) => b[1] - a[1])[0]?.[0] : undefined);
+  for (const o of olaylar) {
+    const k = ham.get(o.key);
+    if (k?.dilim !== DIGER) continue;
+    const d = enCok(gun.get(o.date.toDateString())) ?? enCok(gun.get(haftaK(o)));
+    if (d) k.dilim = d;
   }
   // Ana dallar: aynı dilim + tür içinde birleştir.
   const grup = new Map<string, Kategori[]>();
