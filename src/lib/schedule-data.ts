@@ -464,6 +464,31 @@ export function aktifDersler(veri?: YuklenenVeri): Ders[] {
     .map((d) => ({ ...d, courseType: dersTuruDuzelt(d.courseType, d.courseName, `${d.notes} ${d.defaultClassroom}`, d.turElle) }));
 }
 
+/**
+ * Uygulama tablosundaki okunabilir satırlar. Tekrarlı grup harfi olanlar (not hücresi) atılır.
+ * Yılı yanlış yazılmış tarihler (ör. dönem Eylül 2026'da başlarken "21.05.2026") bir yıl ileri alınır;
+ * yine programın dışında kalıyorsa satır atılır.
+ */
+const _gecerliCache = new WeakMap<object, UygulamaOlayi[]>();
+export function gecerliUygulamalar(veri?: YuklenenVeri): UygulamaOlayi[] {
+  const liste = veri?.uygulamalar;
+  if (!liste?.length) return [];
+  const c = _gecerliCache.get(liste);
+  if (c) return c;
+  const tarihler = (veri?.dersler ?? []).map((d) => d.date).filter((t): t is string => Boolean(t)).sort();
+  const ilk = tarihler[0], son = tarihler[tarihler.length - 1];
+  const out = liste
+    .filter((u) => new Set(u.gruplar).size === u.gruplar.length)
+    .map((u) => {
+      if (!ilk || !son || !u.date || u.date >= ilk) return u;
+      const ileri = `${Number(u.date.slice(0, 4)) + 1}${u.date.slice(4)}`;
+      return ileri >= ilk && ileri <= son ? { ...u, date: ileri, id: `${u.id}-y` } : null;
+    })
+    .filter((u): u is UygulamaOlayi => u !== null);
+  _gecerliCache.set(liste, out);
+  return out;
+}
+
 /** Yalnız "telafi" olan genel uygulama satırı (konusu yazmayan). */
 const SAF_TELAFI = /^(uygulama|laboratory skills)\s*[(+\-]?\s*(telafi|telafİ|repeat)\s*\)?\s*$/iu;
 
@@ -572,7 +597,7 @@ export function haftaninOlaylari(
 ): DersOlayi[] {
   const mondayIso = isoDate(monday);
   // Tekrarlı grup harfi olan kayıtlar (ör. not/açıklama hücresinden yanlış okunmuş "G A A F D…") gerçek oturum değildir.
-  const uyg = ogrenci && veri?.uygulamalar?.length ? veri.uygulamalar.filter((u) => new Set(u.gruplar).size === u.gruplar.length) : null;
+  const uyg = ogrenci && veri?.uygulamalar?.length ? gecerliUygulamalar(veri) : null;
   // Uygulama tablosunda kayıt olan tüm günlerde genel "UYGULAMA" satırı gizlenir (eski davranış)
   const uygTarihleri = new Set(uyg?.map((u) => u.date));
   const pazar = isoDate(addDays(monday, 6));
@@ -623,7 +648,7 @@ export function haftaninOlaylari(
 
   // Saf telafi satırı ("UYGULAMA (TELAFİ)", "LABORATORY SKILLS (Telafi)") ile aynı saatteki uygulama tablosu
   // oturumları aslında o telafinin içeriğidir: tek olayda birleştir, hangi uygulama + hangi gruplar açıklamaya yazılır.
-  const tumUyg = (veri?.uygulamalar ?? []).filter((u) => new Set(u.gruplar).size === u.gruplar.length);
+  const tumUyg = gecerliUygulamalar(veri);
   const birlesenUyg = new Set<string>();
   const telafiDersler = yillikDersler.map((d) => {
     if (!d.date || d.date < mondayIso || d.date > pazar || !SAF_TELAFI.test(d.courseName.trim())) return d;

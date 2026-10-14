@@ -1,7 +1,7 @@
 import { kisiselUygula } from "@/components/OzelDersler";
 import { addDays, isoDate, startOfWeek } from "./date-utils";
 import { kategoriHaritasi, type OlayTuru } from "./dilim";
-import { haftaninOlaylari, type DersOlayi, type Ogrenci, type YuklenenVeri } from "./schedule-data";
+import { gecerliUygulamalar, haftaninOlaylari, type DersOlayi, type Ogrenci, type YuklenenVeri } from "./schedule-data";
 import type { Ayarlar } from "./store";
 
 export type { OlayTuru };
@@ -16,14 +16,14 @@ export function tumOlaylar(
 ): DersOlayi[] {
   const tarihler = [
     ...(veri?.dersler ?? []).map((d) => d.date).filter((t): t is string => Boolean(t)),
-    ...(veri?.uygulamalar ?? []).map((u) => u.date).filter(Boolean),
+    ...gecerliUygulamalar(veri).map((u) => u.date).filter(Boolean),
   ].sort();
   if (!tarihler.length) return [];
   let hafta = startOfWeek(new Date(`${tarihler[0]}T00:00:00`));
   const son = new Date(`${tarihler[tarihler.length - 1]}T00:00:00`);
   const ilk = hafta;
   const out: DersOlayi[] = [];
-  for (let i = 0; hafta <= son && i < 60; i++) {
+  for (let i = 0; hafta <= son && i < 80; i++) {
     out.push(...haftaninOlaylari(hafta, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? [], ayarlar.telafiGoster ?? true));
     hafta = addDays(hafta, 7);
   }
