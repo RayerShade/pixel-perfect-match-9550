@@ -102,11 +102,11 @@ async function bildir(admin: Admin, degisimler: Degisim[], hedef: { donemId?: st
     const ogr = hedef.ogrenciler?.[noMap.get(r.user_id) ?? ""];
     const ilgili = degisimler.filter((d) => !d.gruplar || (ogr ? grubaUyar(d.gruplar, ogr) : false));
     if (!ilgili.length) continue;
-    const ilk = ilgili.slice(0, 5).map((d) => `• ${d.metin}`).join("\n");
+    const detay = ilgili.map((d) => `• ${d.metin}`).join("\n");
     kayitlar.push({
       user_id: r.user_id,
       baslik: `Programında ${ilgili.length} değişiklik var`,
-      metin: (ilk + (ilgili.length > 5 ? `\n…ve ${ilgili.length - 5} değişiklik daha` : "")).slice(0, 2000),
+      metin: detay,
       tur: "program",
       link: "/",
     });
