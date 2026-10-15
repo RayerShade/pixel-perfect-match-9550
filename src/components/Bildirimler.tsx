@@ -117,14 +117,14 @@ export function BildirimZili() {
       ) : null}
       {seciliBildirim ? (
         <div
-          className="fixed inset-0 z-[60] grid place-items-center bg-foreground/45 px-4 py-6"
+          className="fixed inset-0 z-[60] flex min-h-[100dvh] items-center justify-center overflow-y-auto bg-foreground/45 p-3 sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-labelledby="bildirim-baslik"
           onMouseDown={(e) => { if (e.target === e.currentTarget) setSeciliBildirim(null); }}
         >
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface shadow-xl">
-            <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
+          <div className="my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl sm:max-h-[calc(100dvh-3rem)]">
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-5 py-4">
               <div className="min-w-0">
                 <p id="bildirim-baslik" className="text-base font-bold">{seciliBildirim.baslik}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{new Date(seciliBildirim.created_at).toLocaleString("tr-TR")}</p>
@@ -133,10 +133,10 @@ export function BildirimZili() {
                 Kapat
               </button>
             </div>
-            <div className="max-h-[60vh] overflow-y-auto px-5 py-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
               <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{seciliBildirim.metin || "Bu bildirim için ek açıklama yok."}</p>
             </div>
-            <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
+            <div className="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-3">
               {seciliBildirim.link ? (
                 <button
                   onClick={() => { setSeciliBildirim(null); setAcik(false); void nav({ to: seciliBildirim.link! }); }}
