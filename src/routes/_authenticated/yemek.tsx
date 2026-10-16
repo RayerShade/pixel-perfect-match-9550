@@ -23,10 +23,20 @@ function Yemek() {
   const getir = useServerFn(yemekListesiGetir);
   const yil = imlec.getFullYear(), ay = imlec.getMonth() + 1;
   const q = useQuery({ queryKey: ["yemek-listesi", yil, ay], queryFn: () => getir({ data: { yil, ay } }), staleTime: 20 * 60_000 });
+  // Seçili ay değişse bile "Bugün" kartı her zaman bugünün ayındaki resmi menüden okunur.
+  const [bugununAyi] = useState(() => {
+    const simdi = new Date();
+    return { yil: simdi.getFullYear(), ay: simdi.getMonth() + 1 };
+  });
+  const bugunQ = useQuery({
+    queryKey: ["yemek-listesi", bugununAyi.yil, bugununAyi.ay],
+    queryFn: () => getir({ data: bugununAyi }),
+    staleTime: 20 * 60_000,
+  });
   const liste = (q.data?.gunler ?? []).filter((gun) => satirlar(gun, ogun).length);
   const [bugun, setBugun] = useState("");
   useEffect(() => setBugun(isoDate(new Date())), []);
-  const bugunKaydi = (q.data?.gunler ?? []).find((gun) => gun.tarih === bugun);
+  const bugunKaydi = (bugunQ.data?.gunler ?? []).find((gun) => gun.tarih === bugun);
   const bugunSatirlar = bugunKaydi ? satirlar(bugunKaydi, ogun) : [];
 
   return (
@@ -55,7 +65,7 @@ function Yemek() {
             </button>
           ))}
         </div>
-        {!q.isLoading && !q.isError && bugun ? (
+        {!bugunQ.isLoading && !bugunQ.isError && bugun ? (
           <div className={`mt-4 rounded-xl border p-3 ${bugunSatirlar.length ? "border-primary/40 bg-primary/5" : "border-border bg-accent/40"}`}>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Bugün</span>
