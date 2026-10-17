@@ -504,6 +504,7 @@ function HedefSecici({ hedef, onDegis }: { hedef: Hedef; onDegis: (h: Hedef) => 
           <select className={giris} value={hedef.dil} onChange={(e) => onDegis({ ...hedef, dil: e.target.value as "tr" | "en" | "" })}>
             <option value="">Türkçe + İngilizce</option><option value="tr">Türkçe</option><option value="en">İngilizce</option>
           </select>
+          <input className={giris} value={hedef.grup ?? ""} onChange={(e) => onDegis({ ...hedef, grup: e.target.value })} placeholder="Grup (isteğe bağlı)" />
         </div>
       ) : null}
       {hedef.tip === "secili" ? (
@@ -606,6 +607,13 @@ function Duyuru() {
   const [d, setD] = useState<DuyuruVeri | null>(null);
   const [hedef, setHedef] = useState<Hedef | null>(null);
   const [bekle, setBekle] = useState(false);
+  const [planli, setPlanli] = useState(false);
+  const [yayinZamani, setYayinZamani] = useState("");
+  const planlar = useQuery({
+    queryKey: ["planli-duyurular"],
+    queryFn: async () => (((await (supabase.from("duyuru_planlari" as never) as any).select("*").eq("durum", "bekliyor").order("yayin_zamani")).data ?? []) as { id: string; baslik: string; metin: string; yayin_zamani: string; hedef: Hedef }[]),
+    enabled: mod === "bildirim",
+  });
   const v = d ?? q.data ?? { metin: "", tur: "bilgi", aktif: false };
   const h: Hedef = hedef ?? v.hedef ?? { tip: "herkes" };
   const hedefGecersiz = h.tip === "secili" && h.kullanicilar.length === 0;
@@ -633,6 +641,20 @@ function Duyuru() {
     if (error) { hata(error); return; }
     toast.success(`Bildirim ${data ?? 0} kişiye gönderildi`); setBaslik(""); setD({ ...v, metin: "" }); void qc.invalidateQueries({ queryKey: ["bildirim-gecmis"] });
   };
+  const planla = async () => {
+    const zaman = new Date(yayinZamani);
+    if (!yayinZamani || Number.isNaN(zaman.getTime()) || zaman.getTime() <= Date.now()) { toast.error("Gelecekte bir yayın zamanı seç."); return; }
+    setBekle(true);
+    const { error } = await (supabase.from("duyuru_planlari" as never) as any).insert({ baslik: baslik.trim(), metin: v.metin.trim(), hedef: h, yayin_zamani: zaman.toISOString() });
+    setBekle(false);
+    if (error) { hata(error); return; }
+    toast.success("Duyuru planlandı"); setBaslik(""); setD({ ...v, metin: "" }); setYayinZamani(""); setPlanli(false); void planlar.refetch();
+  };
+  const planIptal = async (id: string) => {
+    const { error } = await (supabase.from("duyuru_planlari" as never) as any).update({ durum: "iptal" }).eq("id", id);
+    if (error) { hata(error); return; }
+    toast.success("Planlanan duyuru iptal edildi"); void planlar.refetch();
+  };
   return (
     <Kart baslik="Duyuru ve bildirim">
       <div className="mb-3 flex flex-wrap gap-1.5">
@@ -651,7 +673,11 @@ function Duyuru() {
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {mod === "bildirim" ? (
-          <button className={ana} disabled={bekle || !baslik.trim() || hedefGecersiz} onClick={() => void gonder()}>{bekle ? "Gönderiliyor…" : "Gönder"}</button>
+          <>
+            <label className="inline-flex items-center gap-1.5 text-xs"><input type="checkbox" checked={planli} onChange={(e) => setPlanli(e.target.checked)} /> İleri bir tarihe planla</label>
+            {planli ? <input type="datetime-local" value={yayinZamani} onChange={(e) => setYayinZamani(e.target.value)} className={giris} /> : null}
+            <button className={ana} disabled={bekle || !baslik.trim() || hedefGecersiz || (planli && !yayinZamani)} onClick={() => void (planli ? planla() : gonder())}>{bekle ? "Kaydediliyor…" : planli ? "Planla" : "Gönder"}</button>
+          </>
         ) : (
           <>
             <select value={v.tur} onChange={(e) => setD({ ...v, tur: e.target.value as DuyuruVeri["tur"] })} className={giris}><option value="bilgi">Bilgi</option><option value="uyari">Uyarı</option></select>
@@ -662,6 +688,13 @@ function Duyuru() {
           </>
         )}
       </div>
+      {mod === "bildirim" && planlar.data?.length ? <div className="mt-5 border-t border-border pt-4">
+        <h3 className="mb-2 text-sm font-semibold">Planlanan duyurular</h3>
+        <ul className="space-y-2">{planlar.data.map((p) => <li key={p.id} className="flex items-start gap-3 rounded-lg bg-accent p-3">
+          <div className="min-w-0 flex-1"><p className="text-sm font-semibold">{p.baslik}</p><p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{p.metin}</p><p className="mt-1 text-[11px] text-muted-foreground">{tarih(p.yayin_zamani)}</p></div>
+          <button className={btn} onClick={() => void planIptal(p.id)}>İptal</button>
+        </li>)}</ul>
+      </div> : null}
       <DuyuruGecmisi mod={mod} />
     </Kart>
   );
