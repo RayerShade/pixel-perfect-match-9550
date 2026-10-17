@@ -65,13 +65,13 @@ function Takvim() {
   const { secili: secmeliler } = useSecmeliler();
   const { manuel, ata } = useManuelAmfiler();
   const { ayarlar } = useAyarlar();
-  const { veri } = useYuklenenVeri();
-
-  const monday = useMemo(() => startOfWeek(imlec), [imlec]);
   const gorunenGunler = useMemo(
     () => Array.from({ length: ayarlar.haftaSonuGoster ? 7 : 5 }, (_, i) => addDays(monday, i)),
     [monday, ayarlar.haftaSonuGoster],
   );
+  const { veri } = useYuklenenVeri();
+
+  const monday = useMemo(() => startOfWeek(imlec), [imlec]);
   const ogrenci = useMemo(() => ogrenciBul(veri, ayarlar.ogrenciNo ?? "", ayarlar.grupElle), [veri, ayarlar.ogrenciNo, ayarlar.grupElle]);
   const olaylar = useMemo(
     () =>
