@@ -106,8 +106,50 @@ export type Database = {
           },
         ]
       }
+      destek_ekleri: {
+        Row: {
+          ad: string
+          boyut: number
+          content_type: string
+          created_at: string
+          id: string
+          talep_id: string
+          user_id: string
+          yol: string
+        }
+        Insert: {
+          ad: string
+          boyut: number
+          content_type?: string
+          created_at?: string
+          id?: string
+          talep_id: string
+          user_id?: string
+          yol: string
+        }
+        Update: {
+          ad?: string
+          boyut?: number
+          content_type?: string
+          created_at?: string
+          id?: string
+          talep_id?: string
+          user_id?: string
+          yol?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "destek_ekleri_talep_id_fkey"
+            columns: ["talep_id"]
+            isOneToOne: false
+            referencedRelation: "destek_talepleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       destek_talepleri: {
         Row: {
+          aciklama: string
           created_at: string
           durum: string
           id: string
@@ -117,6 +159,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          aciklama?: string
           created_at?: string
           durum?: string
           id?: string
@@ -126,6 +169,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          aciklama?: string
           created_at?: string
           durum?: string
           id?: string
