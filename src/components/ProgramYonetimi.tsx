@@ -1,7 +1,7 @@
 import { SheetsTusu, type SheetsTur } from "@/components/SheetsTusu";
 import { SheetsTakip } from "@/components/SheetsTakip";
 import { ProgramTakvim } from "@/components/ProgramTakvim";
-import { UygulamaToplu, VeriKontrol } from "@/components/VeriKontrol";
+import { AiAsistan, UygulamaToplu, VeriKontrol } from "@/components/VeriKontrol";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarRange, FlaskConical, Pencil, Plus, Save, Trash2, Upload, Users } from "lucide-react";
@@ -405,6 +405,7 @@ export function ProgramYonetimi() {
               </div>
 
               <VeriKontrol dersler={prog.dersler ?? []} uygulamalar={prog.uygulamalar ?? []} onDegis={(p) => guncelle(p)} />
+              <AiAsistan dersler={prog.dersler ?? []} uygulamalar={prog.uygulamalar ?? []} onDegis={(p) => guncelle(p)} />
 
               {bolum === "dersler" ? (
                 <ProgramTakvim
