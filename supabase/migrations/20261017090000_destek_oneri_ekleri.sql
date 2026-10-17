@@ -1,5 +1,7 @@
 -- Destek / öneri ayrımı ve güvenli görsel ekleri
 UPDATE public.destek_talepleri SET tur = 'destek' WHERE tur = 'sikayet';
+ALTER TABLE public.destek_talepleri
+  ADD COLUMN IF NOT EXISTS aciklama text NOT NULL DEFAULT '' CHECK (char_length(aciklama) <= 4000);
 ALTER TABLE public.destek_talepleri DROP CONSTRAINT IF EXISTS destek_talepleri_tur_check;
 ALTER TABLE public.destek_talepleri
   ADD CONSTRAINT destek_talepleri_tur_check CHECK (tur IN ('destek', 'oneri'));
