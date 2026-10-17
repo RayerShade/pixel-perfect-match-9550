@@ -60,7 +60,7 @@ function KrokiTusu() {
     <>
       <button type="button" onClick={() => setAcik(true)} className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-4 text-left hover:border-primary">
         <MapPinned className="h-5 w-5 shrink-0 text-primary" />
-        <span className="flex-1"><span className="block text-sm font-semibold">Dersim nerede?</span><span className="block text-xs text-muted-foreground">Fakülte krokisini ve amfi listesini aç</span></span>
+        <span className="flex-1"><span className="block text-sm font-semibold">Dersim nerede?</span><span className="block text-xs text-muted-foreground">Fakülte Krokisi</span></span>
       </button>
       {acik ? <div role="dialog" aria-modal="true" aria-label="Fakülte krokisi" className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-3" onClick={() => setAcik(false)}>
         <div className="relative max-h-[92vh] w-full max-w-5xl overflow-auto rounded-2xl bg-background p-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
