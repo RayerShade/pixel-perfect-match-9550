@@ -3,7 +3,7 @@ import { useAyarlar } from "@/lib/store";
 import { useState } from "react";
 import { CircleHelp } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { TalepListesi, TalepSohbet, YeniTalep, useTalepler } from "@/components/Destek";
+import { TalepListesi, TalepSohbet, TalepTuruSecici, YeniTalep, useTalepler, type Talep } from "@/components/Destek";
 
 export const Route = createFileRoute("/_authenticated/destek")({
   head: () => ({
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/destek")({
       { title: "Destek — Tıp Ders Programı" },
       { name: "description", content: "Sorun bildir, öneri veya şikayet talebi aç." },
       { property: "og:title", content: "Destek — Tıp Ders Programı" },
-      { property: "og:description", content: "Destek, öneri ve şikayet talepleri." },
+      { property: "og:description", content: "Destek al veya önerini ilet." },
     ],
   }),
   component: DestekSayfasi,
@@ -20,15 +20,21 @@ export const Route = createFileRoute("/_authenticated/destek")({
 function DestekSayfasi() {
   const { liste, yenile } = useTalepler();
   const [secili, setSecili] = useState<string | null>(null);
-  const talep = liste.find((t) => t.id === secili);
+  const [akim, setAkim] = useState<Talep["tur"] | null>(null);
+  const destekler = liste.filter((t) => t.tur === "destek");
+  const talep = destekler.find((t) => t.id === secili);
+  const olustu = async (id: string) => {
+    await yenile();
+    if (akim === "destek") setSecili(id);
+    setAkim(null);
+  };
   return (
-    <AppShell baslik="Destek" aciklama="Sorun, öneri veya şikayet talebi aç.">
+    <AppShell baslik="Destek" aciklama="Destek al veya önerini ilet.">
       <div className="mx-auto max-w-3xl space-y-4 p-4 pb-28">
-        <p className="text-sm text-muted-foreground">Yaşadığın sorunları, önerilerini veya şikayetlerini buradan ilet. Cevaplar bu sayfada görünür.</p>
+        {akim ? <YeniTalep tur={akim} onOlustu={olustu} vazgec={() => setAkim(null)} /> : <TalepTuruSecici sec={setAkim} />}
         <TanitimTusu />
-        <div data-tur="yeni-talep"><YeniTalep onOlustu={async (id) => { await yenile(); setSecili(id); }} /></div>
-        <h2 className="font-semibold">Taleplerim</h2>
-        <TalepListesi liste={liste} secili={secili} sec={setSecili} />
+        <div className="flex items-center justify-between"><h2 className="font-semibold">Destek taleplerim</h2><button onClick={() => setAkim("destek")} className="text-xs font-semibold text-primary hover:underline">Yeni destek talebi</button></div>
+        <TalepListesi liste={destekler} secili={secili} sec={setSecili} />
         {talep && <TalepSohbet talep={talep} yonetici={false} onDegisti={yenile} />}
       </div>
     </AppShell>
