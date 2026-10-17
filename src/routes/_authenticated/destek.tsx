@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CircleHelp, MapPinned, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { TalepListesi, TalepSohbet, TalepTuruSecici, YeniTalep, useTalepler, type Talep } from "@/components/Destek";
+import krokiUrl from "@/assets/WhatsApp Image 2026-10-17 at 03.22.17.jpeg";
 
 export const Route = createFileRoute("/_authenticated/destek")({
   head: () => ({
@@ -65,7 +66,7 @@ function KrokiTusu() {
         <div className="relative max-h-[92vh] w-full max-w-5xl overflow-auto rounded-2xl bg-background p-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
           <div className="mb-2 flex items-center gap-2"><MapPinned className="h-5 w-5 text-primary" /><h2 className="font-semibold">İstanbul Tıp Fakültesi krokisi</h2><button aria-label="Krokiyi kapat" onClick={() => setAcik(false)} className="ml-auto rounded-md p-2 hover:bg-accent"><X className="h-5 w-5" /></button></div>
           <p className="mb-3 text-xs text-muted-foreground">Amfi ve derslik isimleri krokideki amfi listesiyle birlikte gösterilir.</p>
-          <img src="https://raw.githubusercontent.com/RayerShade/pixel-perfect-match-9550/main/src/assets/WhatsApp%20Image%202026-10-17%20at%2003.22.17.jpeg" alt="İstanbul Tıp Fakültesi kroki ve amfi listesi" className="h-auto w-full rounded-lg border border-border" />
+          <img src={krokiUrl} alt="İstanbul Tıp Fakültesi kroki ve amfi listesi" className="h-auto w-full rounded-lg border border-border" />
         </div>
       </div> : null}
     </>
