@@ -353,14 +353,22 @@ export function ProgramYonetimi() {
                           if (k === "dersler") {
                             const dersler = await yillikProgramOku(f);
                             if (!dersler.length) throw new Error("Ders bulunamadı.");
+                            const eksik = dersler.filter((d) => !d.defaultClassroom.trim()).length;
+                            const adlar = new Set(dersler.map((d) => d.courseName.trim().toLocaleLowerCase("tr-TR")));
+                            if (!confirm(`Önizleme: ${dersler.length} ders, ${adlar.size} farklı ders adı, ${eksik} amfisi boş kayıt bulundu. Kaydedilsin mi?`)) return;
                             await dosyaKaydet({ dersler, yillikDosya: f.name });
                           } else if (k === "uygulamalar") {
                             const uygulamalar = await uygulamaTablosuOku(f);
                             if (!uygulamalar.length) throw new Error("Uygulama bulunamadı.");
+                            const eksik = uygulamalar.filter((u) => !u.yer.trim() || !u.gruplar.length).length;
+                            if (!confirm(`Önizleme: ${uygulamalar.length} uygulama, ${eksik} yer veya grup bilgisi eksik kayıt bulundu. Kaydedilsin mi?`)) return;
                             await dosyaKaydet({ uygulamalar, uygulamaDosya: f.name });
                           } else {
                             const ogrenciler = await ogrenciListesiOku(f);
-                            if (!Object.keys(ogrenciler).length) throw new Error("Öğrenci bulunamadı.");
+                            const sayi = Object.keys(ogrenciler).length;
+                            if (!sayi) throw new Error("Öğrenci bulunamadı.");
+                            const grubsuz = Object.values(ogrenciler).filter((o) => !o.grup.trim()).length;
+                            if (!confirm(`Önizleme: ${sayi} öğrenci, ${grubsuz} grubu eksik kayıt bulundu. Kaydedilsin mi?`)) return;
                             await dosyaKaydet({ ogrenciler, ogrenciDosya: f.name });
                           }
                           setBolum(k);
