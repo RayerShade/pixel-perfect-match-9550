@@ -188,7 +188,7 @@ export function AiAsistan({
       ...dersler.map((d) => { const x = dilimDal(d); return `D|${d.id}|${d.date ?? `gün${d.dayOfWeek}`}|${d.startTime}-${d.endTime}|${kisa(d.courseName, 120)}|${d.courseType}|${x.dilim}|${x.dal}|${kisa(d.defaultClassroom, 40)}|${kisa(d.notes, 80)}`; }),
       ...uygulamalar.map((u) => `U|${u.id}|${u.date}|${u.startTime}-${u.endTime}|${kisa(u.ad, 120)}|${uygulamaTuru(u)}|${kisa(u.dilim, 60)}|${kisa(u.dal ?? "", 60)}|${kisa(u.yer, 40)}|${u.gruplar.join(",")}`),
     ].slice(0, 4000);
-    if (!satirlar.length) return toast.error("Bu programda veri yok.");
+    if (!satirlar.length) { toast.error("Bu programda veri yok."); return; }
     setYukleniyor(true); setSonuc(null);
     try {
       const r = await calistir({ data: { satirlar, talimat: talimat.trim() || undefined } });
