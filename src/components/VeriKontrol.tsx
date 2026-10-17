@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, Sparkles } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { aiVeriDuzelt } from "@/lib/ai-veri.functions";
 import { DIGER, dilimDal, yazimFarklari } from "@/lib/dilim";
 import { DERS_TURU_ETIKET, dersTuruDuzelt, uygulamaTuru, type Ders, type DersTuru, type UygulamaOlayi } from "@/lib/schedule-data";
 
@@ -153,6 +155,138 @@ export function UygulamaToplu({ uygulamalar, onDegis }: { uygulamalar: UygulamaO
           Eşleşenleri sil
         </button>
       </div>
+    </div>
+  );
+}
+
+type AiDegisiklik = {
+  hedef: "ders" | "uygulama"; id: string; islem: "guncelle" | "sil"; neden: string;
+  alanlar: { ad: string | null; tur: DersTuru | null; dilim: string | null; dal: string | null; derslik: string | null; tarih: string | null; baslangic: string | null; bitis: string | null };
+};
+
+/** Admin: yapay zekâ veriyi inceler ya da yazılan talimatı uygular; öneriler önce gösterilir, seçilenler uygulanır (Kaydet'e kadar yayınlanmaz). */
+export function AiAsistan({
+  dersler,
+  uygulamalar,
+  onDegis,
+}: {
+  dersler: Ders[];
+  uygulamalar: UygulamaOlayi[];
+  onDegis: (p: { dersler?: Ders[]; uygulamalar?: UygulamaOlayi[] }) => void;
+}) {
+  const calistir = useServerFn(aiVeriDuzelt);
+  const [talimat, setTalimat] = useState("");
+  const [yukleniyor, setYukleniyor] = useState(false);
+  const [sonuc, setSonuc] = useState<{ ozet: string; liste: AiDegisiklik[] } | null>(null);
+  const [secili, setSecili] = useState<Set<number>>(new Set());
+  const dMap = useMemo(() => new Map(dersler.map((d) => [d.id, d])), [dersler]);
+  const uMap = useMemo(() => new Map(uygulamalar.map((u) => [u.id, u])), [uygulamalar]);
+  const kisa = (s: string, n: number) => (s ?? "").replace(/[|\n\r]+/g, " ").slice(0, n);
+
+  const baslat = async () => {
+    const satirlar = [
+      ...dersler.map((d) => { const x = dilimDal(d); return `D|${d.id}|${d.date ?? `gün${d.dayOfWeek}`}|${d.startTime}-${d.endTime}|${kisa(d.courseName, 120)}|${d.courseType}|${x.dilim}|${x.dal}|${kisa(d.defaultClassroom, 40)}|${kisa(d.notes, 80)}`; }),
+      ...uygulamalar.map((u) => `U|${u.id}|${u.date}|${u.startTime}-${u.endTime}|${kisa(u.ad, 120)}|${uygulamaTuru(u)}|${kisa(u.dilim, 60)}|${kisa(u.dal ?? "", 60)}|${kisa(u.yer, 40)}|${u.gruplar.join(",")}`),
+    ].slice(0, 4000);
+    if (!satirlar.length) return toast.error("Bu programda veri yok.");
+    setYukleniyor(true); setSonuc(null);
+    try {
+      const r = await calistir({ data: { satirlar, talimat: talimat.trim() || undefined } });
+      if (!r.ok) { toast.error(r.mesaj); return; }
+      const liste = r.degisiklikler.filter((c) => (c.hedef === "ders" ? dMap.has(c.id) : uMap.has(c.id)));
+      setSonuc({ ozet: r.ozet, liste });
+      setSecili(new Set(liste.map((_, i) => i)));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Yapay zekâ isteği başarısız.");
+    } finally { setYukleniyor(false); }
+  };
+
+  const etiket = (c: AiDegisiklik) => {
+    const a = c.alanlar; const p: string[] = [];
+    if (c.hedef === "ders") {
+      const d = dMap.get(c.id)!; const x = dilimDal(d);
+      if (a.ad != null) p.push(`ad: ${d.courseName} → ${a.ad}`);
+      if (a.tur) p.push(`tür: ${DERS_TURU_ETIKET[d.courseType]} → ${DERS_TURU_ETIKET[a.tur]}`);
+      if (a.dilim != null) p.push(`dilim: ${x.dilim} → ${a.dilim}`);
+      if (a.dal != null) p.push(`ana dal: ${x.dal} → ${a.dal}`);
+      if (a.derslik != null) p.push(`derslik: ${d.defaultClassroom || "—"} → ${a.derslik}`);
+      if (a.tarih) p.push(`tarih: ${d.date ?? "—"} → ${a.tarih}`);
+      if (a.baslangic || a.bitis) p.push(`saat: ${d.startTime}-${d.endTime} → ${a.baslangic ?? d.startTime}-${a.bitis ?? d.endTime}`);
+      return { baslik: `${d.date ?? ""} ${d.startTime} ${d.courseName}`, p };
+    }
+    const u = uMap.get(c.id)!;
+    if (a.ad != null) p.push(`ad: ${u.ad || "—"} → ${a.ad}`);
+    if (a.tur) p.push(`tür: ${DERS_TURU_ETIKET[uygulamaTuru(u)]} → ${DERS_TURU_ETIKET[a.tur]}`);
+    if (a.dilim != null) p.push(`dilim: ${u.dilim || "—"} → ${a.dilim}`);
+    if (a.dal != null) p.push(`ana dal: ${u.dal || "—"} → ${a.dal}`);
+    if (a.derslik != null) p.push(`yer: ${u.yer || "—"} → ${a.derslik}`);
+    if (a.tarih) p.push(`tarih: ${u.date} → ${a.tarih}`);
+    if (a.baslangic || a.bitis) p.push(`saat: ${u.startTime}-${u.endTime} → ${a.baslangic ?? u.startTime}-${a.bitis ?? u.endTime}`);
+    return { baslik: `${u.date} ${u.startTime} ${u.ad} (uygulama)`, p };
+  };
+
+  const uygula = () => {
+    if (!sonuc) return;
+    const sec = sonuc.liste.filter((_, i) => secili.has(i));
+    const dS = new Map(sec.filter((c) => c.hedef === "ders").map((c) => [c.id, c]));
+    const uS = new Map(sec.filter((c) => c.hedef === "uygulama").map((c) => [c.id, c]));
+    const yeniD = dersler.flatMap((d) => {
+      const c = dS.get(d.id); if (!c) return [d];
+      if (c.islem === "sil") return [];
+      const a = c.alanlar;
+      return [{ ...d, ...(a.ad != null ? { courseName: a.ad } : {}), ...(a.tur ? { courseType: a.tur, turElle: true } : {}), ...(a.dilim != null ? { dilim: a.dilim } : {}), ...(a.dal != null ? { dal: a.dal } : {}), ...(a.derslik != null ? { defaultClassroom: a.derslik } : {}), ...(a.tarih ? { date: a.tarih } : {}), ...(a.baslangic ? { startTime: a.baslangic } : {}), ...(a.bitis ? { endTime: a.bitis } : {}) }];
+    });
+    const yeniU = uygulamalar.flatMap((u) => {
+      const c = uS.get(u.id); if (!c) return [u];
+      if (c.islem === "sil") return [];
+      const a = c.alanlar;
+      return [{ ...u, ...(a.ad != null ? { ad: a.ad } : {}), ...(a.tur ? { tur: a.tur, turElle: true } : {}), ...(a.dilim != null ? { dilim: a.dilim } : {}), ...(a.dal != null ? { dal: a.dal } : {}), ...(a.derslik != null ? { yer: a.derslik } : {}), ...(a.tarih ? { date: a.tarih } : {}), ...(a.baslangic ? { startTime: a.baslangic } : {}), ...(a.bitis ? { endTime: a.bitis } : {}) }];
+    });
+    onDegis({ dersler: yeniD, uygulamalar: yeniU });
+    toast.success(`${sec.length} değişiklik uygulandı. Kontrol edip Kaydet'e bas.`);
+    setSonuc(null);
+  };
+
+  return (
+    <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">
+      <p className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="h-4 w-4 text-primary" /> Yapay zekâ asistanı</p>
+      <p className="text-muted-foreground">Boş bırakırsan bu programdaki hataları arar. Ya da ne düzeltmesini istediğini yaz (örn. "12 Ekim'deki mikroskop uygulamasının dilimini Hücre yap"). Değişiklikler önce sana gösterilir.</p>
+      <textarea className={`${girdi} min-h-16 w-full`} placeholder="İsteğe bağlı talimat…" value={talimat} onChange={(e) => setTalimat(e.target.value)} />
+      <button className={tusS} disabled={yukleniyor} onClick={baslat}>
+        {yukleniyor ? <><Loader2 className="mr-1 inline h-3 w-3 animate-spin" />Yapay zekâ inceliyor…</> : talimat.trim() ? "Talimatı uygula" : "Yapay zekâ ile incele"}
+      </button>
+      {sonuc ? (
+        <div className="space-y-2 border-t border-border pt-2">
+          <p>{sonuc.ozet}</p>
+          {!sonuc.liste.length ? <p className="text-muted-foreground">Önerilen değişiklik yok.</p> : (
+            <>
+              <div className="flex gap-3 text-muted-foreground">
+                <button className="underline" onClick={() => setSecili(new Set(sonuc.liste.map((_, i) => i)))}>Tümünü seç</button>
+                <button className="underline" onClick={() => setSecili(new Set())}>Hiçbiri</button>
+              </div>
+              <ul className="max-h-80 space-y-1.5 overflow-auto">
+                {sonuc.liste.map((c, i) => {
+                  const e = etiket(c);
+                  return (
+                    <li key={i} className="flex gap-2 rounded-lg border border-border bg-background p-2">
+                      <input type="checkbox" checked={secili.has(i)} onChange={() => { const s = new Set(secili); if (s.has(i)) s.delete(i); else s.add(i); setSecili(s); }} />
+                      <div className="min-w-0">
+                        <p className="font-semibold">{e.baslik}</p>
+                        {c.islem === "sil" ? <p className="text-destructive">Silinecek</p> : e.p.map((t) => <p key={t}>{t}</p>)}
+                        <p className="text-muted-foreground">{c.neden}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="flex gap-2">
+                <button className={tusS} disabled={!secili.size} onClick={uygula}>Seçilenleri uygula ({secili.size})</button>
+                <button className={tusS} onClick={() => setSonuc(null)}>Vazgeç</button>
+              </div>
+            </>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
