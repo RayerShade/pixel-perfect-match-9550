@@ -68,6 +68,10 @@ function Takvim() {
   const { veri } = useYuklenenVeri();
 
   const monday = useMemo(() => startOfWeek(imlec), [imlec]);
+  const gorunenGunler = useMemo(
+    () => Array.from({ length: ayarlar.haftaSonuGoster ? 7 : 5 }, (_, i) => addDays(monday, i)),
+    [monday, ayarlar.haftaSonuGoster],
+  );
   const ogrenci = useMemo(() => ogrenciBul(veri, ayarlar.ogrenciNo ?? "", ayarlar.grupElle), [veri, ayarlar.ogrenciNo, ayarlar.grupElle]);
   const olaylar = useMemo(
     () =>
@@ -221,19 +225,20 @@ function Takvim() {
         ) : null}
 
         {gorunum === "gun" ? (
-          <div className="mt-3 grid grid-cols-7 gap-1">
-            {Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((g, i) => {
+          <div className={`mt-3 grid gap-1 ${ayarlar.haftaSonuGoster ? "grid-cols-7" : "grid-cols-5"}`}>
+            {gorunenGunler.map((g) => {
               const sec = sameDay(g, imlec);
               const bu = sameDay(g, bugun);
+              const gunIndex = (g.getDay() + 6) % 7;
               return (
                 <button
-                  key={i}
+                  key={isoDate(g)}
                   onClick={() => setImlec(g)}
                   className={`flex flex-col items-center rounded-xl py-1.5 text-xs transition-colors ${
                     sec ? "bg-primary text-primary-foreground" : bu ? "bg-teorik-soft text-teorik" : "text-muted-foreground hover:bg-accent"
                   }`}
                 >
-                  <span className="font-medium">{GUN_KISA[i]}</span>
+                  <span className="font-medium">{GUN_KISA[gunIndex]}</span>
                   <span className="text-base font-bold">{g.getDate()}</span>
                 </button>
               );
