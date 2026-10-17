@@ -699,26 +699,32 @@ function Yedek() {
 function DestekYonetim() {
   const { liste, yenile } = useTalepler();
   const [secili, setSecili] = useState<string | null>(null);
+  const [tur, setTur] = useState<"destek" | "oneri" | "hepsi">("destek");
   const [filtre, setFiltre] = useState<"acik" | "kapali" | "hepsi">("acik");
   const { data: kisiler } = useQuery({
     queryKey: ["destek-kisiler"],
     queryFn: async () => (await supabase.from("profiles").select("id, ad_soyad, email")).data ?? [],
   });
   const ad = (id: string) => { const p = kisiler?.find((k) => k.id === id); return p ? p.ad_soyad || p.email || "" : ""; };
-  const gorunen = liste.filter((t) => filtre === "hepsi" || t.durum === filtre);
+  const gorunen = liste.filter((t) => (tur === "hepsi" || t.tur === tur) && (tur === "oneri" || filtre === "hepsi" || t.durum === filtre));
   const talep = liste.find((t) => t.id === secili);
   return (
     <div className="grid gap-4 md:grid-cols-[320px_1fr]">
       <div className="space-y-2">
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
+          {([["destek", "Destek"], ["oneri", "Öneriler"], ["hepsi", "Tümü"]] as const).map(([id, ad]) => (
+            <button key={id} onClick={() => { setTur(id); setSecili(null); }} className={tur === id ? ana : btn}>{ad}</button>
+          ))}
+        </div>
+        {tur !== "oneri" ? <div className="flex gap-1">
           {(["acik", "kapali", "hepsi"] as const).map((f) => (
             <button key={f} onClick={() => setFiltre(f)} className={filtre === f ? ana : btn}>{f === "acik" ? "Açık" : f === "kapali" ? "Kapalı" : "Hepsi"}</button>
           ))}
           <button onClick={() => void yenile()} className={btn}><RefreshCw className="h-3 w-3" /></button>
-        </div>
+        </div> : <p className="text-xs text-muted-foreground">Öneriler tek yönlüdür; öğrenci yanıt veya geçmiş görmez.</p>}
         <TalepListesi liste={gorunen} secili={secili} sec={setSecili} ekstra={(t) => ad(t.user_id)} />
       </div>
-      {talep ? <TalepSohbet talep={talep} yonetici onDegisti={yenile} /> : <p className="text-sm text-muted-foreground">Bir talep seç.</p>}
+      {talep ? <TalepSohbet talep={talep} yonetici onDegisti={yenile} /> : <p className="text-sm text-muted-foreground">Bir kayıt seç.</p>}
     </div>
   );
 }
