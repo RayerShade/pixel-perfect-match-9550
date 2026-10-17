@@ -1,7 +1,7 @@
 /** Duyuru / bildirim hedef kitlesi. */
 export type Hedef =
   | { tip: "herkes" }
-  | { tip: "donem"; donemId: string; dil: "tr" | "en" | "" }
+  | { tip: "donem"; donemId: string; dil: "tr" | "en" | ""; grup?: string }
   | { tip: "secili"; kullanicilar: string[] };
 
 export function hedefeUyar(h: Hedef | undefined, userId: string | undefined, donemId?: string, dil?: string) {
