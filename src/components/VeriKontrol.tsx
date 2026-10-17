@@ -8,6 +8,7 @@ import { DERS_TURU_ETIKET, dersTuruDuzelt, uygulamaTuru, type Ders, type DersTur
 
 const girdi = "rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs";
 const tusS = "rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold hover:bg-accent disabled:opacity-40";
+const dakika = (s: string) => { const [h, m] = s.split(":").map(Number); return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : NaN; };
 
 /** Admin: dosyadan gelen yazım farklarını, yanlış türleri ve dilimsiz dersleri gösterir; tek tuşla düzeltir. */
 export function VeriKontrol({
@@ -26,9 +27,25 @@ export function VeriKontrol({
     const turDegisen = dersler.filter((d) => dersTuruDuzelt(d.courseType, d.courseName, `${d.notes} ${d.defaultClassroom}`, d.turElle) !== d.courseType);
     const uygTur = uygulamalar.filter((u) => uygulamaTuru(u) !== (u.tur ?? "pratik"));
     const dilimsiz = dersler.filter((d) => dilimDal(d).dilim === DIGER && d.courseType !== "sinav" && d.courseType !== "secmeli");
-    return { dilimFark: yazimFarklari(dilimler, true), dalFark: yazimFarklari(dallar, false), turDegisen, uygTur, dilimsiz };
+    const eksikler = [
+      ...dersler.filter((d) => !d.defaultClassroom.trim()).map((d) => ({ tur: "Amfisi yok", ad: d.courseName, zaman: d.date ?? `Gün ${d.dayOfWeek}` })),
+      ...uygulamalar.filter((u) => !u.yer.trim()).map((u) => ({ tur: "Yeri yok", ad: u.ad, zaman: u.date })),
+      ...uygulamalar.filter((u) => !u.gruplar.length).map((u) => ({ tur: "Grubu belirsiz", ad: u.ad, zaman: u.date })),
+      ...dersler.filter((d) => !Number.isFinite(dakika(d.startTime)) || !Number.isFinite(dakika(d.endTime)) || dakika(d.startTime) >= dakika(d.endTime)).map((d) => ({ tur: "Saat geçersiz", ad: d.courseName, zaman: d.date ?? `Gün ${d.dayOfWeek}` })),
+      ...uygulamalar.filter((u) => !Number.isFinite(dakika(u.startTime)) || !Number.isFinite(dakika(u.endTime)) || dakika(u.startTime) >= dakika(u.endTime)).map((u) => ({ tur: "Saat geçersiz", ad: u.ad, zaman: u.date })),
+    ];
+    const yerler = [
+      ...dersler.filter((d) => d.defaultClassroom.trim()).map((d) => ({ ad: d.courseName, yer: d.defaultClassroom.trim().toLocaleLowerCase("tr"), tarih: d.date ?? `gun-${d.dayOfWeek}`, bas: dakika(d.startTime), bit: dakika(d.endTime) })),
+      ...uygulamalar.filter((u) => u.yer.trim()).map((u) => ({ ad: u.ad, yer: u.yer.trim().toLocaleLowerCase("tr"), tarih: u.date, bas: dakika(u.startTime), bit: dakika(u.endTime) })),
+    ];
+    const cakismalar: { yer: string; tarih: string; dersler: string[] }[] = [];
+    for (let i = 0; i < yerler.length; i++) for (let j = i + 1; j < yerler.length; j++) {
+      const a = yerler[i], b = yerler[j];
+      if (a.yer === b.yer && a.tarih === b.tarih && a.bas < b.bit && b.bas < a.bit) cakismalar.push({ yer: a.yer, tarih: a.tarih, dersler: [a.ad, b.ad] });
+    }
+    return { dilimFark: yazimFarklari(dilimler, true), dalFark: yazimFarklari(dallar, false), turDegisen, uygTur, dilimsiz, eksikler, cakismalar };
   }, [dersler, uygulamalar]);
-  const sorun = rapor.dilimFark.length + rapor.dalFark.length + rapor.turDegisen.length + rapor.uygTur.length;
+  const sorun = rapor.dilimFark.length + rapor.dalFark.length + rapor.turDegisen.length + rapor.uygTur.length + rapor.eksikler.length + rapor.cakismalar.length;
 
   const dilimBirlestir = () => {
     const m = new Map<string, string>();
@@ -71,6 +88,15 @@ export function VeriKontrol({
       </button>
       {acik ? (
         <div className="space-y-3 border-t border-border p-3 text-xs">
+          <section>
+            <p className="font-semibold">Derslik ve zaman uyarıları ({rapor.eksikler.length + rapor.cakismalar.length})</p>
+            {!rapor.eksikler.length && !rapor.cakismalar.length ? <p className="text-muted-foreground">Eksik alan veya amfi çakışması yok.</p> : null}
+            <ul className="mt-1 max-h-40 space-y-0.5 overflow-auto">
+              {rapor.eksikler.map((x, i) => <li key={`e-${i}`}><b className="text-destructive">{x.tur}</b> · {x.zaman} · {x.ad}</li>)}
+              {rapor.cakismalar.map((x, i) => <li key={`c-${i}`}><b className="text-destructive">Amfi çakışması</b> · {x.tarih} · {x.yer}: {x.dersler.join(" / ")}</li>)}
+            </ul>
+            <p className="mt-1 text-muted-foreground">Satırları aşağıdaki ders/uygulama tablolarından düzenleyip Kaydet'e bas.</p>
+          </section>
           <section>
             <p className="font-semibold">Aynı dilim / ana dalın farklı yazımları</p>
             {!rapor.dilimFark.length && !rapor.dalFark.length ? <p className="text-muted-foreground">Yok.</p> : null}
