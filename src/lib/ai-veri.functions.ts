@@ -57,16 +57,23 @@ export const aiVeriDuzelt = createServerFn({ method: "POST" })
       .object({
         satirlar: z.array(z.string().max(400)).min(1).max(4000),
         talimat: z.string().max(2000).optional(),
+        saglayici: z.enum(["lovable", "deepseek"]).default("lovable"),
+        dsModel: z.enum(["deepseek-chat", "deepseek-reasoner"]).default("deepseek-chat"),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!admin) throw new Error("Bu işlem için admin yetkisi gerekli.");
+    const girdi = `${data.talimat?.trim() ? `ADMİN TALİMATI: ${data.talimat.trim()}` : "ADMİN TALİMATI: yok — tüm veriyi incele."}\n\nVERİ:\n${data.satirlar.join("\n")}`;
+    let metin = "";
+    if (data.saglayici === "deepseek") {
+      const ds = await deepseekCagir(girdi, data.dsModel);
+      if (!ds.ok) return ds;
+      metin = ds.metin;
+    } else {
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { ok: false as const, mesaj: "Yapay zekâ anahtarı tanımlı değil." };
-
-    const girdi = `${data.talimat?.trim() ? `ADMİN TALİMATI: ${data.talimat.trim()}` : "ADMİN TALİMATI: yok — tüm veriyi incele."}\n\nVERİ:\n${data.satirlar.join("\n")}`;
     let r: Response;
     try {
       r = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
@@ -103,7 +110,7 @@ export const aiVeriDuzelt = createServerFn({ method: "POST" })
 
     const reader = r.body.getReader();
     const dec = new TextDecoder();
-    let tampon = "", metin = "", hata = "";
+    let tampon = "", hata = "";
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -123,6 +130,7 @@ export const aiVeriDuzelt = createServerFn({ method: "POST" })
       }
     }
     if (hata) return { ok: false as const, mesaj: `Yapay zekâ isteği başarısız: ${hata}` };
+    }
     if (!metin.trim()) return { ok: false as const, mesaj: "Yapay zekâ bir yanıt üretmedi." };
     const sema = z.object({
       ozet: z.string(),
@@ -141,10 +149,69 @@ export const aiVeriDuzelt = createServerFn({ method: "POST" })
       ).max(200),
     });
     try {
-      const p = sema.safeParse(JSON.parse(metin));
+      const temiz = metin.trim().replace(/^```(?:json)?\s*/i, "").replace(/```$/, "");
+      const p = sema.safeParse(JSON.parse(temiz));
       if (!p.success) return { ok: false as const, mesaj: "Yapay zekâ geçersiz bir yanıt döndürdü." };
       return { ok: true as const, ...p.data };
     } catch {
       return { ok: false as const, mesaj: "Yapay zekâ yanıtı okunamadı." };
     }
   });
+
+const DS_EK = `\n\nYanıtı YALNIZCA şu biçimde geçerli bir JSON nesnesi olarak ver (başka metin yok):
+{"ozet":"...","degisiklikler":[{"hedef":"ders"|"uygulama","id":"...","islem":"guncelle"|"sil","neden":"...","alanlar":{"ad":null,"tur":null,"dilim":null,"dal":null,"derslik":null,"tarih":null,"baslangic":null,"bitis":null}}]}
+"alanlar" içindeki 8 anahtarın hepsi her zaman olsun; değişmeyenler null. tur yalnız teorik|pratik|pbl|secmeli|sinav|null.`;
+
+async function deepseekCagir(girdi: string, model: string): Promise<{ ok: true; metin: string } | { ok: false; mesaj: string }> {
+  const key = process.env["DEEPSEEK_API_KEY"];
+  if (!key) return { ok: false, mesaj: "DeepSeek API anahtarı tanımlı değil." };
+  let r: Response;
+  try {
+    r = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model,
+        stream: true,
+        max_tokens: 8000,
+        ...(model === "deepseek-chat" ? { response_format: { type: "json_object" } } : {}),
+        messages: [
+          { role: "system", content: SISTEM + DS_EK },
+          { role: "user", content: girdi + "\n\nYanıtı json olarak ver." },
+        ],
+      }),
+    });
+  } catch {
+    return { ok: false, mesaj: "DeepSeek servisine ulaşılamadı." };
+  }
+  if (!r.ok || !r.body) {
+    const durum: Record<number, string> = {
+      401: "DeepSeek API anahtarı geçersiz.",
+      402: "DeepSeek bakiyen yetersiz. DeepSeek hesabına bakiye yükleyip tekrar dene.",
+      429: "DeepSeek'e çok sık istek gönderildi, biraz bekleyip tekrar dene.",
+    };
+    return { ok: false, mesaj: durum[r.status] ?? `DeepSeek hata verdi (${r.status}).` };
+  }
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let tampon = "", metin = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    tampon += dec.decode(value, { stream: true });
+    let i;
+    while ((i = tampon.indexOf("\n")) >= 0) {
+      const satir = tampon.slice(0, i).trim();
+      tampon = tampon.slice(i + 1);
+      if (!satir.startsWith("data:")) continue;
+      const v = satir.slice(5).trim();
+      if (!v || v === "[DONE]") continue;
+      try {
+        const e = JSON.parse(v) as { choices?: { delta?: { content?: string | null } }[] };
+        const c = e.choices?.[0]?.delta?.content;
+        if (c) metin += c;
+      } catch { /* parça */ }
+    }
+  }
+  return { ok: true, metin };
+}

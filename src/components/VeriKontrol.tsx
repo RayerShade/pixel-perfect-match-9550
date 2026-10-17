@@ -176,6 +176,8 @@ export function AiAsistan({
 }) {
   const calistir = useServerFn(aiVeriDuzelt);
   const [talimat, setTalimat] = useState("");
+  const [saglayici, setSaglayici] = useState<"lovable" | "deepseek">("lovable");
+  const [dsModel, setDsModel] = useState<"deepseek-chat" | "deepseek-reasoner">("deepseek-chat");
   const [yukleniyor, setYukleniyor] = useState(false);
   const [sonuc, setSonuc] = useState<{ ozet: string; liste: AiDegisiklik[] } | null>(null);
   const [secili, setSecili] = useState<Set<number>>(new Set());
@@ -191,7 +193,7 @@ export function AiAsistan({
     if (!satirlar.length) { toast.error("Bu programda veri yok."); return; }
     setYukleniyor(true); setSonuc(null);
     try {
-      const r = await calistir({ data: { satirlar, talimat: talimat.trim() || undefined } });
+      const r = await calistir({ data: { satirlar, talimat: talimat.trim() || undefined, saglayici, dsModel } });
       if (!r.ok) { toast.error(r.mesaj); return; }
       const liste = r.degisiklikler.filter((c) => (c.hedef === "ders" ? dMap.has(c.id) : uMap.has(c.id)));
       setSonuc({ ozet: r.ozet, liste });
@@ -251,6 +253,19 @@ export function AiAsistan({
     <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">
       <p className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="h-4 w-4 text-primary" /> Yapay zekâ asistanı</p>
       <p className="text-muted-foreground">Boş bırakırsan bu programdaki hataları arar. Ya da ne düzeltmesini istediğini yaz (örn. "12 Ekim'deki mikroskop uygulamasının dilimini Hücre yap"). Değişiklikler önce sana gösterilir.</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="text-muted-foreground">Yapay zekâ:</label>
+        <select className={girdi} value={saglayici} onChange={(e) => setSaglayici(e.target.value as "lovable" | "deepseek")}>
+          <option value="lovable">Lovable AI (kredi)</option>
+          <option value="deepseek">DeepSeek (kendi bakiyen)</option>
+        </select>
+        {saglayici === "deepseek" ? (
+          <select className={girdi} value={dsModel} onChange={(e) => setDsModel(e.target.value as "deepseek-chat" | "deepseek-reasoner")}>
+            <option value="deepseek-chat">DeepSeek Chat (hızlı)</option>
+            <option value="deepseek-reasoner">DeepSeek Reasoner (düşünerek)</option>
+          </select>
+        ) : null}
+      </div>
       <textarea className={`${girdi} min-h-16 w-full`} placeholder="İsteğe bağlı talimat…" value={talimat} onChange={(e) => setTalimat(e.target.value)} />
       <button className={tusS} disabled={yukleniyor} onClick={baslat}>
         {yukleniyor ? <><Loader2 className="mr-1 inline h-3 w-3 animate-spin" />Yapay zekâ inceliyor…</> : talimat.trim() ? "Talimatı uygula" : "Yapay zekâ ile incele"}
