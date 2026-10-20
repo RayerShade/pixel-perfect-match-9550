@@ -180,6 +180,42 @@ export type Database = {
         }
         Relationships: []
       }
+      duyuru_planlari: {
+        Row: {
+          baslik: string
+          created_at: string
+          durum: string
+          gonderildi_at: string | null
+          hedef: Json
+          id: string
+          metin: string
+          olusturan: string | null
+          yayin_zamani: string
+        }
+        Insert: {
+          baslik: string
+          created_at?: string
+          durum?: string
+          gonderildi_at?: string | null
+          hedef?: Json
+          id?: string
+          metin: string
+          olusturan?: string | null
+          yayin_zamani: string
+        }
+        Update: {
+          baslik?: string
+          created_at?: string
+          durum?: string
+          gonderildi_at?: string | null
+          hedef?: Json
+          id?: string
+          metin?: string
+          olusturan?: string | null
+          yayin_zamani?: string
+        }
+        Relationships: []
+      }
       global_data: {
         Row: {
           anahtar: string
