@@ -8,7 +8,7 @@ import { DERS_TURU_ETIKET, dersTuruDuzelt, uygulamaTuru, type Ders, type DersTur
 
 const girdi = "rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs";
 const tusS = "rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold hover:bg-accent disabled:opacity-40";
-const dakika = (s: string) => { const [h, m] = s.split(":").map(Number); return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : NaN; };
+const dakika = (s: string) => { const [h = NaN, m = NaN] = s.split(":").map(Number); return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : NaN; };
 
 /** Admin: dosyadan gelen yazım farklarını, yanlış türleri ve dilimsiz dersleri gösterir; tek tuşla düzeltir. */
 export function VeriKontrol({
@@ -41,7 +41,7 @@ export function VeriKontrol({
     const cakismalar: { yer: string; tarih: string; dersler: string[] }[] = [];
     for (let i = 0; i < yerler.length; i++) for (let j = i + 1; j < yerler.length; j++) {
       const a = yerler[i], b = yerler[j];
-      if (a.yer === b.yer && a.tarih === b.tarih && a.bas < b.bit && b.bas < a.bit) cakismalar.push({ yer: a.yer, tarih: a.tarih, dersler: [a.ad, b.ad] });
+      if (a && b && a.yer === b.yer && a.tarih === b.tarih && a.bas < b.bit && b.bas < a.bit) cakismalar.push({ yer: a.yer, tarih: a.tarih, dersler: [a.ad, b.ad] });
     }
     return { dilimFark: yazimFarklari(dilimler, true), dalFark: yazimFarklari(dallar, false), turDegisen, uygTur, dilimsiz, eksikler, cakismalar };
   }, [dersler, uygulamalar]);
