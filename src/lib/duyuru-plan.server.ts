@@ -5,11 +5,11 @@ type Hedef = { tip?: "herkes" | "donem" | "secili"; donemId?: string; dil?: stri
 function hedefeUyar(ayarlar: Record<string, unknown>, userId: string, hedef: Hedef) {
   if (hedef.tip === "secili") return (hedef.kullanicilar ?? []).includes(userId);
   if (hedef.tip !== "donem") return true;
-  if (hedef.donemId && ayarlar.donemId !== hedef.donemId) return false;
-  if (hedef.dil && ayarlar.dil !== hedef.dil) return false;
+  if (hedef.donemId && ayarlar["donemId"] !== hedef.donemId) return false;
+  if (hedef.dil && ayarlar["dil"] !== hedef.dil) return false;
   if (hedef.grup) {
-    const elle = ayarlar.grupElle as { grup?: string } | undefined;
-    if ((elle?.grup ?? ayarlar.grup) !== hedef.grup) return false;
+    const elle = ayarlar["grupElle"] as { grup?: string } | undefined;
+    if ((elle?.grup ?? ayarlar["grup"]) !== hedef.grup) return false;
   }
   return true;
 }
