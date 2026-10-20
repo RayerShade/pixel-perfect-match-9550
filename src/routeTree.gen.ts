@@ -20,6 +20,7 @@ import { Route as AuthenticatedDestekRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authenticated/secmeliler'
 import { Route as AuthenticatedSunucuRouteImport } from './routes/_authenticated/sunucu'
 import { Route as AuthenticatedYemekRouteImport } from './routes/_authenticated/yemek'
+import { Route as ApiPublicDuyuruPlanlariniGonderRouteImport } from './routes/api/public/duyuru-planlarini-gonder'
 import { Route as ApiPublicSheetsKontrolRouteImport } from './routes/api/public/sheets-kontrol'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -78,6 +79,12 @@ const AuthenticatedYemekRoute = AuthenticatedYemekRouteImport.update({
   path: '/yemek',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicDuyuruPlanlariniGonderRoute =
+  ApiPublicDuyuruPlanlariniGonderRouteImport.update({
+    id: '/api/public/duyuru-planlarini-gonder',
+    path: '/api/public/duyuru-planlarini-gonder',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSheetsKontrolRoute = ApiPublicSheetsKontrolRouteImport.update({
   id: '/api/public/sheets-kontrol',
   path: '/api/public/sheets-kontrol',
@@ -105,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/sunucu': typeof AuthenticatedSunucuRoute
   '/yemek': typeof AuthenticatedYemekRoute
+  '/api/public/duyuru-planlarini-gonder': typeof ApiPublicDuyuruPlanlariniGonderRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -120,6 +128,7 @@ export interface FileRoutesByTo {
   '/sunucu': typeof AuthenticatedSunucuRoute
   '/yemek': typeof AuthenticatedYemekRoute
   '/': typeof AuthenticatedIndexRoute
+  '/api/public/duyuru-planlarini-gonder': typeof ApiPublicDuyuruPlanlariniGonderRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -137,6 +146,7 @@ export interface FileRoutesById {
   '/_authenticated/sunucu': typeof AuthenticatedSunucuRoute
   '/_authenticated/yemek': typeof AuthenticatedYemekRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/api/public/duyuru-planlarini-gonder': typeof ApiPublicDuyuruPlanlariniGonderRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/secmeliler'
     | '/sunucu'
     | '/yemek'
+    | '/api/public/duyuru-planlarini-gonder'
     | '/api/public/sheets-kontrol'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/sunucu'
     | '/yemek'
     | '/'
+    | '/api/public/duyuru-planlarini-gonder'
     | '/api/public/sheets-kontrol'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -185,6 +197,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sunucu'
     | '/_authenticated/yemek'
     | '/_authenticated/'
+    | '/api/public/duyuru-planlarini-gonder'
     | '/api/public/sheets-kontrol'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -194,6 +207,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicDuyuruPlanlariniGonderRoute: typeof ApiPublicDuyuruPlanlariniGonderRoute
   ApiPublicSheetsKontrolRoute: typeof ApiPublicSheetsKontrolRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -278,6 +292,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedYemekRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/duyuru-planlarini-gonder': {
+      id: '/api/public/duyuru-planlarini-gonder'
+      path: '/api/public/duyuru-planlarini-gonder'
+      fullPath: '/api/public/duyuru-planlarini-gonder'
+      preLoaderRoute: typeof ApiPublicDuyuruPlanlariniGonderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sheets-kontrol': {
       id: '/api/public/sheets-kontrol'
       path: '/api/public/sheets-kontrol'
@@ -331,6 +352,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicDuyuruPlanlariniGonderRoute: ApiPublicDuyuruPlanlariniGonderRoute,
   ApiPublicSheetsKontrolRoute: ApiPublicSheetsKontrolRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
