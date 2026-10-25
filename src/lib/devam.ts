@@ -46,6 +46,9 @@ export interface DevamGrubu {
   girilen: number;
   toplam: number;
   oran: number;
+  telafi: number;
+  izinliDevamsizlik: number;
+  kalanHak: number;
 }
 
 export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>, simdi = new Date()): DevamGrubu[] {
@@ -55,18 +58,26 @@ export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>
     const k = kat.get(o.key);
     if (!k) continue;
     const id = `${k.dilim}|${k.tur}`;
-    const g = m.get(id) ?? { ...k, dal: k.tur === "uygulama" ? "uygulamalar" : "teorik dersler", yapilan: 0, girilen: 0, toplam: 0, oran: 1 };
-    g.toplam++;
-    if (gecti(o, simdi)) {
-      g.yapilan++;
-      if (katilim[o.key]) g.girilen++;
+    const g = m.get(id) ?? { ...k, dal: k.tur === "uygulama" ? "uygulamalar" : "teorik dersler", yapilan: 0, girilen: 0, toplam: 0, oran: 1, telafi: 0, izinliDevamsizlik: 0, kalanHak: 0 };
+    const telafi = k.tur === "uygulama" && /telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`);
+    if (telafi) {
+      if (gecti(o, simdi) && katilim[o.key]) g.telafi++;
+    } else {
+      g.toplam++;
+      if (gecti(o, simdi)) {
+        g.yapilan++;
+        if (katilim[o.key]) g.girilen++;
+      }
     }
     m.set(id, g);
   }
   return [...m.values()].map((g) => {
-    const kacan = g.yapilan - g.girilen;
-    const oran = g.toplam ? kacan / g.toplam : 0;
-    return { ...g, oran };
+    // Telafi uygulamasına katılım, aynı dilimde kaçırılmış uygulamayı karşılar; yeni bir zorunlu oturum eklemez.
+    const girilen = Math.min(g.toplam, g.girilen + g.telafi);
+    const kacan = Math.max(0, g.yapilan - girilen);
+    const zorunluOran = g.tur === "uygulama" ? 0.8 : 0.7;
+    const izinliDevamsizlik = Math.max(0, g.toplam - Math.ceil(g.toplam * zorunluOran));
+    return { ...g, girilen, oran: g.toplam ? kacan / g.toplam : 0, izinliDevamsizlik, kalanHak: izinliDevamsizlik - kacan };
   });
 }
 
