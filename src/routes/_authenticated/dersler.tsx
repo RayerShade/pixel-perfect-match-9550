@@ -58,7 +58,7 @@ const bolumSira = (d: { tur: OlayTuru; ad: string }) => (d.tur === "ders" ? 0 : 
 const kisaTarih = (d: Date) => d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", weekday: "short" });
 
 /** Dilim başlığında yalnızca devam sayıları gösterilir; hak/kalma uyarısı yoktur. */
-function DilimSatiri({ os, katilim, tur, devam }: { os: DersOlayi[]; katilim: Record<string, true>; tur: OlayTuru; devam?: DevamGrubu }) {
+function DilimSatiri({ os, katilim, tur, devam }: { os: DersOlayi[]; katilim: Record<string, true>; tur: OlayTuru; devam?: DevamGrubu | undefined }) {
   if (!os.length) return null;
   const yapilan = os.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
@@ -70,7 +70,7 @@ function DilimSatiri({ os, katilim, tur, devam }: { os: DersOlayi[]; katilim: Re
 function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
   return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
 }
-function Istatistik({ olaylar, katilim, devam }: { olaylar: DersOlayi[]; katilim: Record<string, true>; devam?: DevamGrubu }) {
+function Istatistik({ olaylar, katilim, devam }: { olaylar: DersOlayi[]; katilim: Record<string, true>; devam?: DevamGrubu | undefined }) {
   const yapilan = olaylar.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
   const girdi = devam?.girilen ?? girilen;
