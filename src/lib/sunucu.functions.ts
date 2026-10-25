@@ -198,7 +198,8 @@ export const kullaniciOlustur = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({
     email: z.string().email().max(200),
-    sifre: z.string().min(6).max(100),
+    sifre: z.string().min(1).max(100),
+    dil: z.enum(["tr", "en"]).default("tr"),
     adSoyad: z.string().max(100).default(""),
     ogrenciNo: z.string().max(30).default(""),
   }).parse(d))
@@ -206,13 +207,13 @@ export const kullaniciOlustur = createServerFn({ method: "POST" })
     const db = await yetkili(context as never);
     const { data: u, error } = await db.auth.admin.createUser({
       email: data.email, password: data.sifre, email_confirm: true,
-      user_metadata: { ad_soyad: data.adSoyad, ogrenci_no: data.ogrenciNo },
+      user_metadata: { ad_soyad: data.adSoyad, ogrenci_no: data.ogrenciNo, dil: data.dil },
     });
     if (error) throw new Error(error.message);
     const id = u.user.id;
     await logla(context, "Kullanıcı oluşturuldu", data.email);
     await db.from("profiles").upsert({ id, email: data.email, ad_soyad: data.adSoyad, ogrenci_no: data.ogrenciNo }, { onConflict: "id" });
-    await db.from("user_data").upsert({ user_id: id }, { onConflict: "user_id" });
+    await db.from("user_data").upsert({ user_id: id, ayarlar: { dil: data.dil, dilElle: true } }, { onConflict: "user_id" });
     return { id };
   });
 
@@ -221,7 +222,8 @@ export const kullaniciDuzenle = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({
     userId: z.string().uuid(),
     email: z.string().email().max(200).optional(),
-    sifre: z.string().min(6).max(100).optional().or(z.literal("")),
+    sifre: z.string().min(1).max(100).optional().or(z.literal("")),
+    dil: z.enum(["tr", "en"]).optional(),
     adSoyad: z.string().max(100).optional(),
     ogrenciNo: z.string().max(30).optional(),
     grup: z.string().max(50).optional(),
@@ -248,11 +250,12 @@ export const kullaniciDuzenle = createServerFn({ method: "POST" })
       }, { onConflict: "id" });
       if (error) throw new Error(error.message);
     }
-    if (data.grup !== undefined || data.altGrup !== undefined) {
+    if (data.grup !== undefined || data.altGrup !== undefined || data.dil !== undefined) {
       const { data: mevcut } = await db.from("user_data").select("ayarlar").eq("user_id", data.userId).maybeSingle();
       const ayarlar = { ...((mevcut?.ayarlar ?? {}) as Record<string, unknown>) };
       const grup = (data.grup ?? "").trim();
-      ayarlar["grupElle"] = grup ? { grup, altGrup: (data.altGrup ?? "").trim() } : null;
+      if (data.grup !== undefined || data.altGrup !== undefined) ayarlar["grupElle"] = grup ? { grup, altGrup: (data.altGrup ?? "").trim() } : null;
+      if (data.dil !== undefined) { ayarlar["dil"] = data.dil; ayarlar["dilElle"] = true; }
       const { error } = await db.from("user_data").upsert({ user_id: data.userId, ayarlar: ayarlar as never }, { onConflict: "user_id" });
       if (error) throw new Error(error.message);
     }
