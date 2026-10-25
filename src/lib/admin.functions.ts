@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { adminYeniSifreSemasi } from "./admin-sifre";
 
 async function logla(userId: string, islem: string, detay = "") {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -56,7 +57,7 @@ export const hesapOlustur = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z.object({
       email: z.string().trim().email().max(255),
-      sifre: z.string().min(6).max(72),
+      sifre: adminYeniSifreSemasi,
       adSoyad: z.string().trim().min(1).max(100),
       ogrenciNo: z.string().trim().max(30),
     }).parse(d),
@@ -65,9 +66,11 @@ export const hesapOlustur = createServerFn({ method: "POST" })
     const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!admin) throw new Error("Bu işlem için admin yetkisi gerekli.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { adminYeniSifreHash } = await import("./admin-sifre.server");
+    const passwordHash = await adminYeniSifreHash(data.sifre);
     const { data: yeni, error } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
-      password: data.sifre,
+      password_hash: passwordHash,
       email_confirm: true,
       user_metadata: { ad_soyad: data.adSoyad, ogrenci_no: data.ogrenciNo },
     });

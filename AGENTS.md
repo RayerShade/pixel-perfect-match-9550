@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
+- New admin-created accounts use server-side bcrypt and the Auth admin password-hash import API after role verification; ordinary signup and all later password changes retain the global Auth password policies.
 - Data lives in Lovable Cloud; localStorage is only a per-session cache filled by `src/lib/bulut.ts` on sign-in — keeps existing hooks unchanged.
 - Weekly amfi + genel seçmeli are global (`global_data` keys `amfi`/`secmeli`); yearly program, uygulama, öğrenci list are per dönem+dil (`global_data` key `program:<donemId>:<tr|en>`, list in key `donemler`, anon may read only `donemler` for signup) — students never upload.
 - Student personal data (settings incl. donemId/dil, own lessons `ozelDersler`, overrides `dersDuzenleri`, choices) lives in `user_data`; overrides are applied client-side by `kisiselUygula` after schedule generation.

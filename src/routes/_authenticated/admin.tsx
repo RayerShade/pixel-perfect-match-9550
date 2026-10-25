@@ -364,7 +364,7 @@ function YeniHesap({ onOlustu }: { onOlustu: () => void }) {
           <input className={girdi} placeholder="Ad soyad" required value={f.adSoyad} onChange={(e) => setF({ ...f, adSoyad: e.target.value })} />
           <input className={girdi} placeholder="Öğrenci no" value={f.ogrenciNo} onChange={(e) => setF({ ...f, ogrenciNo: e.target.value })} />
           <input className={girdi} type="email" placeholder="E-posta" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
-          <input className={girdi} type="text" placeholder="Şifre (en az 6 karakter)" minLength={6} required value={f.sifre} onChange={(e) => setF({ ...f, sifre: e.target.value })} />
+          <input className={girdi} type="password" autoComplete="new-password" placeholder="Şifre" required value={f.sifre} onChange={(e) => setF({ ...f, sifre: e.target.value })} />
           <button disabled={bekle} className="rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 sm:col-span-2">
             {bekle ? "Oluşturuluyor…" : "Hesabı oluştur"}
           </button>
