@@ -141,7 +141,7 @@ function AuthSayfasi() {
           ) : null}
           <input className={girdi} type="email" placeholder="E-posta" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           {mod !== "sifre" ? (
-            <input className={girdi} type="password" placeholder="Şifre" minLength={6} autoComplete={mod === "giris" ? "current-password" : "new-password"} value={sifre} onChange={(e) => setSifre(e.target.value)} required />
+            <input className={girdi} type="password" placeholder="Şifre" minLength={mod === "kayit" ? 6 : undefined} autoComplete={mod === "giris" ? "current-password" : "new-password"} value={sifre} onChange={(e) => setSifre(e.target.value)} required />
           ) : null}
           {mod === "giris" ? (
             <label className="flex items-center gap-2 text-sm">
