@@ -195,8 +195,8 @@ function Dersler() {
                                       {[...konuOlaylari].sort((a, b) => a.date.getTime() - b.date.getTime() || a.ders.startTime.localeCompare(b.ders.startTime)).map((o) => {
                                         const gecmis = gecti(o);
                                         return (
+                                          <div key={o.key} className="flex items-center gap-1.5">
                                           <label
-                                            key={o.key}
                                             className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] ${katilim[o.key] ? "border-primary bg-primary/10" : "border-border"} ${gecmis ? "cursor-pointer" : "opacity-50"}`}
                                           >
                                             <input
@@ -208,6 +208,8 @@ function Dersler() {
                                             />
                                             {kisaTarih(o.date)} {o.ders.startTime}
                                           </label>
+                                          {d.tur === "uygulama" ? <label className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] ${katilim[`telafi:${o.key}`] ? "border-primary bg-primary/10" : "border-border"}`}><input type="checkbox" checked={Boolean(katilim[`telafi:${o.key}`])} onChange={(e) => ayarla([`telafi:${o.key}`], e.target.checked)} className="accent-primary" />Telafi</label> : null}
+                                          </div>
                                         );
                                       })}
                                     </div>
