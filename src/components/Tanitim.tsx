@@ -43,7 +43,7 @@ export function Tanitim() {
 
   const vw = typeof window === "undefined" ? 0 : window.innerWidth, vh = typeof window === "undefined" ? 0 : window.innerHeight;
   const W = Math.min(320, vw - 24);
-  const r = kutu ?? new DOMRect(vw / 2 - 1, vh / 2 - 1, 2, 2);
+  const r = kutu ?? { left: vw / 2 - 1, top: vh / 2 - 1, width: 2, height: 2, bottom: vh / 2 + 1 };
   const merkez = r.left + r.width / 2, left = Math.max(12, Math.min(vw - W - 12, merkez - W / 2));
   const altta = r.top + r.height / 2 < vh / 2;
   const konum = altta ? { top: Math.min(r.bottom + 18, vh - 230) } : { bottom: Math.min(vh - r.top + 18, vh - 230) };
