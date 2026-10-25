@@ -208,7 +208,6 @@ function Dersler() {
                                             />
                                             {kisaTarih(o.date)} {o.ders.startTime}
                                           </label>
-                                          {d.tur === "uygulama" ? <label className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] ${katilim[`telafi:${o.key}`] ? "border-primary bg-primary/10" : "border-border"}`}><input type="checkbox" checked={Boolean(katilim[`telafi:${o.key}`])} onChange={(e) => ayarla([`telafi:${o.key}`], e.target.checked)} className="accent-primary" />Telafi</label> : null}
                                         );
                                       })}
                                     </div>
