@@ -58,7 +58,7 @@ const bolumSira = (d: { tur: OlayTuru; ad: string }) => (d.tur === "ders" ? 0 : 
 const kisaTarih = (d: Date) => d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", weekday: "short" });
 
 /** Dilim başlığında yalnızca devam sayıları gösterilir; hak/kalma uyarısı yoktur. */
-function DilimSatiri({ os, katilim, tur, devam }: { os: DersOlayi[]; katilim: Record<string, true>; tur: OlayTuru; devam?: DevamGrubu }) {
+function DilimSatiri({ os, katilim, tur, devam }: { os: DersOlayi[]; katilim: Record<string, true>; tur: OlayTuru; devam?: DevamGrubu | undefined }) {
   if (!os.length) return null;
   const yapilan = os.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
@@ -70,7 +70,7 @@ function DilimSatiri({ os, katilim, tur, devam }: { os: DersOlayi[]; katilim: Re
 function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
   return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
 }
-function Istatistik({ olaylar, katilim, devam }: { olaylar: DersOlayi[]; katilim: Record<string, true>; devam?: DevamGrubu }) {
+function Istatistik({ olaylar, katilim, devam }: { olaylar: DersOlayi[]; katilim: Record<string, true>; devam?: DevamGrubu | undefined }) {
   const yapilan = olaylar.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
   const girdi = devam?.girilen ?? girilen;
@@ -195,8 +195,8 @@ function Dersler() {
                                       {[...konuOlaylari].sort((a, b) => a.date.getTime() - b.date.getTime() || a.ders.startTime.localeCompare(b.ders.startTime)).map((o) => {
                                         const gecmis = gecti(o);
                                         return (
+                                          <div key={o.key} className="flex items-center gap-1.5">
                                           <label
-                                            key={o.key}
                                             className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] ${katilim[o.key] ? "border-primary bg-primary/10" : "border-border"} ${gecmis ? "cursor-pointer" : "opacity-50"}`}
                                           >
                                             <input
@@ -209,6 +209,7 @@ function Dersler() {
                                             {kisaTarih(o.date)} {o.ders.startTime}
                                           </label>
                                           {d.tur === "uygulama" ? <label className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] ${katilim[`telafi:${o.key}`] ? "border-primary bg-primary/10" : "border-border"}`}><input type="checkbox" checked={Boolean(katilim[`telafi:${o.key}`])} onChange={(e) => ayarla([`telafi:${o.key}`], e.target.checked)} className="accent-primary" />Telafi</label> : null}
+                                          </div>
                                         );
                                       })}
                                     </div>
