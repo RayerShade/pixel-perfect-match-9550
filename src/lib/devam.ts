@@ -1,6 +1,6 @@
 import { kisiselUygula } from "@/components/OzelDersler";
 import { addDays, isoDate, startOfWeek } from "./date-utils";
-import { kategoriHaritasi, type OlayTuru } from "./dilim";
+import { kategoriHaritasi, ONLINE_DILIM, SECMELI_DILIM, type OlayTuru } from "./dilim";
 import { gecerliUygulamalar, haftaninOlaylari, type DersOlayi, type Ogrenci, type YuklenenVeri } from "./schedule-data";
 import type { Ayarlar } from "./store";
 
@@ -57,8 +57,9 @@ export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>
   for (const o of olaylar) {
     const k = kat.get(o.key);
     if (!k) continue;
-    const id = `${k.dilim}|${k.tur}`;
-    const g = m.get(id) ?? { ...k, dal: k.tur === "uygulama" ? "uygulamalar" : "teorik dersler", yapilan: 0, girilen: 0, toplam: 0, oran: 1, telafi: 0, izinliDevamsizlik: 0, kalanHak: 0 };
+    const ayriDers = k.dilim === ONLINE_DILIM || k.dilim === SECMELI_DILIM;
+    const id = `${k.dilim}|${k.tur}|${ayriDers ? k.dal : ""}`;
+    const g = m.get(id) ?? { ...k, dal: ayriDers ? k.dal : (k.tur === "uygulama" ? "uygulamalar" : "teorik dersler"), yapilan: 0, girilen: 0, toplam: 0, oran: 1, telafi: 0, izinliDevamsizlik: 0, kalanHak: 0 };
     const telafi = k.tur === "uygulama" && /telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`);
     if (telafi) {
       if (gecti(o, simdi) && katilim[o.key]) g.telafi++;
