@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Check, Eye, EyeOff } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/secmeliler")({
       },
     ],
   }),
+  beforeLoad: () => { throw redirect({ to: "/ayarlar" }); },
   component: Secmeliler,
 });
 
