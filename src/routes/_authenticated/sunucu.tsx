@@ -187,7 +187,7 @@ function Kullanicilar() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     try {
-      await olustur({ data: { email: String(f.get("email") ?? ""), sifre: String(f.get("sifre") ?? ""), adSoyad: String(f.get("ad") ?? ""), ogrenciNo: String(f.get("no") ?? "") } });
+      await olustur({ data: { email: String(f.get("email") ?? ""), sifre: String(f.get("sifre") ?? ""), dil: String(f.get("dil") ?? "tr") as "tr" | "en", adSoyad: String(f.get("ad") ?? ""), ogrenciNo: String(f.get("no") ?? "") } });
       toast.success("Hesap oluşturuldu"); setYeni(false); yenile();
     } catch (err) { hata(err); }
   };
@@ -209,6 +209,7 @@ function Kullanicilar() {
         userId: u.id,
         email: val("email") && val("email") !== u.email ? val("email") : undefined,
         sifre: val("sifre") || undefined,
+        dil: val("dil") as "tr" | "en",
         adSoyad: val("ad") !== (p?.ad_soyad ?? "") ? val("ad") : undefined,
         ogrenciNo: val("no") !== (p?.ogrenci_no ?? "") ? val("no") : undefined,
         grup: grupDegisti ? val("grup") : undefined,
@@ -275,7 +276,8 @@ function Kullanicilar() {
           <input name="ad" placeholder="Ad soyad" className={giris} />
           <input name="no" placeholder="Öğrenci no" className={giris} />
           <input name="email" type="email" required placeholder="E-posta *" className={giris} />
-          <input name="sifre" required minLength={6} placeholder="Şifre (en az 6) *" className={giris} />
+          <input name="sifre" required placeholder="Şifre *" className={giris} />
+          <select name="dil" defaultValue="tr" className={giris}><option value="tr">Türkçe program</option><option value="en">İngilizce program</option></select>
           <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-4">
             <button type="submit" className={ana}>Hesabı oluştur</button>
             <span className="text-xs text-muted-foreground">E-posta otomatik onaylı açılır, öğrenci hemen girebilir.</span>
@@ -345,7 +347,8 @@ function Kullanicilar() {
                     <label className="text-xs">Ad soyad<input name="ad" defaultValue={p?.ad_soyad ?? ""} className={`${giris} mt-0.5 w-full`} /></label>
                     <label className="text-xs">Öğrenci no<input name="no" defaultValue={p?.ogrenci_no ?? ""} className={`${giris} mt-0.5 w-full`} /></label>
                     <label className="text-xs">E-posta<input name="email" type="email" defaultValue={u.email} className={`${giris} mt-0.5 w-full`} /></label>
-                    <label className="text-xs">Yeni şifre (boş = değişmez)<input name="sifre" minLength={6} placeholder="••••••" className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Yeni şifre (boş = değişmez)<input name="sifre" placeholder="••••••" className={`${giris} mt-0.5 w-full`} /></label>
+                    <label className="text-xs">Program dili<select name="dil" defaultValue={String((ayarMap.get(u.id) ?? {})["dil"] ?? "tr")} className={`${giris} mt-0.5 w-full`}><option value="tr">Türkçe</option><option value="en">İngilizce</option></select></label>
                     <label className="text-xs">Grup (boş = listeden otomatik)<input name="grup" defaultValue={String(((ayarMap.get(u.id) ?? {})["grupElle"] as { grup?: string } | null)?.grup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
                     <label className="text-xs">Alt grup<input name="altGrup" defaultValue={String(((ayarMap.get(u.id) ?? {})["grupElle"] as { altGrup?: string } | null)?.altGrup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
                     <div className="flex items-end sm:col-span-3"><button type="submit" className={ana}>Kaydet</button></div>
