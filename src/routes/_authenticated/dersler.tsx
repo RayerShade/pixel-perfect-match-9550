@@ -6,7 +6,7 @@ import { ogrenciBul, type DersOlayi } from "@/lib/schedule-data";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 import { useKatilim } from "@/lib/katilim";
 import { ONLINE_DILIM, SECMELI_DILIM, kategoriHaritasi, type OlayTuru } from "@/lib/dilim";
-import { gecti, tumOlaylar } from "@/lib/devam";
+import { devamHesapla, gecti, tumOlaylar, type DevamGrubu } from "@/lib/devam";
 
 export const Route = createFileRoute("/_authenticated/dersler")({
   head: () => ({
@@ -58,7 +58,7 @@ const bolumSira = (d: { tur: OlayTuru; ad: string }) => (d.tur === "ders" ? 0 : 
 const kisaTarih = (d: Date) => d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", weekday: "short" });
 
 /** Dilim başlığında yalnızca devam sayıları gösterilir; hak/kalma uyarısı yoktur. */
-function DilimSatiri({ os, katilim, tur }: { os: DersOlayi[]; katilim: Record<string, true>; tur: OlayTuru }) {
+function DilimSatiri({ os, katilim, tur, devam }: { os: DersOlayi[]; katilim: Record<string, true>; tur: OlayTuru; devam?: DevamGrubu }) {
   if (!os.length) return null;
   const yapilan = os.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
@@ -66,7 +66,8 @@ function DilimSatiri({ os, katilim, tur }: { os: DersOlayi[]; katilim: Record<st
   const ad = tur === "uygulama" ? "Uygulama" : "Teorik";
   return (
     <span className="block text-[11px] text-muted-foreground">
-      {yapilan.length ? `${ad}: ${girilen}/${yapilan.length} girildi · kaçırılan ${kacan}` : `${ad}: ${os.length} oturum · henüz başlamadı`}
+      {yapilan.length ? `${ad}: ${devam?.girilen ?? girilen}/${yapilan.length} girildi · kaçırılan ${Math.max(0, (devam ? yapilan - devam.girilen : kacan))}` : `${ad}: ${os.length} oturum · henüz başlamadı`}
+      {devam?.toplam ? <span className={`ml-1 font-semibold ${devam.kalanHak < 0 ? "text-destructive" : "text-primary"}`}>· kalan devamsızlık hakkı {Math.max(0, devam.kalanHak)}/{devam.izinliDevamsizlik}{devam.telafi ? ` · ${devam.telafi} telafi sayıldı` : ""}</span> : null}
     </span>
   );
 }
@@ -74,6 +75,7 @@ function DilimSatiri({ os, katilim, tur }: { os: DersOlayi[]; katilim: Record<st
 function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
   return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
 }
+function telafiOlaylari(dl: Dilim) { return [...dl.dallar.values()].filter(telafiDal).flatMap((d) => [...d.konular.values()].flat()); }
 function Istatistik({ olaylar, katilim }: { olaylar: DersOlayi[]; katilim: Record<string, true> }) {
   const yapilan = olaylar.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
@@ -116,6 +118,8 @@ function Dersler() {
   const ogrenci = useMemo(() => ogrenciBul(veri, ayarlar.ogrenciNo ?? "", ayarlar.grupElle), [veri, ayarlar.ogrenciNo, ayarlar.grupElle]);
   const olaylar = useMemo(() => tumOlaylar(veri, secili, manuel, ogrenci, ayarlar), [veri, secili, manuel, ogrenci, ayarlar]);
   const agac = useMemo(() => agacKur(olaylar), [olaylar]);
+  const devam = useMemo(() => devamHesapla(olaylar, katilim), [olaylar, katilim]);
+  const devamBul = (dilim: string, tur: OlayTuru) => devam.find((x) => x.dilim === dilim && x.tur === tur);
   const q = arama.toLocaleLowerCase("tr-TR").trim();
   const uyar = (s: string) => !q || s.toLocaleLowerCase("tr-TR").includes(q);
 
@@ -139,10 +143,11 @@ function Dersler() {
         {agac.map((dl) => {
           const dallar = [...dl.dallar.values()]
             .map((d) => ({ ...d, liste: [...d.konular.entries()].filter(([ad, os]) => uyar(`${dl.ad} ${d.ad} ${ad} ${os[0]?.ders.instructor ?? ""}`)) }))
-            .filter((d) => d.liste.length)
+            .filter((d) => d.liste.length && !telafiDal(d))
             .sort((a, b) => bolumSira(a) - bolumSira(b) || a.ad.localeCompare(b.ad, "tr"));
           if (!dallar.length) return null;
           const tumu = dallar.flatMap((d) => d.liste.flatMap(([, os]) => os));
+          const telafiler = telafiOlaylari(dl);
           const acikDl = acik.has(dl.ad) || Boolean(q);
           let sonTur: string | null = null;
           return (
@@ -154,14 +159,15 @@ function Dersler() {
                     <p className="flex items-center gap-2 font-bold">
                       <span className="truncate">{dl.ad}</span>
                     </p>
-                    <DilimSatiri os={dilimOlaylari(dl, "ders")} katilim={katilim} tur="ders" />
-                    <DilimSatiri os={dilimOlaylari(dl, "uygulama")} katilim={katilim} tur="uygulama" />
+                    <DilimSatiri os={dilimOlaylari(dl, "ders").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="ders" devam={devamBul(dl.ad, "ders")} />
+                    <DilimSatiri os={dilimOlaylari(dl, "uygulama").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="uygulama" devam={devamBul(dl.ad, "uygulama")} />
                   </div>
                 </button>
                 <TopluTus olaylar={tumu} katilim={katilim} ayarla={ayarla} />
               </div>
               {acikDl ? (
                 <div className="space-y-2 border-t border-border px-3 pb-3 pt-3">
+                  {telafiler.length ? <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-3"><p className="text-xs font-semibold text-primary">Telafi katılımı</p><p className="mt-0.5 text-[11px] text-muted-foreground">Telafiye girdiğini işaretlersen aynı dilimdeki uygulama devamına katılmış olarak sayılır.</p><div className="mt-2 flex flex-wrap gap-1.5">{telafiler.sort((a, b) => a.date.getTime() - b.date.getTime()).map((o) => { const gecmis = gecti(o); return <label key={o.key} className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] ${katilim[o.key] ? "border-primary bg-primary/10" : "border-border"} ${gecmis ? "cursor-pointer" : "opacity-50"}`}><input type="checkbox" disabled={!gecmis} checked={Boolean(katilim[o.key])} onChange={(e) => ayarla([o.key], e.target.checked)} className="accent-primary" />Telafiye girdim · {kisaTarih(o.date)} {o.ders.startTime}</label>; })}</div></div> : null}
                   {dallar.map((d) => {
                     const dalKey = `${dl.ad}|${d.tur}|${d.ad}`;
                     const os = d.liste.flatMap(([, x]) => x);
