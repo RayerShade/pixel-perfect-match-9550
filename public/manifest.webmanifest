@@ -1,0 +1,14 @@
+{
+  "name": "İstanbul Tıp Ders Takvimi",
+  "short_name": "Ders Takvimi",
+  "description": "İstanbul Tıp Fakültesi ders programı ve amfi takvimi.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f1d38",
+  "lang": "tr",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -6,6 +6,7 @@ import { DIL_ETIKET } from "@/lib/program";
 import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/store";
 import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
 import { SecmeliSecici } from "@/components/SecmeliSecici";
+import { PwaKurulum } from "@/components/PwaKurulum";
 
 
 export const Route = createFileRoute("/_authenticated/ayarlar")({
@@ -197,6 +198,8 @@ function Ayarlar() {
           </label>
           <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="mt-4 w-full rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">Seçmeli derslerini seç</button>
         </section>
+
+        <PwaKurulum />
 
         <section className="rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-bold">Veri</h2>
