@@ -19,3 +19,9 @@ $$;
 
 revoke all on function public.sheets_cron_token_dogrula(text) from public;
 grant execute on function public.sheets_cron_token_dogrula(text) to service_role;
+
+
+alter table public.sheets_kaynaklari
+  add column if not exists kontrol_tipi text not null default 'aralik' check (kontrol_tipi in ('aralik', 'gunluk', 'haftalik')),
+  add column if not exists saatler jsonb not null default '[]'::jsonb,
+  add column if not exists hafta_gunleri integer[] not null default '{}'::integer[];
