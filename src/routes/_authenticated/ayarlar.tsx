@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { useDonemler } from "@/components/DonemSecici";
 import { DIL_ETIKET } from "@/lib/program";
@@ -7,6 +8,8 @@ import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/
 import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
 import { SecmeliSecici } from "@/components/SecmeliSecici";
 import { PwaKurulum } from "@/components/PwaKurulum";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 
 export const Route = createFileRoute("/_authenticated/ayarlar")({
@@ -29,6 +32,7 @@ export const Route = createFileRoute("/_authenticated/ayarlar")({
 
 function Ayarlar() {
   const { ayarlar, guncelle } = useAyarlar();
+  const { cikis } = useAuth();
   const { secili } = useSecmeliler();
   const { veri } = useYuklenenVeri();
   const onlineDersler = onlineDersAdlari(veri);
@@ -201,20 +205,37 @@ function Ayarlar() {
 
         <PwaKurulum />
 
-        <section className="rounded-2xl border border-border bg-surface p-4">
-          <h2 className="text-sm font-bold">Veri</h2>
+        <section className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
+          <h2 className="text-sm font-bold text-destructive">Tehlike Bölgesi</h2>
           <p className="mt-2 text-xs text-muted-foreground">
             Seçili seçmeli ders sayısı: {secili.length}. Seçimlerin ve elle yaptığın amfi
             atamaları bu cihazda saklanır.
           </p>
           <button
             onClick={() => {
+              if (!window.confirm("Tüm yerel tercihlerin sıfırlanacak. Devam etmek istiyor musun?")) return;
               window.localStorage.clear();
               window.location.reload();
             }}
             className="mt-3 rounded-xl border border-destructive/40 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10"
           >
             Tüm tercihleri sıfırla
+          </button>
+          <button
+            onClick={() => void (async () => {
+              if (!window.confirm("Hesabın ve sana ait tüm veriler kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musun?")) return;
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) throw new Error("Oturum bulunamadı.");
+                const yanit = await fetch("/api/hesabimi-sil", { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` } });
+                if (!yanit.ok) throw new Error("Hesap silinemedi.");
+                window.localStorage.clear();
+                await cikis();
+              } catch (e) { toast.error(e instanceof Error ? e.message : "Hesap silinemedi."); }
+            })()}
+            className="mt-3 ml-2 rounded-xl bg-destructive px-3 py-2 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90"
+          >
+            Hesabımı ve tüm verilerimi sil
           </button>
         </section>
       </div>
