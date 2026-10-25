@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/public/sheets-kontrol")({
           const token = /^Bearer ([^\s,]+)$/.exec(request.headers.get("authorization") ?? "")?.[1];
           if (!token) return eskiDogrulama;
           const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
-          const { data, error } = await admin.rpc("sheets_cron_token_dogrula", { _token: token });
+          const { data, error } = await (admin as any).rpc("sheets_cron_token_dogrula", { _token: token });
           if (error || !data) return eskiDogrulama;
         }
         const { sheetsKontrol } = await import("@/lib/sheets-takip.server");
