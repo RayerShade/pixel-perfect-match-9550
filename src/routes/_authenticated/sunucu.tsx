@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Activity, History, LifeBuoy, CalendarRange, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
+import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
 import { IslemGecmisi, OgrenciDevam } from "@/components/SunucuEk";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
@@ -14,6 +14,7 @@ import {
   TABLOLAR, dosyaIslem, dosyaListele, kullaniciDuzenle, kullaniciEkIslem, kullaniciIslem, kullaniciOlustur,
   satirKaydet, satirSil, sunucuKullanicilar, sunucuOzet, tabloOku, tamYedek, yedekGeriYukle,
 } from "@/lib/sunucu.functions";
+import { sheetsKaynakListele, sheetsKaynakPlanGuncelle, sheetsSimdiKontrol } from "@/lib/sheets-takip.functions";
 
 export const Route = createFileRoute("/_authenticated/sunucu")({
   head: () => ({ meta: [{ title: "Sunucu paneli" }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -48,7 +49,7 @@ function SunucuKapi() {
   );
 }
 
-type Sekme = "ozet" | "kullanicilar" | "destek" | "donem" | "veri" | "dosyalar" | "duyuru" | "yedek" | "gecmis";
+type Sekme = "ozet" | "kullanicilar" | "destek" | "donem" | "veri" | "dosyalar" | "kontrol" | "duyuru" | "yedek" | "gecmis";
 const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "ozet", ad: "Özet", ikon: Activity },
   { id: "kullanicilar", ad: "Kullanıcılar", ikon: Users },
@@ -56,6 +57,7 @@ const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "donem", ad: "Dönemler", ikon: CalendarRange },
   { id: "veri", ad: "Veritabanı", ikon: Database },
   { id: "dosyalar", ad: "Dosyalar", ikon: FileSpreadsheet },
+  { id: "kontrol", ad: "Kontroller", ikon: Clock },
   { id: "duyuru", ad: "Duyuru", ikon: Megaphone },
   { id: "yedek", ad: "Yedek", ikon: HardDrive },
   { id: "gecmis", ad: "İşlem Geçmişi", ikon: History },
@@ -105,7 +107,7 @@ function Sunucu() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl space-y-4 p-3 md:p-5">
-        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />}
+        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "kontrol" ? <SheetsKontroller /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />}
       </main>
     </div>
   );
@@ -365,6 +367,43 @@ function Kullanicilar() {
       </div>
     </Kart>
   );
+}
+
+function SheetsKontroller() {
+  const listele = useServerFn(sheetsKaynakListele);
+  const planla = useServerFn(sheetsKaynakPlanGuncelle);
+  const simdi = useServerFn(sheetsSimdiKontrol);
+  const q = useQuery({ queryKey: ["sheets-kaynaklari"], queryFn: () => listele() });
+  const kaydet = async (e: React.FormEvent<HTMLFormElement>, id: string) => {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const saatler = String(f.get("saatler") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    try {
+      await planla({ data: { id, aktif: f.get("aktif") === "on", aralikDk: Number(f.get("aralik") || 60), tip: String(f.get("tip")) as "aralik" | "gunluk" | "haftalik", saatler, haftaGunleri: f.getAll("gun").map(Number) } });
+      toast.success("Kontrol planı kaydedildi."); void q.refetch();
+    } catch (e) { hata(e); }
+  };
+  const hemen = async (id?: string) => {
+    try { const r = await simdi({ data: id ? { id } : {} }); toast.success(String(r.length) + " kaynak kontrol edildi."); void q.refetch(); } catch (e) { hata(e); }
+  };
+  const gunler = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+  return <Kart baslik="Google Sheets kontrolleri" sag={<><button className={ana} onClick={() => void hemen()}>Hepsini şimdi kontrol et</button><button className={btn} onClick={() => void q.refetch()}><RefreshCw className="h-3 w-3" />yenile</button></>}>
+    <p className="mb-3 text-xs text-muted-foreground">Aralıklı planda kaynak belirlenen dakikada bir; günlük planda seçilen saatlerde; haftalık planda seçilen gün ve saatlerde kontrol edilir. Saatler İstanbul saatidir.</p>
+    <div className="space-y-3">{(q.data ?? []).map((k) => {
+      const saatler = Array.isArray(k.saatler) ? k.saatler.join(", ") : "";
+      const seciliGunler = new Set(Array.isArray(k.hafta_gunleri) ? k.hafta_gunleri : []);
+      return <form key={k.id} onSubmit={(e) => void kaydet(e, k.id)} className="rounded-lg border border-border p-3">
+        <div className="mb-2 flex flex-wrap items-center gap-2"><b className="font-mono text-sm">{k.anahtar}</b><span className="rounded bg-muted px-1.5 py-0.5 text-xs">{k.tur}</span><span className="text-xs text-muted-foreground">Son kontrol: {tarih(k.son_kontrol)} · Son değişim: {tarih(k.son_degisim)}</span><button type="button" className={btn + " ml-auto"} onClick={() => void hemen(k.id)}>Şimdi kontrol et</button></div>
+        {k.hata ? <p className="mb-2 text-xs text-destructive">Son hata: {k.hata}</p> : null}
+        <div className="grid gap-2 md:grid-cols-4"><label className="text-xs"><input name="aktif" type="checkbox" defaultChecked={k.aktif} className="mr-1 accent-primary" />Aktif</label>
+          <label className="text-xs">Plan<select name="tip" defaultValue={k.kontrol_tipi ?? "aralik"} className={giris + " mt-0.5 w-full"}><option value="aralik">Belirli dakikada bir</option><option value="gunluk">Her gün belirli saatlerde</option><option value="haftalik">Haftanın seçili gün/saatlerinde</option></select></label>
+          <label className="text-xs">Aralık (dk)<input name="aralik" type="number" min="5" max="10080" defaultValue={k.aralik_dk} className={giris + " mt-0.5 w-full"} /></label>
+          <label className="text-xs">Saatler (virgülle)<input name="saatler" placeholder="08:00, 16:30" defaultValue={saatler} className={giris + " mt-0.5 w-full"} /></label></div>
+        <div className="mt-2 flex flex-wrap gap-2">{gunler.map((g, i) => <label key={g} className="text-xs"><input name="gun" type="checkbox" value={i} defaultChecked={seciliGunler.has(i)} className="mr-1 accent-primary" />{g}</label>)}</div>
+        <button type="submit" className={ana + " mt-3"}>Planı kaydet</button>
+      </form>;
+    })}</div>
+  </Kart>;
 }
 
 function Veri() {
