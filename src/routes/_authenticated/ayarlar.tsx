@@ -208,8 +208,7 @@ function Ayarlar() {
         <section className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
           <h2 className="text-sm font-bold text-destructive">Tehlike Bölgesi</h2>
           <p className="mt-2 text-xs text-muted-foreground">
-            Seçili seçmeli ders sayısı: {secili.length}. Seçimlerin ve elle yaptığın amfi
-            atamaları bu cihazda saklanır.
+            {secili.length} seçmeli ders seçtin. Seçimlerin, takvim tercihlerinin ve elle yaptığın amfi atamalarının hesabınla eşitlenir.
           </p>
           <button
             onClick={() => {
