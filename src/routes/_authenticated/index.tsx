@@ -104,8 +104,13 @@ function Takvim() {
   const gunIsaretle = (g: Date) => isaretle(olaylar.filter((o) => sameDay(o.date, g)));
 
   const kaydir = (yon: number) => {
-    if (gorunum === "gun") setImlec((d) => addDays(d, yon));
-    else if (gorunum === "hafta") setImlec((d) => addDays(d, 7 * yon));
+    if (gorunum === "gun") {
+      setImlec((d) => {
+        let sonraki = addDays(d, yon);
+        while (!ayarlar.haftaSonuGoster && (sonraki.getDay() === 0 || sonraki.getDay() === 6)) sonraki = addDays(sonraki, yon);
+        return sonraki;
+      });
+    } else if (gorunum === "hafta") setImlec((d) => addDays(d, 7 * yon));
     else setImlec((d) => new Date(d.getFullYear(), d.getMonth() + yon, 1));
   };
 

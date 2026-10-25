@@ -8,12 +8,11 @@ import { Tanitim } from "@/components/Tanitim";
 import { NumaraBilgi, useNumaraSorgu } from "@/components/NumaraBilgi";
 
 import { useAyarlar } from "@/lib/store";
-import { CalendarDays, BookOpen, ListChecks, Settings, LifeBuoy, LogOut, ShieldCheck, Loader2, Info, UtensilsCrossed } from "lucide-react";
+import { CalendarDays, BookOpen, Settings, LifeBuoy, LogOut, ShieldCheck, Loader2, Info, UtensilsCrossed } from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Takvim", icon: CalendarDays },
   { to: "/dersler", label: "Dersler", icon: BookOpen },
-  { to: "/secmeliler", label: "Seçmeliler", icon: ListChecks },
   { to: "/yemek", label: "Yemek", icon: UtensilsCrossed },
   { to: "/destek", label: "Destek", icon: LifeBuoy },
   { to: "/ayarlar", label: "Ayarlar", icon: Settings },
@@ -101,7 +100,7 @@ export function AppShell({
       <main className="mx-auto max-w-6xl px-3 py-4 md:px-4 md:py-6">{children}</main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-surface/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-6">
+        <div className="grid grid-cols-5">
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
