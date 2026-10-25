@@ -68,6 +68,8 @@ export function devamHesapla(olaylar: DersOlayi[], katilim: Record<string, true>
       if (gecti(o, simdi)) {
         g.yapilan++;
         if (katilim[o.key]) g.girilen++;
+        // Her normal uygulamanın kendi tarih bağımsız telafi işareti vardır.
+        if (k.tur === "uygulama" && katilim[`telafi:${o.key}`]) g.telafi++;
       }
     }
     m.set(id, g);
