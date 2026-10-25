@@ -76,14 +76,14 @@ function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
   return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
 }
 function telafiOlaylari(dl: Dilim) { return [...dl.dallar.values()].filter(telafiDal).flatMap((d) => [...d.konular.values()].flat()); }
-function Istatistik({ olaylar, katilim }: { olaylar: DersOlayi[]; katilim: Record<string, true> }) {
+function Istatistik({ olaylar, katilim, devam }: { olaylar: DersOlayi[]; katilim: Record<string, true>; devam?: DevamGrubu }) {
   const yapilan = olaylar.filter((o) => gecti(o));
   const girilen = yapilan.filter((o) => katilim[o.key]).length;
   if (!yapilan.length) return <span className="text-[11px] text-muted-foreground">{olaylar.length} oturum · henüz başlamadı</span>;
   const kacan = yapilan.length - girilen;
   return (
     <span className="text-[11px] text-muted-foreground">
-      {girilen}/{yapilan.length} girildi · kaçırılan {kacan}/{olaylar.length}
+      {devam?.girilen ?? girilen}/{yapilan.length} girildi · kaçırılan {Math.max(0, yapilan.length - (devam?.girilen ?? girilen))}/{olaylar.length}{devam?.toplam ? <span className={`ml-1 font-semibold ${devam.kalanHak < 0 ? "text-destructive" : "text-primary"}`}>· kalan hak {Math.max(0, devam.kalanHak)}/{devam.izinliDevamsizlik}</span> : null}
     </span>
   );
 }
@@ -119,7 +119,7 @@ function Dersler() {
   const olaylar = useMemo(() => tumOlaylar(veri, secili, manuel, ogrenci, ayarlar), [veri, secili, manuel, ogrenci, ayarlar]);
   const agac = useMemo(() => agacKur(olaylar), [olaylar]);
   const devam = useMemo(() => devamHesapla(olaylar, katilim), [olaylar, katilim]);
-  const devamBul = (dilim: string, tur: OlayTuru) => devam.find((x) => x.dilim === dilim && x.tur === tur);
+  const devamBul = (dilim: string, tur: OlayTuru, dal?: string) => devam.find((x) => x.dilim === dilim && x.tur === tur && (!dal || x.dal === dal));
   const q = arama.toLocaleLowerCase("tr-TR").trim();
   const uyar = (s: string) => !q || s.toLocaleLowerCase("tr-TR").includes(q);
 
@@ -159,8 +159,8 @@ function Dersler() {
                     <p className="flex items-center gap-2 font-bold">
                       <span className="truncate">{dl.ad}</span>
                     </p>
-                    <DilimSatiri os={dilimOlaylari(dl, "ders").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="ders" devam={devamBul(dl.ad, "ders")} />
-                    <DilimSatiri os={dilimOlaylari(dl, "uygulama").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="uygulama" devam={devamBul(dl.ad, "uygulama")} />
+                    <DilimSatiri os={dilimOlaylari(dl, "ders").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="ders" devam={dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? undefined : devamBul(dl.ad, "ders")} />
+                    <DilimSatiri os={dilimOlaylari(dl, "uygulama").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="uygulama" devam={dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? undefined : devamBul(dl.ad, "uygulama")} />
                   </div>
                 </button>
                 <TopluTus olaylar={tumu} katilim={katilim} ayarla={ayarla} />
@@ -185,7 +185,7 @@ function Dersler() {
                           <div className="flex items-center gap-2 px-3 py-2">
                             <button onClick={() => ac(dalKey)} className="min-w-0 flex-1 text-left">
                               <p className="text-sm font-semibold">{d.ad}</p>
-                              <Istatistik olaylar={os} katilim={katilim} />
+                              <Istatistik olaylar={os} katilim={katilim} devam={devamBul(dl.ad, d.tur, (dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM) ? d.ad : undefined)} />
                             </button>
                             <TopluTus olaylar={os} katilim={katilim} ayarla={ayarla} />
                           </div>
