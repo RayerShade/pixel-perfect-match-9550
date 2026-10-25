@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { adminYeniSifreSemasi } from "./admin-sifre";
 
 /** Sunucu paneli: yalnızca süper admin. Tüm işlemler sunucuda yetki kontrolünden sonra yapılır. */
 export const TABLOLAR = { profiles: "id", user_data: "user_id", user_roles: "id", global_data: "anahtar" } as const;
@@ -198,15 +199,17 @@ export const kullaniciOlustur = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({
     email: z.string().email().max(200),
-    sifre: z.string().min(1).max(100),
+    sifre: adminYeniSifreSemasi,
     dil: z.enum(["tr", "en"]).default("tr"),
     adSoyad: z.string().max(100).default(""),
     ogrenciNo: z.string().max(30).default(""),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await yetkili(context as never);
+    const { adminYeniSifreHash } = await import("./admin-sifre.server");
+    const passwordHash = await adminYeniSifreHash(data.sifre);
     const { data: u, error } = await db.auth.admin.createUser({
-      email: data.email, password: data.sifre, email_confirm: true,
+      email: data.email, password_hash: passwordHash, email_confirm: true,
       user_metadata: { ad_soyad: data.adSoyad, ogrenci_no: data.ogrenciNo, dil: data.dil },
     });
     if (error) throw new Error(error.message);
