@@ -184,8 +184,8 @@ function Dersler() {
                                     <button onClick={() => ac(`${dalKey}|${ad}`)} className="min-w-0 flex-1 text-left">
                                       <p className="text-sm font-medium">{ad}</p>
                                       <p className="text-[11px] text-muted-foreground">
-                                        {[...new Set(konuOlaylari.map((o) => o.ders.instructor).filter(Boolean))].join(", ") || "—"} ·{" "}
-                                        {konuOlaylari.filter((o) => katilim[o.key]).length}/{konuOlaylari.filter((o) => gecti(o)).length} ({konuOlaylari.length}) girildi
+                                        {[...new Set(konuOlaylari.map((o) => o.ders.instructor).filter(Boolean))].join(", ") || "—"}
+                                        {(dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM) ? <> · {konuOlaylari.filter((o) => katilim[o.key]).length}/{konuOlaylari.filter((o) => gecti(o)).length} ({konuOlaylari.length}) girildi</> : null}
                                       </p>
                                     </button>
                                     <TopluTus olaylar={konuOlaylari} katilim={katilim} ayarla={ayarla} />
