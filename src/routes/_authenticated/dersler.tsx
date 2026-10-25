@@ -65,7 +65,7 @@ function DilimSatiri({ os, katilim, tur, devam }: { os: DersOlayi[]; katilim: Re
   const ad = tur === "uygulama" ? "Uygulama" : "Teorik";
   const girdi = devam?.girilen ?? girilen;
   const kullanilan = devam ? devam.izinliDevamsizlik - devam.kalanHak : Math.max(0, yapilan.length - girilen);
-  return <span className="block text-[11px] text-muted-foreground">{ad}: {girdi}/{yapilan.length} ({os.length}) girildi{devam?.toplam ? <span className="ml-1 font-semibold">· Devamsızlık {kullanilan}/{devam.izinliDevamsizlik}</span> : null}</span>;
+  return <span className="block text-[11px] text-muted-foreground">{ad}: {girdi}/{yapilan.length} ({os.length}) girildi{devam?.toplam ? <span className="ml-1 font-semibold">· Yapılan devamsızlık: {kullanilan}</span> : null}</span>;
 }
 function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
   return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
@@ -122,7 +122,7 @@ function Dersler() {
           className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
         <p className="px-1 text-[11px] text-muted-foreground">
-          Geçmiş derslere katıldığını işaretleyebilir; her başlık altında girdiğin ve kaçırdığın ders sayısını görebilirsin.
+          Geçmiş derslere katıldığını işaretleyebilir; dilim başlıklarında katılımını ve yapılan devamsızlık sayını görebilirsin.
         </p>
         {!agac.length ? (
           <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
