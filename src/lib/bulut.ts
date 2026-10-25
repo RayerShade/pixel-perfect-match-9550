@@ -73,7 +73,9 @@ export async function buluttanYukle(userId: string, ogrenciNo: string, meta: Rec
       : undefined;
     if (eslesen) {
       const [, id, dil] = eslesen.anahtar.split(":");
-      if (ayar["donemId"] !== id || ayar["dil"] !== dil) { ayar["donemId"] = id; ayar["dil"] = dil; kaydet = true; }
+      if (ayar["donemId"] !== id) { ayar["donemId"] = id; kaydet = true; }
+      // Sunucu panelinden adminin seçtiği dil, öğrenci listesinin otomatik tespitinden önceliklidir.
+      if (!ayar["dilElle"] && ayar["dil"] !== dil) { ayar["dil"] = dil; kaydet = true; }
     } else {
       if (!ayar["donemId"] && meta["donem_id"]) { ayar["donemId"] = meta["donem_id"]; kaydet = true; }
       if (!ayar["dil"] && meta["dil"]) { ayar["dil"] = meta["dil"]; kaydet = true; }
