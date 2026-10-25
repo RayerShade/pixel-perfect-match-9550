@@ -65,7 +65,7 @@ function DilimSatiri({ os, katilim, tur, devam }: { os: DersOlayi[]; katilim: Re
   const ad = tur === "uygulama" ? "Uygulama" : "Teorik";
   const girdi = devam?.girilen ?? girilen;
   const kullanilan = devam ? devam.izinliDevamsizlik - devam.kalanHak : Math.max(0, yapilan.length - girilen);
-  return <span className="block text-[11px] text-muted-foreground">{ad}: {girdi}/{yapilan.length} ({os.length}) girildi{devam?.toplam ? <span className="ml-1 font-semibold">· Yapılan devamsızlık: {kullanilan}</span> : null}</span>;
+  return <span className="block text-[11px] text-muted-foreground">{ad}: {girdi}/{yapilan.length} ({os.length}) girildi{devam?.toplam ? <span className="ml-1 font-semibold">· Yapılan devamsızlık: {kullanilan}/{devam.izinliDevamsizlik}</span> : null}</span>;
 }
 function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
   return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
