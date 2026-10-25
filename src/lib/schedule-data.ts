@@ -497,22 +497,28 @@ const telafiMi = (d: Ders) => /\btelafi\b|\brepeat\b|\bmake[ -]?up\b/i.test(`${d
 /** İngilizce yıllık programdaki "(Uygulama adı) İ1" parçalarından öğrencininkini seçer. */
 function ingilizceLaboratuvariniSec(d: Ders, ogrenci?: Ogrenci): Ders | null {
   if (!/^laboratory skills\b/i.test(d.courseName.trim()) || !ogrenci) return d;
-  const hedef = `${ogrenci.altGrup || ogrenci.grup}`.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").replace(/[^i0-9]/g, "");
-  if (!hedef) return d;
+  // Öğrenci listesinde alt grup bazen "İ1", bazen grup "İ" + alt grup "1" olarak gelir.
+  // İki biçimi de aday kabul etmezsek doğru uygulama adı bulunamayıp genel "Laboratory Skills" görünür.
+  const normGrup = (v: string) => v.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").replace(/[^a-z0-9]/g, "");
+  const grup = normGrup(ogrenci.grup);
+  const alt = normGrup(ogrenci.altGrup);
+  const tam = alt && !alt.startsWith(grup) ? `${grup}${alt}` : alt || grup;
+  const hedefler = new Set([alt, grup, tam].filter(Boolean).flatMap((x) => /^\d+$/.test(x) ? [x, `i${x}`] : [x]));
+  if (!hedefler.size) return d;
   const eslesmeler = [...d.courseName.matchAll(/\(([^)]+)\)\s*[İIıi]\s*(\d+)/g)];
   if (!eslesmeler.length) return d;
   const telafi = telafiMi(d);
   // Telafi satırları tüm gruplar için tek oturum: hangi uygulamanın telafisi ve hangi grup açıklamada.
   if (telafi) {
     const satir = eslesmeler.map((m) => `${m[1]!.trim()} (İ${m[2]})`).join("; ");
-    // Telafi bütün gruplara açıktır: grup kısıtı koyma, hangi uygulamanın telafisi açıklamada yazar.
     return { ...d, courseName: "Laboratory Skills — Telafi", group: "", notes: [d.notes, `Telafiler: ${satir}`].filter(Boolean).join(" · ") };
   }
-  const secilen = eslesmeler.find((m) => `i${m[2]}` === hedef);
+  const secilen = eslesmeler.find((m) => hedefler.has(`i${m[2]}`));
   if (!secilen) return null;
+  const hedef = `i${secilen[2]}`;
   return {
     ...d,
-    courseName: `${secilen[1]!.trim()}${telafi ? " (Telafi)" : ""}`,
+    courseName: secilen[1]!.trim(),
     group: hedef.toLocaleUpperCase("tr-TR"),
     notes: [d.notes, `Laboratory Skills · Grup ${hedef.toLocaleUpperCase("tr-TR")}`].filter(Boolean).join(" · "),
   };
