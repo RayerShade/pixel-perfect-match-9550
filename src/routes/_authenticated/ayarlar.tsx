@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useDonemler } from "@/components/DonemSecici";
 import { DIL_ETIKET } from "@/lib/program";
 import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/store";
 import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
+import { SecmeliSecici } from "@/components/SecmeliSecici";
 
 
 export const Route = createFileRoute("/_authenticated/ayarlar")({
@@ -38,6 +39,7 @@ function Ayarlar() {
   const { data: donemler = [] } = useDonemler();
   const donemAdi = donemler.find((d) => d.id === ayarlar.donemId)?.ad ?? "";
   const dilEtiket = ayarlar.dil ? DIL_ETIKET[ayarlar.dil] : "";
+  const [secmeliAcik, setSecmeliAcik] = useState(false);
 
   // Ad, grup ve dönem yüklenen dosyalardan gelir; bulununca tercih olarak da kaydedilir.
   useEffect(() => {
@@ -55,7 +57,7 @@ function Ayarlar() {
 
   return (
     <AppShell baslik="Ayarlar" aciklama="Uygulama tercihleri">
-      <div className="space-y-3">
+      <div className="space-y-3">        {secmeliAcik ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label="Seçmeli dersler"><div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl"><div className="mb-4 flex items-center gap-3"><div className="min-w-0 flex-1"><h2 className="text-lg font-bold">Seçmeli dersler</h2><p className="text-xs text-muted-foreground">Her gruptan bir ders seçebilirsin; seçimin takvimine otomatik eklenir.</p></div><button onClick={() => setSecmeliAcik(false)} className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-accent">Kapat</button></div><SecmeliSecici /></div></div> : null}
         <section data-tur="ogrenci-bilgi" className="rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-bold">Öğrenci Bilgileri</h2>
           <div className="mt-3 space-y-3">
@@ -181,22 +183,6 @@ function Ayarlar() {
               </div>
             ) : null}
           </div>
-          {(ayarlar.devamUyariKapali ?? []).length ? (
-            <div className="mt-4 border-t border-border pt-4">
-              <span className="block text-sm">Devamsızlık uyarısı kapalı dilimler</span>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {(ayarlar.devamUyariKapali ?? []).map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => guncelle({ devamUyariKapali: (ayarlar.devamUyariKapali ?? []).filter((x) => x !== d) })}
-                    className="rounded-lg border border-border px-2.5 py-1 text-xs hover:bg-accent"
-                  >
-                    {d} · uyarıyı aç
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
           <label className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4">
             <span>
               <span className="block text-sm">Telafi uygulamalarını göster</span>
@@ -209,30 +195,7 @@ function Ayarlar() {
               className="h-5 w-5 shrink-0 accent-[var(--teorik)]"
             />
           </label>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <label className="block">
-              <span className="text-xs text-muted-foreground">Başlangıç saati</span>
-              <input
-                type="number"
-                min={6}
-                max={12}
-                value={ayarlar.gunBaslangic}
-                onChange={(e) => guncelle({ gunBaslangic: Number(e.target.value) })}
-                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block">
-              <span className="text-xs text-muted-foreground">Bitiş saati</span>
-              <input
-                type="number"
-                min={14}
-                max={23}
-                value={ayarlar.gunBitis}
-                onChange={(e) => guncelle({ gunBitis: Number(e.target.value) })}
-                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-              />
-            </label>
-          </div>
+          <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="mt-4 w-full rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">Seçmeli derslerini seç</button>
         </section>
 
         <section className="rounded-2xl border border-border bg-surface p-4">
