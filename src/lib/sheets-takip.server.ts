@@ -13,6 +13,9 @@ interface Kaynak {
   tur: Tur;
   url: string;
   son_hash: string | null;
+  kontrol_tipi?: "aralik" | "gunluk" | "haftalik";
+  saatler?: string[];
+  hafta_gunleri?: number[];
 }
 type Veri = Record<string, unknown>;
 
@@ -182,17 +185,36 @@ async function kaynakIsle(admin: Admin, k: Kaynak): Promise<{ degisti: boolean; 
   return { degisti: true, bildirim };
 }
 
+/** İstanbul saatine göre günlük/haftalık planların vaktinin gelip gelmediği. Günler: 0=Pzt … 6=Paz. */
+function kontrolSirada(k: Kaynak & { son_kontrol: string | null; aralik_dk: number }, simdi: number) {
+  if (!k.son_kontrol) return true;
+  const tip = k.kontrol_tipi ?? "aralik";
+  if (tip === "aralik") return simdi - new Date(k.son_kontrol).getTime() >= (k.aralik_dk - 2) * 60_000;
+  const ist = new Date(simdi + 3 * 3600_000);
+  const gun = (ist.getUTCDay() + 6) % 7;
+  if (tip === "haftalik" && !(k.hafta_gunleri ?? []).includes(gun)) return false;
+  const saatler = (k.saatler ?? []).filter((s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(s));
+  if (!saatler.length) return false;
+  const son = new Date(k.son_kontrol).getTime();
+  const yil = ist.getUTCFullYear(), ay = ist.getUTCMonth(), tarih = ist.getUTCDate();
+  return saatler.some((s) => {
+    const [h, m] = s.split(":").map(Number);
+    const planlanan = Date.UTC(yil, ay, tarih, (h ?? 0) - 3, m ?? 0);
+    return simdi >= planlanan && simdi - planlanan < 5 * 60_000 && son < planlanan;
+  });
+}
+
 /** Aktif tüm (veya tek) kaynakları kontrol eder. Hatalı kaynak tekrar tekrar denenmez: aktif=false yapılır. */
 export async function sheetsKontrol(id?: string) {
   const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
-  let q = admin.from("sheets_kaynaklari").select("id, anahtar, tur, url, son_hash, son_kontrol, aralik_dk");
+  let q = admin.from("sheets_kaynaklari").select("id, anahtar, tur, url, son_hash, son_kontrol, aralik_dk, kontrol_tipi, saatler, hafta_gunleri");
   q = id ? q.eq("id", id) : q.eq("aktif", true);
   const { data, error } = await q;
   if (error) throw error;
   const sonuc: { id: string; degisti: boolean; bildirim: number; hata?: string }[] = [];
   const simdi = Date.now();
   const sirada = ((data ?? []) as (Kaynak & { son_kontrol: string | null; aralik_dk: number })[]).filter(
-    (k) => id || !k.son_kontrol || simdi - new Date(k.son_kontrol).getTime() >= (k.aralik_dk - 2) * 60_000,
+    (k) => id || kontrolSirada(k, simdi),
   );
   for (const k of sirada) {
     try {
