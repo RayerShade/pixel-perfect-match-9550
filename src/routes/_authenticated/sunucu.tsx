@@ -96,7 +96,7 @@ function Kart({ baslik, children, sag }: { baslik: string; children: ReactNode; 
 
 function Sunucu() {
   const [sekme, setSekme] = useState<Sekme>("ozet");
-  const aktifSekme = SEKMELER.find((x) => x.id === sekme) ?? SEKMELER[0];
+  const aktifSekme = SEKMELER.find((x) => x.id === sekme) ?? SEKMELER[0]!;
   const I = aktifSekme.ikon;
   const icerik = sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "kontrol" ? <SheetsKontroller /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />;
   return (
