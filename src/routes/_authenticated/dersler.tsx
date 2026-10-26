@@ -114,13 +114,13 @@ function Dersler() {
 
   return (
     <AppShell baslik="Dersler" aciklama="Dilim ve anabilim dalına göre · devam takibi">
-      <div className="space-y-4">
-        <input
+      <div className="space-y-5">
+        <div className="workspace-toolbar"><input
           value={arama}
           onChange={(e) => setArama(e.target.value)}
           placeholder="Dilim, anabilim dalı, konu veya hoca ara…"
-          className="ui-surface w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm outline-none"
-        />
+          className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none"
+        /></div>
         <p className="px-1 text-[11px] text-muted-foreground">
           Geçmiş derslere katıldığını işaretleyebilir; dilim başlıklarında katılımını ve yapılan devamsızlık sayını görebilirsin.
         </p>
@@ -139,7 +139,7 @@ function Dersler() {
           const acikDl = acik.has(dl.ad) || Boolean(q);
           let sonTur: string | null = null;
           return (
-            <section key={dl.ad} data-tur="dilim" className="ui-surface overflow-hidden rounded-2xl border border-border bg-surface">
+            <section key={dl.ad} data-tur="dilim" className="workspace-panel overflow-hidden">
               <div className="flex items-center gap-2 p-4">
                 <button onClick={() => ac(dl.ad)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${acikDl ? "rotate-180" : ""}`} />
