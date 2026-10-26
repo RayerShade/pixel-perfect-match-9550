@@ -27,24 +27,25 @@ export function VeriKontrol({
     const turDegisen = dersler.filter((d) => dersTuruDuzelt(d.courseType, d.courseName, `${d.notes} ${d.defaultClassroom}`, d.turElle) !== d.courseType);
     const uygTur = uygulamalar.filter((u) => uygulamaTuru(u) !== (u.tur ?? "pratik"));
     const dilimsiz = dersler.filter((d) => dilimDal(d).dilim === DIGER && d.courseType !== "sinav" && d.courseType !== "secmeli");
+    // Amfi listesi haftalık gelir; yalnızca açık haftadaki yer eksiklerini/çakışmalarını uyar.
+    const bugun = new Date(); bugun.setHours(0, 0, 0, 0);
+    const haftaBaslangic = new Date(bugun); haftaBaslangic.setDate(bugun.getDate() - ((bugun.getDay() + 6) % 7));
+    const haftaBitis = new Date(haftaBaslangic); haftaBitis.setDate(haftaBaslangic.getDate() + 6);
+    const buHafta = (tarih?: string) => {
+      if (!tarih) return false;
+      const gun = new Date(`${tarih}T12:00:00`);
+      return gun >= haftaBaslangic && gun <= haftaBitis;
+    };
     const eksikler = [
-      // Amfi listesi haftalık gelir; ileri tarihler için derslik eksikliği gerçek bir hata değildir.
-      ...dersler.filter((d) => {
-        if (!d.date || d.defaultClassroom.trim()) return false;
-        const bugun = new Date(); bugun.setHours(0, 0, 0, 0);
-        const pazartesi = new Date(bugun); pazartesi.setDate(bugun.getDate() - ((bugun.getDay() + 6) % 7));
-        const pazar = new Date(pazartesi); pazar.setDate(pazartesi.getDate() + 6);
-        const tarih = new Date(`${d.date}T12:00:00`);
-        return tarih >= pazartesi && tarih <= pazar;
-      }).map((d) => ({ tur: "Bu hafta amfisi yok", ad: d.courseName, zaman: d.date! })),
+      ...dersler.filter((d) => d.date && !d.defaultClassroom.trim() && buHafta(d.date)).map((d) => ({ tur: "Bu hafta amfisi yok", ad: d.courseName, zaman: d.date! })),
       ...uygulamalar.filter((u) => !u.yer.trim()).map((u) => ({ tur: "Yeri yok", ad: u.ad, zaman: u.date })),
       ...uygulamalar.filter((u) => !u.gruplar.length).map((u) => ({ tur: "Grubu belirsiz", ad: u.ad, zaman: u.date })),
       ...dersler.filter((d) => !Number.isFinite(dakika(d.startTime)) || !Number.isFinite(dakika(d.endTime)) || dakika(d.startTime) >= dakika(d.endTime)).map((d) => ({ tur: "Saat geçersiz", ad: d.courseName, zaman: d.date ?? `Gün ${d.dayOfWeek}` })),
       ...uygulamalar.filter((u) => !Number.isFinite(dakika(u.startTime)) || !Number.isFinite(dakika(u.endTime)) || dakika(u.startTime) >= dakika(u.endTime)).map((u) => ({ tur: "Saat geçersiz", ad: u.ad, zaman: u.date })),
     ];
     const yerler = [
-      ...dersler.filter((d) => d.defaultClassroom.trim()).map((d) => ({ ad: d.courseName, yer: d.defaultClassroom.trim().toLocaleLowerCase("tr"), tarih: d.date ?? `gun-${d.dayOfWeek}`, bas: dakika(d.startTime), bit: dakika(d.endTime) })),
-      ...uygulamalar.filter((u) => u.yer.trim()).map((u) => ({ ad: u.ad, yer: u.yer.trim().toLocaleLowerCase("tr"), tarih: u.date, bas: dakika(u.startTime), bit: dakika(u.endTime) })),
+      ...dersler.filter((d) => d.defaultClassroom.trim() && buHafta(d.date)).map((d) => ({ ad: d.courseName, yer: d.defaultClassroom.trim().toLocaleLowerCase("tr"), tarih: d.date!, bas: dakika(d.startTime), bit: dakika(d.endTime) })),
+      ...uygulamalar.filter((u) => u.yer.trim() && buHafta(u.date)).map((u) => ({ ad: u.ad, yer: u.yer.trim().toLocaleLowerCase("tr"), tarih: u.date, bas: dakika(u.startTime), bit: dakika(u.endTime) })),
     ];
     const cakismalar: { yer: string; tarih: string; dersler: string[] }[] = [];
     for (let i = 0; i < yerler.length; i++) for (let j = i + 1; j < yerler.length; j++) {
@@ -103,7 +104,7 @@ export function VeriKontrol({
               {rapor.eksikler.map((x, i) => <li key={`e-${i}`}><b className="text-destructive">{x.tur}</b> · {x.zaman} · {x.ad}</li>)}
               {rapor.cakismalar.map((x, i) => <li key={`c-${i}`}><b className="text-destructive">Amfi çakışması</b> · {x.tarih} · {x.yer}: {x.dersler.join(" / ")}</li>)}
             </ul>
-            <p className="mt-1 text-muted-foreground">Satırları aşağıdaki ders/uygulama tablolarından düzenleyip Kaydet'e bas.</p>
+            <p className="mt-1 text-muted-foreground">Bu bölüm yalnızca içinde bulunulan haftanın amfi kaynaklı sorunlarını listeler. Satırı aşağıdaki ders/uygulama ekranından düzenleyip Kaydet'e bas.</p>
           </section>
           <section>
             <p className="font-semibold">Aynı dilim / ana dalın farklı yazımları</p>

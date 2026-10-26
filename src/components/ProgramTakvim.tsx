@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { DERS_TURU_ETIKET, derslikListesi, type Ders, type DersTuru } from "@/lib/schedule-data";
 import { useYuklenenVeri } from "@/lib/store";
 import { DIGER, dilimDal } from "@/lib/dilim";
@@ -69,13 +69,13 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
         </div>
       </section>
 
-      {yonet && <DilimYonetimi dersler={dersler} onDegis={onDegis} ekstra={ekstra} setEkstra={setEkstra} />}
-      {toplu && <TopluDuzen dersler={dersler} onDegis={onDegis} secenek={secenek} />}
+      {yonet ? <DilimYonetimi dersler={dersler} onDegis={onDegis} ekstra={ekstra} setEkstra={setEkstra} /> : null}
+      {!yonet && toplu ? <TopluDuzen dersler={dersler} onDegis={onDegis} secenek={secenek} /> : null}
       <datalist id="pt-dilimler">{secenek.dilimler.map((x) => <option key={x} value={x} />)}</datalist>
       <datalist id="pt-derslikler">{derslikler.map((x) => <option key={x} value={x} />)}</datalist>
       <datalist id="pt-dallar">{secenek.dallar.map((x) => <option key={x} value={x} />)}</datalist>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
+      {!yonet ? <div className="overflow-x-auto rounded-2xl border border-border bg-surface p-1 shadow-sm">
         <div className="grid min-w-[900px]" style={{ gridTemplateColumns: "48px repeat(7, 1fr)" }}>
           <div />
           {gunler.map((g, i) => (
@@ -113,31 +113,39 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
             </div>
           ))}
         </div>
-      </div>
+      </div> : <section className="rounded-2xl border border-dashed border-border bg-accent/35 p-5 text-center"><p className="text-sm font-bold">Dilim ve ana dal ayarları açık</p><p className="mt-1 text-xs text-muted-foreground">Burada dilim ağacını düzenle. Ders takvimine dönmek için üstteki “Takvim” sekmesine bas.</p></section>}
 
-      {duzen && <DersFormu ders={duzen} yeniMi={!dersler.some((r) => r.id === duzen.id)} kapat={() => setDuzen(null)} kaydet={kaydet}
+      {duzen && <DersFormu ders={duzen} tumDersler={dersler} yeniMi={!dersler.some((r) => r.id === duzen.id)} kapat={() => setDuzen(null)} kaydet={kaydet}
         sil={() => { onDegis(dersler.filter((r) => r.id !== duzen.id)); setDuzen(null); }}
         kopya={() => setDuzen({ ...duzen, id: crypto.randomUUID() })} />}
     </div>
   );
 }
 
-function DersFormu({ ders, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; yeniMi: boolean; kapat: () => void; kaydet: (d: Ders) => void; sil: () => void; kopya: () => void }) {
+function DersFormu({ ders, tumDersler, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; tumDersler: Ders[]; yeniMi: boolean; kapat: () => void; kaydet: (d: Ders) => void; sil: () => void; kopya: () => void }) {
   const [d, setD] = useState(ders);
   const k = <K extends keyof Ders>(a: K, v: Ders[K]) => setD({ ...d, [a]: v });
   const oto = dilimDal({ ...d, dilim: undefined, dal: undefined });
+  const saatEkle = (dakika: number) => {
+    const bas = dk(d.startTime); if (!Number.isFinite(bas)) return;
+    const toplam = bas + dakika; k("endTime", `${String(Math.floor(toplam / 60)).padStart(2, "0")}:${String(toplam % 60).padStart(2, "0")}`);
+  };
+  const cakisan = d.date && d.defaultClassroom.trim() ? tumDersler.filter((x) => x.id !== d.id && x.date === d.date && x.defaultClassroom.trim().toLocaleLowerCase("tr") === d.defaultClassroom.trim().toLocaleLowerCase("tr") && dk(x.startTime) < dk(d.endTime) && dk(x.endTime) > dk(d.startTime)) : [];
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={kapat}>
-      <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold">{yeniMi ? "Yeni ders" : "Dersi düzenle"}</h3>
-          <button onClick={kapat} aria-label="Kapat"><X className="h-4 w-4" /></button>
+      <div className="w-full max-w-xl max-h-[calc(100dvh-2rem)] space-y-4 overflow-y-auto rounded-3xl border border-border bg-surface p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
+          <div><p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">Takvim etkinliği</p><h3 className="mt-1 text-lg font-bold">{yeniMi ? "Yeni ders ekle" : "Dersi düzenle"}</h3><p className="mt-0.5 text-xs text-muted-foreground">Tarih, saat ve dersliği tek kartta yönet.</p></div>
+          <button className="rounded-xl p-2 hover:bg-accent" onClick={kapat} aria-label="Kapat"><X className="h-4 w-4" /></button>
         </div>
         <label className="block text-xs">Ders adı<input className={girdi} value={d.courseName} onChange={(e) => k("courseName", e.target.value)} autoFocus /></label>
-        <div className="grid grid-cols-3 gap-2">
-          <label className="text-xs">Tarih<input type="date" className={girdi} value={d.date ?? ""} onChange={(e) => k("date", e.target.value || undefined)} /></label>
-          <label className="text-xs">Başlangıç<input type="time" className={girdi} value={d.startTime} onChange={(e) => k("startTime", e.target.value)} /></label>
-          <label className="text-xs">Bitiş<input type="time" className={girdi} value={d.endTime} onChange={(e) => k("endTime", e.target.value)} /></label>
+        <div className="rounded-2xl bg-accent/55 p-3">
+          <div className="grid grid-cols-3 gap-2">
+            <label className="text-xs font-semibold">Tarih<input type="date" className={girdi} value={d.date ?? ""} onChange={(e) => k("date", e.target.value || undefined)} /></label>
+            <label className="text-xs font-semibold">Başlangıç<input type="time" className={girdi} value={d.startTime} onChange={(e) => k("startTime", e.target.value)} /></label>
+            <label className="text-xs font-semibold">Bitiş<input type="time" className={girdi} value={d.endTime} onChange={(e) => k("endTime", e.target.value)} /></label>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5"><span className="mr-1 text-[11px] text-muted-foreground">Hızlı süre:</span>{[50, 60, 90, 120].map((sure) => <button key={sure} type="button" onClick={() => saatEkle(sure)} className="rounded-full border border-border bg-surface px-2 py-1 text-[11px] font-bold hover:bg-background">{sure} dk</button>)}</div>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <label className="text-xs">Derslik
@@ -146,7 +154,8 @@ function DersFormu({ ders, yeniMi, kapat, kaydet, sil, kopya }: { ders: Ders; ye
           </label>
           <label className="text-xs">Hoca<input className={girdi} value={d.instructor} onChange={(e) => k("instructor", e.target.value)} /></label>
         </div>
-        <p id="pt-derslik-ipucu" className="-mt-2 text-[11px] text-muted-foreground">Listede yoksa istediğin dersliği yazabilirsin.</p>
+        <p id="pt-derslik-ipucu" className="-mt-2 text-[11px] text-muted-foreground">Listede yoksa dersliği yazabilirsin; kesin atama öğrenci kartında vurgulanır.</p>
+        {cakisan.length ? <div className="flex gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><span><b>Amfi çakışması olabilir.</b> Aynı saat ve derslikte: {cakisan.map((x) => x.courseName).join(", ")}.</span></div> : null}
         <label className="flex items-center gap-2 text-xs">
           <input type="checkbox" checked={!!d.sinifKesin} disabled={!d.defaultClassroom.trim()} onChange={(e) => k("sinifKesin", e.target.checked || undefined)} />
           Yönetici derslik onayı
