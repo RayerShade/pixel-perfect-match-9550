@@ -62,6 +62,12 @@ const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "yedek", ad: "Yedek", ikon: HardDrive },
   { id: "gecmis", ad: "İşlem Geçmişi", ikon: History },
 ];
+const SEKME_GRUPLARI: { baslik: string; ids: Sekme[] }[] = [
+  { baslik: "Genel", ids: ["ozet", "kullanicilar"] },
+  { baslik: "Akademik", ids: ["donem"] },
+  { baslik: "İletişim", ids: ["destek", "duyuru"] },
+  { baslik: "Sistem", ids: ["kontrol", "dosyalar", "veri", "yedek", "gecmis"] },
+];
 const btn = "ui-control inline-flex items-center gap-1 rounded-xl border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-accent disabled:opacity-50";
 const ana = `${btn} border-primary bg-primary text-primary-foreground hover:bg-primary/90`;
 const tehlike = `${btn} text-destructive hover:bg-destructive/10`;
@@ -90,29 +96,40 @@ function Kart({ baslik, children, sag }: { baslik: string; children: ReactNode; 
 
 function Sunucu() {
   const [sekme, setSekme] = useState<Sekme>("ozet");
+  const aktifSekme = SEKMELER.find((x) => x.id === sekme) ?? SEKMELER[0];
+  const I = aktifSekme.ikon;
+  const icerik = sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "kontrol" ? <SheetsKontroller /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />;
   return (
     <div className="app-frame min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-10 px-2 pt-2 md:px-4 md:pt-3">
-        <div className="ui-surface mx-auto flex max-w-7xl flex-wrap items-center gap-2 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl">
-          <Server className="h-5 w-5 text-primary" />
-          <b className="mr-3">Sunucu paneli</b>
-          <nav className="flex flex-nowrap gap-1 overflow-x-auto no-scrollbar rounded-xl bg-accent/60 p-1">
-            {SEKMELER.map(({ id, ad, ikon: I }) => (
-              <button key={id} onClick={() => setSekme(id)} className={`ui-control inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold ${sekme === id ? "bg-surface text-primary shadow-sm" : "hover:bg-accent"}`}>
-                <I className="h-4 w-4" />{ad}
-              </button>
-            ))}
-          </nav>
+      <header className="sticky top-0 z-20 px-2 pt-2 md:px-4 md:pt-3">
+        <div className="ui-surface mx-auto flex max-w-7xl items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Server className="h-4 w-4" /></div>
+          <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">Yönetim</p><h1 className="truncate text-sm font-extrabold">Sunucu paneli</h1></div>
           <a href="/" className={`${btn} ml-auto`}>Siteye dön</a>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl space-y-4 p-3 md:p-5">
-        {sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "kontrol" ? <SheetsKontroller /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />}
-      </main>
+
+      <nav aria-label="Sunucu paneli bölümleri" className="mx-auto mt-3 flex max-w-7xl gap-1 overflow-x-auto px-3 no-scrollbar md:hidden">
+        {SEKMELER.map(({ id, ad, ikon: Ikon }) => <button key={id} onClick={() => setSekme(id)} className={`ui-control flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold ${sekme === id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface text-muted-foreground"}`}><Ikon className="h-3.5 w-3.5" />{ad}</button>)}
+      </nav>
+
+      <div className="mx-auto grid max-w-7xl gap-4 p-3 md:grid-cols-[13.5rem_minmax(0,1fr)] md:p-5">
+        <aside className="ui-surface hidden h-fit rounded-3xl border border-border bg-surface p-2 md:block">
+          <div className="px-2 py-2"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Bölümler</p></div>
+          {SEKME_GRUPLARI.map((grup) => <div key={grup.baslik} className="mb-3 last:mb-0"><p className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">{grup.baslik}</p><div className="space-y-0.5">{grup.ids.map((id) => { const item = SEKMELER.find((x) => x.id === id)!; const Ikon = item.ikon; return <button key={id} onClick={() => setSekme(id)} className={`ui-control flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs font-bold ${sekme === id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Ikon className="h-4 w-4" />{item.ad}</button>; })}</div></div>)}
+        </aside>
+
+        <main className="min-w-0 space-y-4">
+          <section className="ui-surface flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface p-4">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-primary"><I className="h-5 w-5" /></div>
+            <div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Sunucu paneli</p><h2 className="text-lg font-bold">{aktifSekme.ad}</h2></div>
+          </section>
+          {icerik}
+        </main>
+      </div>
     </div>
   );
 }
-
 function Ozet({ git }: { git: (s: Sekme) => void }) {
   const f = useServerFn(sunucuOzet);
   const q = useQuery({ queryKey: ["sunucu-ozet"], queryFn: () => f() });
@@ -431,6 +448,8 @@ function SheetsKaynakKarti({
       </button>
     </div>
 
+    {!aktif ? <p className="mt-4 rounded-xl border border-dashed border-border bg-accent/40 px-3 py-2 text-xs text-muted-foreground">Otomatik kontrol kapalı. Plan ayarlarını değiştirmek için önce otomatik kontrolü aç.</p> : null}
+    <fieldset disabled={!aktif} className={aktif ? "" : "pointer-events-none opacity-45"}>
     <div className="mt-4 grid gap-2 md:grid-cols-3">
       {planlar.map(({ id, baslik, aciklama, ikon: Ikon }) => <button key={id} type="button" onClick={() => setTip(id)} className={`ui-control flex items-start gap-2 rounded-xl border p-3 text-left ${tip === id ? "border-primary bg-primary/8 text-primary ring-1 ring-primary/20" : "border-border bg-surface hover:bg-accent"}`}>
         <Ikon className="mt-0.5 h-4 w-4 shrink-0" /><span><b className="block text-xs">{baslik}</b><span className="block text-[11px] text-muted-foreground">{aciklama}</span></span>
@@ -458,6 +477,7 @@ function SheetsKaynakKarti({
     </div> : null}
 
     <div className="mt-4 flex justify-end border-t border-border pt-3"><button type="button" disabled={bekliyor || (tip !== "aralik" && !saatler.length) || (tip === "haftalik" && !gunler.length)} className={ana} onClick={() => void kaydet()}><CheckCircle2 className="h-3.5 w-3.5" />Planı kaydet</button></div>
+    </fieldset>
   </article>;
 }
 
