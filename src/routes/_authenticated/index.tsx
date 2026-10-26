@@ -122,11 +122,13 @@ function Takvim() {
         : `${AYLAR[imlec.getMonth()]} ${imlec.getFullYear()}`;
   const guncellemeZamani = (zaman?: string) =>
     zaman ? new Date(zaman).toLocaleString("tr-TR", { dateStyle: "medium", timeStyle: "short" }) : "Henüz güncellenmedi";
-  const seciliGunOlaylari = useMemo(
-    () => olaylar.filter((o) => sameDay(o.date, imlec)).sort((a, b) => a.ders.startTime.localeCompare(b.ders.startTime)),
-    [olaylar, imlec],
+  const bugununOlaylari = useMemo(
+    () => olaylar.filter((o) => sameDay(o.date, bugun)).sort((a, b) => a.ders.startTime.localeCompare(b.ders.startTime)),
+    [olaylar, bugun],
   );
-  const gununPlaniGorunsun = gorunum === "ay" || !sameDay(imlec, bugun) || (gorunum === "hafta" && !sameDay(monday, startOfWeek(bugun)));
+  const gununPlaniGorunsun = gorunum === "ay"
+    || (gorunum === "gun" && !sameDay(imlec, bugun))
+    || (gorunum === "hafta" && !sameDay(monday, startOfWeek(bugun)));
 
   return (
     <AppShell baslik="Ders Takvimi" aciklama={ayarlar.donem}>
@@ -261,8 +263,8 @@ function Takvim() {
 
           {gununPlaniGorunsun ? <>
           <aside className="rounded-2xl border border-border bg-surface p-3">
-            <div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-teorik-soft text-teorik"><CalendarDays className="h-4 w-4" /></span><div><p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">Günün planı</p><h3 className="text-sm font-bold">{formatLong(imlec)}</h3></div></div>
-            {seciliGunOlaylari.length ? <ol className="mt-3 space-y-2">{seciliGunOlaylari.map((o) => <li key={o.key}><button onClick={() => setSecili(o)} className="flex w-full gap-2 rounded-xl p-2 text-left transition hover:bg-accent"><span className="w-10 shrink-0 pt-0.5 text-[10px] font-bold text-muted-foreground">{o.ders.startTime}</span><span className="min-w-0 flex-1 border-l-2 border-teorik pl-2"><span className="block truncate text-xs font-bold">{o.ders.courseName}</span><span className="mt-0.5 block truncate text-[10px] text-muted-foreground">{o.amfi ?? "Amfi bekleniyor"}</span></span></button></li>)}</ol> : <div className="mt-4 rounded-xl bg-accent/60 p-3 text-center"><Clock3 className="mx-auto h-4 w-4 text-muted-foreground" /><p className="mt-2 text-xs font-semibold">Bu gün ders yok</p><p className="mt-1 text-[10px] text-muted-foreground">Başka bir güne dokunarak planını gör.</p></div>}
+            <div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-teorik-soft text-teorik"><CalendarDays className="h-4 w-4" /></span><div><p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">Bugünün planı</p><h3 className="text-sm font-bold">{formatLong(bugun)}</h3></div></div>
+            {bugununOlaylari.length ? <ol className="mt-3 space-y-2">{bugununOlaylari.map((o) => <li key={o.key}><button onClick={() => setSecili(o)} className="flex w-full gap-2 rounded-xl p-2 text-left transition hover:bg-accent"><span className="w-10 shrink-0 pt-0.5 text-[10px] font-bold text-muted-foreground">{o.ders.startTime}</span><span className="min-w-0 flex-1 border-l-2 border-teorik pl-2"><span className="block truncate text-xs font-bold">{o.ders.courseName}</span><span className="mt-0.5 block truncate text-[10px] text-muted-foreground">{o.amfi ?? "Amfi bekleniyor"}</span></span></button></li>)}</ol> : <div className="mt-4 rounded-xl bg-accent/60 p-3 text-center"><Clock3 className="mx-auto h-4 w-4 text-muted-foreground" /><p className="mt-2 text-xs font-semibold">Bugün ders yok</p><p className="mt-1 text-[10px] text-muted-foreground">Bugünün ders programı burada görünür.</p></div>}
           </aside>
           </> : null}
         </div>
