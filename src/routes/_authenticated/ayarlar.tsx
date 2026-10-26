@@ -62,8 +62,8 @@ function Ayarlar() {
 
   return (
     <AppShell baslik="Ayarlar" aciklama="Uygulama tercihleri">
-      <div className="space-y-4">        {secmeliAcik ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label="Seçmeli dersler"><div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/80 bg-surface p-5 shadow-xl"><div className="mb-4 flex items-center gap-3"><div className="min-w-0 flex-1"><h2 className="text-lg font-bold">Seçmeli dersler</h2><p className="text-xs text-muted-foreground">Her gruptan bir ders seçebilirsin; seçimin takvimine otomatik eklenir.</p></div><button onClick={() => setSecmeliAcik(false)} className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-accent">Kapat</button></div><SecmeliSecici /></div></div> : null}
-        <section data-tur="ogrenci-bilgi" className="ui-surface rounded-2xl border border-border bg-surface p-4">
+      <div className="space-y-5">        {secmeliAcik ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label="Seçmeli dersler"><div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/80 bg-surface p-5 shadow-xl"><div className="mb-4 flex items-center gap-3"><div className="min-w-0 flex-1"><h2 className="text-lg font-bold">Seçmeli dersler</h2><p className="text-xs text-muted-foreground">Her gruptan bir ders seçebilirsin; seçimin takvimine otomatik eklenir.</p></div><button onClick={() => setSecmeliAcik(false)} className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-accent">Kapat</button></div><SecmeliSecici /></div></div> : null}
+        <section data-tur="ogrenci-bilgi" className="workspace-panel p-4">
           <h2 className="text-sm font-bold">Öğrenci Bilgileri</h2>
           <div className="mt-3 space-y-3">
             <div>
