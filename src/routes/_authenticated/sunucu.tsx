@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users, ShieldCheck, CheckCircle2, AlertTriangle, CalendarClock, Play, Plus, X, Timer, Crown } from "lucide-react";
+import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users, ShieldCheck, CheckCircle2, AlertTriangle, CalendarClock, Play, Plus, X, Timer, Crown, BookOpen, UtensilsCrossed, Settings } from "lucide-react";
 import { IslemGecmisi, OgrenciDevam } from "@/components/SunucuEk";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
@@ -108,6 +108,13 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
         <div className="ui-surface mx-auto flex max-w-7xl items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Server className="h-4 w-4" /></div>
           <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">Yönetim</p><h1 className="truncate text-sm font-extrabold">Süper admin paneli</h1></div>
+          <nav className="hidden items-center gap-1 rounded-xl bg-accent/60 p-1 lg:flex" aria-label="Öğrenci sayfaları">
+            <a href="/" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><CalendarRange className="h-3.5 w-3.5" />Takvim</a>
+            <a href="/dersler" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><BookOpen className="h-3.5 w-3.5" />Dersler</a>
+            <a href="/yemek" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><UtensilsCrossed className="h-3.5 w-3.5" />Yemek</a>
+            <a href="/destek" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><LifeBuoy className="h-3.5 w-3.5" />Destek</a>
+            <a href="/ayarlar" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><Settings className="h-3.5 w-3.5" />Ayarlar</a>
+          </nav>
           {adminGorunumuneDon ? <div role="group" aria-label="Yönetim görünümü" className="relative ml-auto grid grid-cols-2 rounded-xl bg-accent p-1">
             <span aria-hidden="true" className="absolute inset-y-1 w-[calc(50%-0.25rem)] translate-x-[calc(100%+0.25rem)] rounded-lg bg-primary shadow-sm" />
             <button onClick={adminGorunumuneDon} className="relative z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" />Admin</button>
@@ -459,8 +466,8 @@ function SheetsKaynakKarti({
 
     <div className="mt-4 flex items-center justify-between rounded-xl bg-accent/55 px-3 py-2">
       <div><p className="text-sm font-semibold">Otomatik kontrol</p><p className="text-[11px] text-muted-foreground">Bu kaynağın güncellemesini arka planda izle.</p></div>
-      <button type="button" role="switch" aria-checked={aktif} onClick={() => setAktif((x) => !x)} className={`relative h-7 w-12 rounded-full transition-colors ${aktif ? "bg-primary" : "bg-muted-foreground/35"}`}>
-        <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${aktif ? "translate-x-6" : "translate-x-1"}`} />
+      <button type="button" role="switch" aria-label="Otomatik kontrolü aç veya kapat" aria-checked={aktif} onClick={() => setAktif((x) => !x)} className={`relative h-7 w-12 rounded-full transition-colors ${aktif ? "bg-primary" : "bg-muted-foreground/35"}`}>
+        <span className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${aktif ? "translate-x-5" : "translate-x-0"}`} />
       </button>
     </div>
 
@@ -492,8 +499,8 @@ function SheetsKaynakKarti({
       <div className="mt-2 flex flex-wrap gap-2">{gunAdlari.map((ad, gun) => <button key={ad} type="button" onClick={() => gunDegistir(gun)} className={`ui-control rounded-lg border px-3 py-1.5 text-xs font-bold ${gunler.includes(gun) ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}>{ad}</button>)}</div>
     </div> : null}
 
-    <div className="mt-4 flex justify-end border-t border-border pt-3"><button type="button" disabled={bekliyor || (tip !== "aralik" && !saatler.length) || (tip === "haftalik" && !gunler.length)} className={ana} onClick={() => void kaydet()}><CheckCircle2 className="h-3.5 w-3.5" />Planı kaydet</button></div>
     </fieldset>
+    <div className="mt-4 flex justify-end border-t border-border pt-3"><button type="button" disabled={bekliyor || (aktif && tip !== "aralik" && !saatler.length) || (aktif && tip === "haftalik" && !gunler.length)} className={ana} onClick={() => void kaydet()}><CheckCircle2 className="h-3.5 w-3.5" />{aktif ? "Planı kaydet" : "Kapatmayı kaydet"}</button></div>
   </article>;
 }
 
@@ -763,7 +770,7 @@ function DuyuruGecmisi({ mod }: { mod: "bant" | "bildirim" }) {
   );
 }
 
-function Duyuru() {
+export function Duyuru() {
   const q = useQuery({
     queryKey: ["duyuru"],
     queryFn: async () => ((await supabase.from("global_data").select("veri").eq("anahtar", "duyuru").maybeSingle()).data?.veri ?? null) as DuyuruVeri | null,
@@ -896,7 +903,7 @@ function Yedek() {
   );
 }
 
-function DestekYonetim() {
+export function DestekYonetim() {
   const { liste, yenile } = useTalepler();
   const [secili, setSecili] = useState<string | null>(null);
   const [tur, setTur] = useState<"destek" | "oneri" | "hepsi">("destek");

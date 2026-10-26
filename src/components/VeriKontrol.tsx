@@ -28,7 +28,15 @@ export function VeriKontrol({
     const uygTur = uygulamalar.filter((u) => uygulamaTuru(u) !== (u.tur ?? "pratik"));
     const dilimsiz = dersler.filter((d) => dilimDal(d).dilim === DIGER && d.courseType !== "sinav" && d.courseType !== "secmeli");
     const eksikler = [
-      ...dersler.filter((d) => !d.defaultClassroom.trim()).map((d) => ({ tur: "Amfisi yok", ad: d.courseName, zaman: d.date ?? `Gün ${d.dayOfWeek}` })),
+      // Amfi listesi haftalık gelir; ileri tarihler için derslik eksikliği gerçek bir hata değildir.
+      ...dersler.filter((d) => {
+        if (!d.date || d.defaultClassroom.trim()) return false;
+        const bugun = new Date(); bugun.setHours(0, 0, 0, 0);
+        const pazartesi = new Date(bugun); pazartesi.setDate(bugun.getDate() - ((bugun.getDay() + 6) % 7));
+        const pazar = new Date(pazartesi); pazar.setDate(pazartesi.getDate() + 6);
+        const tarih = new Date(`${d.date}T12:00:00`);
+        return tarih >= pazartesi && tarih <= pazar;
+      }).map((d) => ({ tur: "Bu hafta amfisi yok", ad: d.courseName, zaman: d.date! })),
       ...uygulamalar.filter((u) => !u.yer.trim()).map((u) => ({ tur: "Yeri yok", ad: u.ad, zaman: u.date })),
       ...uygulamalar.filter((u) => !u.gruplar.length).map((u) => ({ tur: "Grubu belirsiz", ad: u.ad, zaman: u.date })),
       ...dersler.filter((d) => !Number.isFinite(dakika(d.startTime)) || !Number.isFinite(dakika(d.endTime)) || dakika(d.startTime) >= dakika(d.endTime)).map((d) => ({ tur: "Saat geçersiz", ad: d.courseName, zaman: d.date ?? `Gün ${d.dayOfWeek}` })),
