@@ -466,8 +466,8 @@ function SheetsKaynakKarti({
 
     <div className="mt-4 flex items-center justify-between rounded-xl bg-accent/55 px-3 py-2">
       <div><p className="text-sm font-semibold">Otomatik kontrol</p><p className="text-[11px] text-muted-foreground">Bu kaynağın güncellemesini arka planda izle.</p></div>
-      <button type="button" role="switch" aria-checked={aktif} onClick={() => setAktif((x) => !x)} className={`relative h-7 w-12 rounded-full transition-colors ${aktif ? "bg-primary" : "bg-muted-foreground/35"}`}>
-        <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${aktif ? "translate-x-6" : "translate-x-1"}`} />
+      <button type="button" role="switch" aria-label="Otomatik kontrolü aç veya kapat" aria-checked={aktif} onClick={() => setAktif((x) => !x)} className={`relative h-7 w-12 rounded-full transition-colors ${aktif ? "bg-primary" : "bg-muted-foreground/35"}`}>
+        <span className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${aktif ? "translate-x-5" : "translate-x-0"}`} />
       </button>
     </div>
 
@@ -499,8 +499,8 @@ function SheetsKaynakKarti({
       <div className="mt-2 flex flex-wrap gap-2">{gunAdlari.map((ad, gun) => <button key={ad} type="button" onClick={() => gunDegistir(gun)} className={`ui-control rounded-lg border px-3 py-1.5 text-xs font-bold ${gunler.includes(gun) ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}>{ad}</button>)}</div>
     </div> : null}
 
-    <div className="mt-4 flex justify-end border-t border-border pt-3"><button type="button" disabled={bekliyor || (tip !== "aralik" && !saatler.length) || (tip === "haftalik" && !gunler.length)} className={ana} onClick={() => void kaydet()}><CheckCircle2 className="h-3.5 w-3.5" />Planı kaydet</button></div>
     </fieldset>
+    <div className="mt-4 flex justify-end border-t border-border pt-3"><button type="button" disabled={bekliyor || (aktif && tip !== "aralik" && !saatler.length) || (aktif && tip === "haftalik" && !gunler.length)} className={ana} onClick={() => void kaydet()}><CheckCircle2 className="h-3.5 w-3.5" />{aktif ? "Planı kaydet" : "Kapatmayı kaydet"}</button></div>
   </article>;
 }
 
