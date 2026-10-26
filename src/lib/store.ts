@@ -10,6 +10,11 @@ export interface OzelDers {
   ad: string;
   yer: string;
   not: string;
+  /** Kişisel ders formundaki ek ayrıntılar; eski kayıtlar için isteğe bağlı tutulur. */
+  instructor?: string | undefined;
+  courseType?: "teorik" | "pratik" | "pbl" | "secmeli" | "sinav" | undefined;
+  dilim?: string | undefined;
+  dal?: string | undefined;
   tarih: string; // ilk gün YYYY-MM-DD
   startTime: string;
   endTime: string;
