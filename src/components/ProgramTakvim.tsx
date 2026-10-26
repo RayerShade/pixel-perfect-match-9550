@@ -51,16 +51,23 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <button onClick={() => kaydir(-1)} className="rounded-md border border-border p-1.5 hover:bg-accent" aria-label="Önceki hafta"><ChevronLeft className="h-4 w-4" /></button>
-        <button onClick={() => kaydir(1)} className="rounded-md border border-border p-1.5 hover:bg-accent" aria-label="Sonraki hafta"><ChevronRight className="h-4 w-4" /></button>
-        <button onClick={() => setHafta(pazartesi(new Date()))} className="rounded-md border border-border px-3 py-1 text-sm hover:bg-accent">Bu hafta</button>
-        <input type="date" value={iso(hafta)} onChange={(e) => e.target.value && setHafta(pazartesi(new Date(e.target.value + "T00:00")))} className="rounded-md border border-input bg-background px-2 py-1 text-sm" />
-        <span className="text-sm text-muted-foreground">{gunler[0]!.toLocaleDateString("tr-TR", { day: "numeric", month: "long" })} – {gunler[6]!.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} · {haftaDersleri.length} ders</span>
-        <button onClick={() => setToplu((v) => !v)} className={`rounded-md border px-3 py-1 text-sm ${toplu ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}>Toplu düzenle</button>
-        <button onClick={() => setYonet((v) => !v)} className={`rounded-md border px-3 py-1 text-sm ${yonet ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}>Dilim / ana dal</button>
-        <span className="ml-auto text-xs text-muted-foreground">Boş alana tıkla: ders ekle · Derse tıkla: düzenle</span>
-      </div>
+      <section className="rounded-2xl border border-border bg-surface p-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="mr-auto min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Ders düzeni</p><p className="truncate text-sm font-bold">{gunler[0]!.toLocaleDateString("tr-TR", { day: "numeric", month: "long" })} – {gunler[6]!.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} <span className="font-normal text-muted-foreground">· {haftaDersleri.length} ders</span></p></div>
+          <div className="flex rounded-xl bg-accent p-1">
+            <button onClick={() => setYonet(false)} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${!yonet ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>Takvim</button>
+            <button onClick={() => setYonet(true)} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${yonet ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>Dilim ve ana dal</button>
+          </div>
+          <button onClick={() => setToplu((v) => !v)} className={`rounded-xl border px-3 py-1.5 text-xs font-bold ${toplu ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}>Toplu düzenle</button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/70 pt-3">
+          <button onClick={() => kaydir(-1)} className="rounded-xl border border-border p-2 hover:bg-accent" aria-label="Önceki hafta"><ChevronLeft className="h-4 w-4" /></button>
+          <button onClick={() => setHafta(pazartesi(new Date()))} className="rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-accent">Bu hafta</button>
+          <button onClick={() => kaydir(1)} className="rounded-xl border border-border p-2 hover:bg-accent" aria-label="Sonraki hafta"><ChevronRight className="h-4 w-4" /></button>
+          <input aria-label="Hafta seç" type="date" value={iso(hafta)} onChange={(e) => e.target.value && setHafta(pazartesi(new Date(e.target.value + "T00:00")))} className="rounded-xl border border-input bg-background px-3 py-1.5 text-xs" />
+          <span className="ml-auto text-xs text-muted-foreground">Boş saat: ekle · Ders: düzenle</span>
+        </div>
+      </section>
 
       {yonet && <DilimYonetimi dersler={dersler} onDegis={onDegis} ekstra={ekstra} setEkstra={setEkstra} />}
       {toplu && <TopluDuzen dersler={dersler} onDegis={onDegis} secenek={secenek} />}
