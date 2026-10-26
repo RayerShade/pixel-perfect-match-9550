@@ -90,11 +90,6 @@ export function OzelDersFormu({
 }) {
   const { ayarlar, guncelle } = useAyarlar();
   const { veri } = useYuklenenVeri();
-  const derslikler = derslikListesi(veri, []);
-  const programDersleri = veri.dersler ?? [];
-  const dilimler = [...new Set(programDersleri.map((d) => dilimDal(d).dilim).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr"));
-  const dallar = [...new Set(programDersleri.filter((d) => !f.dilim || dilimDal(d).dilim === f.dilim).map((d) => dilimDal(d).dal).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr"));
-  const hocalar = [...new Set(programDersleri.filter((d) => (!f.dilim || dilimDal(d).dilim === f.dilim) && (!f.dal || dilimDal(d).dal === f.dal)).map((d) => d.instructor.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr"));
   const [f, setF] = useState<OzelDers>(
     mevcut ?? {
       id: crypto.randomUUID(),
@@ -111,6 +106,11 @@ export function OzelDersFormu({
       dal: "",
     },
   );
+  const derslikler = derslikListesi(veri, []);
+  const programDersleri = veri.dersler ?? [];
+  const dilimler = [...new Set(programDersleri.map((d) => dilimDal(d).dilim).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr"));
+  const dallar = [...new Set(programDersleri.filter((d) => !f.dilim || dilimDal(d).dilim === f.dilim).map((d) => dilimDal(d).dal).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr"));
+  const hocalar = [...new Set(programDersleri.filter((d) => (!f.dilim || dilimDal(d).dilim === f.dilim) && (!f.dal || dilimDal(d).dal === f.dal)).map((d) => d.instructor.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr"));
   const set = (p: Partial<OzelDers>) => setF((x) => ({ ...x, ...p }));
   const kaydet = () => {
     if (!f.ad.trim() || f.endTime <= f.startTime) return;
