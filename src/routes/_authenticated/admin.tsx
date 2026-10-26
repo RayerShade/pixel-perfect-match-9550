@@ -34,6 +34,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 const ORIJINAL_ADMIN_EMAIL = "cerandeniz435@gmail.com";
+type AdminSekme = "genel" | "programlar" | "kullanicilar";
 
 interface Hesap {
   id: string;
@@ -88,6 +89,7 @@ function Admin() {
   const sil = useServerFn(hesapSil);
   const [ara, setAra] = useState("");
   const [acik, setAcik] = useState<string | null>(null);
+  const [sekme, setSekme] = useState<AdminSekme>("genel");
   const { data: hesaplar = [], isLoading, error } = useQuery({ queryKey: ["admin-hesaplar"], queryFn: hesaplariGetir });
 
   const secmeliAdi = useMemo(() => {
@@ -130,158 +132,47 @@ function Admin() {
     }
   };
 
+  const sekmeler: { id: AdminSekme; ad: string; aciklama: string; ikon: typeof ShieldCheck }[] = [
+    { id: "genel", ad: "Genel bakış", aciklama: "Dosyalar ve seçmeli durumu", ikon: ShieldCheck },
+    { id: "programlar", ad: "Programlar", aciklama: "Dönem ve ders verileri", ikon: BookMarked },
+    { id: "kullanicilar", ad: "Kullanıcılar", aciklama: "Hesaplar ve yetkiler", ikon: UsersRound },
+  ];
+
   return (
-    <AppShell baslik="Admin Paneli" aciklama={`${hesaplar.length} hesap`}>
-      <div className="space-y-6">
+    <AppShell baslik="Admin Paneli" aciklama="Ortak verileri ve kullanıcıları yönet">
+      <div className="space-y-5">
         <section className="grid gap-3 sm:grid-cols-3">
-          <div className="ui-surface rounded-2xl border border-border bg-surface p-4">
-            <div className="flex items-center gap-2 text-muted-foreground"><UsersRound className="h-4 w-4 text-teorik" /><span className="text-xs font-semibold">Toplam hesap</span></div>
-            <p className="mt-2 text-3xl font-extrabold">{hesaplar.length}</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">Kayıtlı öğrenci ve yönetici</p>
-          </div>
-          <div className="ui-surface rounded-2xl border border-border bg-surface p-4">
-            <div className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4 text-altin" /><span className="text-xs font-semibold">Yönetici hesabı</span></div>
-            <p className="mt-2 text-3xl font-extrabold">{hesaplar.filter((h) => h.admin).length}</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">Yetkili panel erişimi</p>
-          </div>
-          <div className="ui-surface rounded-2xl border border-border bg-surface p-4">
-            <div className="flex items-center gap-2 text-muted-foreground"><BookMarked className="h-4 w-4 text-pratik" /><span className="text-xs font-semibold">Seçmeli tercihi</span></div>
-            <p className="mt-2 text-3xl font-extrabold">{hesaplar.reduce((toplam, h) => toplam + h.secmeliler.length, 0)}</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">Tüm öğrencilerin seçimi</p>
-          </div>
+          <div className="ui-surface rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-2 text-muted-foreground"><UsersRound className="h-4 w-4 text-teorik" /><span className="text-xs font-semibold">Toplam hesap</span></div><p className="mt-2 text-3xl font-extrabold">{hesaplar.length}</p><p className="mt-1 text-[11px] text-muted-foreground">Kayıtlı öğrenci ve yönetici</p></div>
+          <div className="ui-surface rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4 text-altin" /><span className="text-xs font-semibold">Yönetici hesabı</span></div><p className="mt-2 text-3xl font-extrabold">{hesaplar.filter((h) => h.admin).length}</p><p className="mt-1 text-[11px] text-muted-foreground">Yetkili panel erişimi</p></div>
+          <div className="ui-surface rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-2 text-muted-foreground"><BookMarked className="h-4 w-4 text-pratik" /><span className="text-xs font-semibold">Seçmeli tercihi</span></div><p className="mt-2 text-3xl font-extrabold">{hesaplar.reduce((toplam, h) => toplam + h.secmeliler.length, 0)}</p><p className="mt-1 text-[11px] text-muted-foreground">Tüm öğrencilerin seçimi</p></div>
         </section>
 
-        <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5 space-y-3">
-          <h2 className="flex items-center gap-2 text-sm font-bold">
-            <ShieldCheck className="h-4 w-4 text-altin" /> Herkes için ortak dosyalar
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Buraya yüklediğin haftalık amfi programları ve genel seçmeli programı tüm öğrencilerin takvimine yansır.
-          </p>
-          <VeriYukleme tur="genel" />
-        </section>
+        <nav aria-label="Admin bölümleri" className="ui-surface flex gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-1.5 no-scrollbar">
+          {sekmeler.map(({ id, ad, aciklama, ikon: Ikon }) => <button key={id} onClick={() => setSekme(id)} className={`ui-control min-w-[10rem] flex-1 rounded-xl px-3 py-2.5 text-left ${sekme === id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent"}`}><span className="flex items-center gap-2 text-sm font-bold"><Ikon className="h-4 w-4" />{ad}</span><span className={`mt-0.5 block text-[10px] ${sekme === id ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{aciklama}</span></button>)}
+        </nav>
 
-        <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5 space-y-3">
-          <h2 className="flex items-center gap-2 text-sm font-bold">
-            <ShieldCheck className="h-4 w-4 text-altin" /> Dönem programları
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Her dönem için Türkçe ve İngilizce ders programı, uygulama tablosu ve öğrenci listesi. Öğrenciler kayıtta seçtikleri döneme göre bunları otomatik görür.
-          </p>
-          <ProgramYonetimi />
-        </section>
-
-        <YeniHesap onOlustu={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} />
-
-        {secmeliSayim.length ? (
+        {sekme === "genel" ? <div className="space-y-4">
           <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5">
-            <h2 className="mb-2 text-sm font-bold">Seçmeli tercihleri</h2>
-            <div className="grid gap-1.5 sm:grid-cols-2">
-              {secmeliSayim.map(([id, n]) => (
-                <div key={id} className="flex items-center justify-between gap-2 rounded-lg bg-accent px-2.5 py-1.5 text-xs">
-                  <span className="truncate">
-                    {secmeliAdi.get(id)?.grup ? `${secmeliAdi.get(id)?.grup}. grup · ` : ""}
-                    {secmeliAdi.get(id)?.ad ?? id}
-                  </span>
-                  <span className="shrink-0 font-bold">{n} öğrenci</span>
-                </div>
-              ))}
+            <div className="mb-4"><h2 className="flex items-center gap-2 text-base font-bold"><ShieldCheck className="h-4 w-4 text-altin" /> Herkes için ortak dosyalar</h2><p className="mt-1 text-xs text-muted-foreground">Haftalık amfi ve genel seçmeli programı burada yüklersen tüm öğrencilerin takvimine yansır.</p></div>
+            <VeriYukleme tur="genel" />
+          </section>
+          {secmeliSayim.length ? <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5"><div className="mb-3 flex items-center justify-between gap-2"><div><h2 className="text-base font-bold">Seçmeli tercihleri</h2><p className="mt-1 text-xs text-muted-foreground">En çok seçilen dersleri hızlıca gör.</p></div><span className="rounded-full bg-accent px-2 py-1 text-xs font-bold">{secmeliSayim.length} ders</span></div><div className="grid gap-2 sm:grid-cols-2">{secmeliSayim.map(([id, n]) => <div key={id} className="flex items-center justify-between gap-2 rounded-xl bg-accent/70 px-3 py-2 text-xs"><span className="truncate">{secmeliAdi.get(id)?.grup ? `${secmeliAdi.get(id)?.grup}. grup · ` : ""}{secmeliAdi.get(id)?.ad ?? id}</span><span className="shrink-0 font-bold">{n} öğrenci</span></div>)}</div></section> : null}
+        </div> : null}
+
+        {sekme === "programlar" ? <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5"><div className="mb-4"><h2 className="text-base font-bold">Dönem programları</h2><p className="mt-1 text-xs text-muted-foreground">Türkçe ve İngilizce ders programı, uygulama tablosu ve öğrenci listesini dönem bazında yönet.</p></div><ProgramYonetimi /></section> : null}
+
+        {sekme === "kullanicilar" ? <div className="space-y-4">
+          <YeniHesap onOlustu={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} />
+          <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-base font-bold">Kullanıcı yönetimi</h2><p className="mt-1 text-xs text-muted-foreground">Hesapları açıp öğrenci bilgilerini, dosyalarını ve yetkilerini düzenle.</p></div><span className="rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-muted-foreground">{liste.length} sonuç</span></div>
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-background/55 px-3 py-2"><Search className="h-4 w-4 text-muted-foreground" /><input value={ara} onChange={(e) => setAra(e.target.value)} placeholder="Ad, öğrenci no veya e-posta ara" className="w-full bg-transparent text-sm outline-none" /></div>
+            {isLoading ? <p className="text-sm text-muted-foreground">Hesaplar yükleniyor…</p> : null}
+            {error ? <p className="text-sm text-destructive">Hesaplar alınamadı.</p> : null}
+            <div className="overflow-hidden rounded-2xl border border-border bg-background/35">
+              {liste.map((h) => { const a = acik === h.id; return <div key={h.id} className="border-b border-border/70 last:border-0"><button onClick={() => setAcik(a ? null : h.id)} className="flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-accent/60"><div className="min-w-0 flex-1"><p className="flex items-center gap-1.5 truncate text-sm font-semibold">{h.ad_soyad || "(adsız)"}{h.admin ? <span className="rounded bg-accent px-1.5 text-[10px] font-bold text-altin">{h.email?.toLowerCase() === ORIJINAL_ADMIN_EMAIL ? "SÜPER ADMİN" : "ADMİN"}</span> : null}</p><p className="truncate text-xs text-muted-foreground">{h.ogrenci_no || "no yok"} · {h.email}</p></div><span className="shrink-0 text-xs text-muted-foreground">{h.secmeliler.length} seçmeli</span><ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${a ? "rotate-180" : ""}` /></button>{a ? <div className="space-y-3 bg-accent/30 px-3 pb-3 pt-1 text-xs"><NoDuzenle userId={h.id} no={h.ogrenci_no} onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} /><Bilgi etiket="E-posta" deger={h.email ?? "—"} /><Bilgi etiket="Kayıt tarihi" deger={new Date(h.created_at).toLocaleString("tr-TR")} />{h.guncelleme ? <Bilgi etiket="Son güncelleme" deger={new Date(h.guncelleme).toLocaleString("tr-TR")} /> : null}<GrupDuzenle userId={h.id} ayarlar={h.ayarlar} onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} /><div><p className="font-semibold text-muted-foreground">Seçtiği seçmeliler</p>{h.secmeliler.length ? <ul className="mt-1 list-inside list-disc">{h.secmeliler.map((id) => <li key={id}>{secmeliAdi.get(id)?.grup ? `${secmeliAdi.get(id)?.grup}. grup: ` : ""}{secmeliAdi.get(id)?.ad ?? id}</li>)}</ul> : <p className="mt-1">Seçim yok</p>}</div>{h.id !== user?.id ? <HesapDuzenle key={h.id + h.secmeliler.join()} userId={h.id} secili={h.secmeliler} dosyalar={h.dosyalar} secenekler={secenekler} onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} /> : null}{h.id !== user?.id ? <div className="flex flex-wrap gap-2">{orijinal ? <button onClick={() => void yetki(h)} className="ui-control inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 font-semibold text-altin hover:bg-accent"><ShieldCheck className="h-3.5 w-3.5" /> {h.admin ? "Admin yetkisini al" : "Admin yap"}</button> : null}<button onClick={() => void hesabiSil(h)} className="ui-control inline-flex items-center gap-1.5 rounded-xl border border-destructive/40 px-3 py-1.5 font-semibold text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /> Hesabı sil</button></div> : null}</div> : null}</div>; })}
             </div>
           </section>
-        ) : null}
-
-        <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-base font-bold">Kullanıcı yönetimi</h2><p className="mt-1 text-xs text-muted-foreground">Hesapları ara, açıp ayrıntılarını düzenle veya yetkilerini yönet.</p></div><span className="rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-muted-foreground">{liste.length} sonuç</span></div>
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-background/55 px-3 py-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <input
-              value={ara}
-              onChange={(e) => setAra(e.target.value)}
-              placeholder="Ad, öğrenci no veya e-posta ara"
-              className="w-full bg-transparent text-sm outline-none"
-            />
-          </div>
-          {isLoading ? <p className="text-sm text-muted-foreground">Hesaplar yükleniyor…</p> : null}
-          {error ? <p className="text-sm text-destructive">Hesaplar alınamadı.</p> : null}
-          <div className="overflow-hidden rounded-2xl border border-border bg-background/35">
-            {liste.map((h) => {
-              const a = acik === h.id;
-              return (
-                <div key={h.id} className="border-b border-border/70 last:border-0">
-                  <button onClick={() => setAcik(a ? null : h.id)} className="flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-accent/60">
-                    <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
-                        {h.ad_soyad || "(adsız)"}
-                        {h.admin ? (
-                          <span className="rounded bg-accent px-1.5 text-[10px] font-bold text-altin">
-                            {h.email?.toLowerCase() === ORIJINAL_ADMIN_EMAIL ? "SÜPER ADMİN" : "ADMİN"}
-                          </span>
-                        ) : null}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {h.ogrenci_no || "no yok"} · {h.email}
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-xs text-muted-foreground">{h.secmeliler.length} seçmeli</span>
-                    <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${a ? "rotate-180" : ""}`} />
-                  </button>
-                  {a ? (
-                    <div className="space-y-3 bg-accent/30 px-3 pb-3 pt-1 text-xs">
-                      <NoDuzenle userId={h.id} no={h.ogrenci_no} onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} />
-                      <Bilgi etiket="E-posta" deger={h.email ?? "—"} />
-                      <Bilgi etiket="Kayıt tarihi" deger={new Date(h.created_at).toLocaleString("tr-TR")} />
-                      {h.guncelleme ? <Bilgi etiket="Son güncelleme" deger={new Date(h.guncelleme).toLocaleString("tr-TR")} /> : null}
-                      <GrupDuzenle userId={h.id} ayarlar={h.ayarlar} onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} />
-                      <div>
-                        <p className="font-semibold text-muted-foreground">Seçtiği seçmeliler</p>
-                        {h.secmeliler.length ? (
-                          <ul className="mt-1 list-inside list-disc">
-                            {h.secmeliler.map((id) => (
-                              <li key={id}>
-                                {secmeliAdi.get(id)?.grup ? `${secmeliAdi.get(id)?.grup}. grup: ` : ""}
-                                {secmeliAdi.get(id)?.ad ?? id}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="mt-1">Seçim yok</p>
-                        )}
-                      </div>
-                      {h.id !== user?.id ? (
-                        <HesapDuzenle
-                          key={h.id + h.secmeliler.join()}
-                          userId={h.id}
-                          secili={h.secmeliler}
-                          dosyalar={h.dosyalar}
-                          secenekler={secenekler}
-                          onKaydedildi={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })}
-                        />
-                      ) : null}
-                      {h.id !== user?.id ? (
-                        <div className="flex flex-wrap gap-2">
-                          {orijinal ? (
-                            <button
-                              onClick={() => void yetki(h)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 font-semibold text-altin hover:bg-accent"
-                            >
-                              <ShieldCheck className="h-3.5 w-3.5" /> {h.admin ? "Admin yetkisini al" : "Admin yap"}
-                            </button>
-                          ) : null}
-                          <button
-                            onClick={() => void hesabiSil(h)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 font-semibold text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" /> Hesabı sil
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        </div> : null}
       </div>
     </AppShell>
   );
