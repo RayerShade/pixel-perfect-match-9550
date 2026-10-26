@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
@@ -7,6 +7,7 @@ import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpread
 import { IslemGecmisi, OgrenciDevam } from "@/components/SunucuEk";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
+import { VeriYukleme } from "@/components/VeriYukleme";
 import { useDonemler } from "@/components/DonemSecici";
 import type { Hedef } from "@/lib/hedef";
 import { TalepListesi, TalepSohbet, useTalepler } from "@/components/Destek";
@@ -17,7 +18,8 @@ import {
 import { sheetsKaynakListele, sheetsKaynakPlanGuncelle, sheetsSimdiKontrol } from "@/lib/sheets-takip.functions";
 
 export const Route = createFileRoute("/_authenticated/sunucu")({
-  head: () => ({ meta: [{ title: "Sunucu paneli" }, { name: "robots", content: "noindex, nofollow" }] }),
+  beforeLoad: () => { throw redirect({ to: "/admin" }); },
+  head: () => ({ meta: [{ title: "Yönetim paneli" }, { name: "robots", content: "noindex, nofollow" }] }),
   component: SunucuKapi,
 });
 
@@ -27,7 +29,7 @@ function SunucuKapi() {
   const [bekle, setBekle] = useState(false);
   const [mesaj, setMesaj] = useState("");
   if (q.isLoading) return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">yükleniyor…</div>;
-  if (q.data) return <Sunucu />;
+  if (q.data) return <SuperYonetim />;
   const gir = async (e: React.FormEvent) => {
     e.preventDefault(); setBekle(true); setMesaj("");
     const { data, error } = await supabase.rpc("panel_sifre_dene", { _sifre: sifre });
@@ -49,11 +51,12 @@ function SunucuKapi() {
   );
 }
 
-type Sekme = "ozet" | "kullanicilar" | "destek" | "donem" | "veri" | "dosyalar" | "kontrol" | "duyuru" | "yedek" | "gecmis";
+type Sekme = "ozet" | "kullanicilar" | "destek" | "ortak" | "donem" | "veri" | "dosyalar" | "kontrol" | "duyuru" | "yedek" | "gecmis";
 const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "ozet", ad: "Özet", ikon: Activity },
   { id: "kullanicilar", ad: "Kullanıcılar", ikon: Users },
   { id: "destek", ad: "Destek", ikon: LifeBuoy },
+  { id: "ortak", ad: "Ortak dosyalar", ikon: FileSpreadsheet },
   { id: "donem", ad: "Dönemler", ikon: CalendarRange },
   { id: "veri", ad: "Veritabanı", ikon: Database },
   { id: "dosyalar", ad: "Dosyalar", ikon: FileSpreadsheet },
@@ -64,7 +67,7 @@ const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
 ];
 const SEKME_GRUPLARI: { baslik: string; ids: Sekme[] }[] = [
   { baslik: "Genel", ids: ["ozet", "kullanicilar"] },
-  { baslik: "Akademik", ids: ["donem"] },
+  { baslik: "Akademik", ids: ["ortak", "donem"] },
   { baslik: "İletişim", ids: ["destek", "duyuru"] },
   { baslik: "Sistem", ids: ["kontrol", "dosyalar", "veri", "yedek", "gecmis"] },
 ];
@@ -94,18 +97,18 @@ function Kart({ baslik, children, sag }: { baslik: string; children: ReactNode; 
   );
 }
 
-function Sunucu() {
+export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () => void }) {
   const [sekme, setSekme] = useState<Sekme>("ozet");
   const aktifSekme = SEKMELER.find((x) => x.id === sekme) ?? SEKMELER[0]!;
   const I = aktifSekme.ikon;
-  const icerik = sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "kontrol" ? <SheetsKontroller /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />;
+  const icerik = sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "ortak" ? <OrtakYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "kontrol" ? <SheetsKontroller /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />;
   return (
     <div className="app-frame min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-20 px-2 pt-2 md:px-4 md:pt-3">
         <div className="ui-surface mx-auto flex max-w-7xl items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Server className="h-4 w-4" /></div>
           <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">Yönetim</p><h1 className="truncate text-sm font-extrabold">Sunucu paneli</h1></div>
-          <a href="/" className={`${btn} ml-auto`}>Siteye dön</a>
+          {adminGorunumuneDon ? <button onClick={adminGorunumuneDon} className={btn}>Admin görünümü</button> : null}<a href="/" className={`${btn} ${adminGorunumuneDon ? "" : "ml-auto"}`}>Siteye dön</a>
         </div>
       </header>
 
@@ -130,6 +133,15 @@ function Sunucu() {
     </div>
   );
 }
+function OrtakYonetim() {
+  return <div className="space-y-4">
+    <Kart baslik="Herkes için ortak dosyalar">
+      <p className="mb-4 text-xs text-muted-foreground">Haftalık amfi programı ve genel seçmeli programını buradan yönet. Bu dosyalar tüm öğrencilerin takvimine yansır.</p>
+      <VeriYukleme tur="genel" />
+    </Kart>
+  </div>;
+}
+
 function Ozet({ git }: { git: (s: Sekme) => void }) {
   const f = useServerFn(sunucuOzet);
   const q = useQuery({ queryKey: ["sunucu-ozet"], queryFn: () => f() });
