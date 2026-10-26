@@ -165,7 +165,7 @@ function Admin() {
         {orijinal ? <section className="ui-surface flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
           <div><p className="text-sm font-bold">Görünüm</p><p className="mt-0.5 text-xs text-muted-foreground">Yalnızca süper adminler yönetim seviyesini değiştirebilir.</p></div>
           <div role="group" aria-label="Yönetim görünümü" className="relative grid grid-cols-2 rounded-xl bg-accent p-1">
-            <span aria-hidden="true" className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-primary shadow-sm transition-transform duration-200" style={{ transform: gorunum === "admin" ? "translateX(0.25rem)" : "translateX(calc(100% + 0.25rem))" }} />
+            <span aria-hidden="true" className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-primary shadow-sm transition-transform duration-200" style={{ transform: "translateX(0.25rem)" }} />
             <button onClick={() => setGorunum("admin")} className="relative z-10 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-primary-foreground"><ShieldCheck className="h-4 w-4" />Admin</button>
             <button onClick={() => setGorunum("super")} className="relative z-10 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-muted-foreground"><Crown className="h-4 w-4" />Süper admin</button>
           </div>
