@@ -2,10 +2,11 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { ChevronDown, Search, ShieldCheck, Trash2, UsersRound, UserRoundPlus, BookMarked } from "lucide-react";
+import { ChevronDown, Search, ShieldCheck, Trash2, UsersRound, UserRoundPlus, BookMarked, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { VeriYukleme } from "@/components/VeriYukleme";
+import { SuperYonetim } from "@/routes/_authenticated/sunucu";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
 import { HesapDuzenle } from "@/components/HesapDuzenle";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,6 +91,7 @@ function Admin() {
   const [ara, setAra] = useState("");
   const [acik, setAcik] = useState<string | null>(null);
   const [sekme, setSekme] = useState<AdminSekme>("genel");
+  const [gorunum, setGorunum] = useState<"admin" | "super">("admin");
   const { data: hesaplar = [], isLoading, error } = useQuery({ queryKey: ["admin-hesaplar"], queryFn: hesaplariGetir });
 
   const secmeliAdi = useMemo(() => {
@@ -132,6 +134,8 @@ function Admin() {
     }
   };
 
+  if (orijinal && gorunum === "super") return <SuperYonetim adminGorunumuneDon={() => setGorunum("admin")} />;
+
   const sekmeler: { id: AdminSekme; ad: string; aciklama: string; ikon: typeof ShieldCheck }[] = [
     { id: "genel", ad: "Genel bakış", aciklama: "Dosyalar ve seçmeli durumu", ikon: ShieldCheck },
     { id: "programlar", ad: "Programlar", aciklama: "Dönem ve ders verileri", ikon: BookMarked },
@@ -141,6 +145,14 @@ function Admin() {
   return (
     <AppShell baslik="Admin Paneli" aciklama="Ortak verileri ve kullanıcıları yönet">
       <div className="space-y-5">
+        {orijinal ? <section className="ui-surface flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
+          <div><p className="text-sm font-bold">Görünüm</p><p className="mt-0.5 text-xs text-muted-foreground">Yalnızca süper adminler yönetim seviyesini değiştirebilir.</p></div>
+          <div role="group" aria-label="Yönetim görünümü" className="relative grid grid-cols-2 rounded-xl bg-accent p-1">
+            <span aria-hidden="true" className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-primary shadow-sm transition-transform duration-200" style={{ transform: gorunum === "admin" ? "translateX(0.25rem)" : "translateX(calc(100% + 0.25rem))" }} />
+            <button onClick={() => setGorunum("admin")} className="relative z-10 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-primary-foreground"><ShieldCheck className="h-4 w-4" />Admin</button>
+            <button onClick={() => setGorunum("super")} className="relative z-10 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-muted-foreground"><Crown className="h-4 w-4" />Süper admin</button>
+          </div>
+        </section> : null}
         <section className="grid gap-3 sm:grid-cols-3">
           <div className="ui-surface rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-2 text-muted-foreground"><UsersRound className="h-4 w-4 text-teorik" /><span className="text-xs font-semibold">Toplam hesap</span></div><p className="mt-2 text-3xl font-extrabold">{hesaplar.length}</p><p className="mt-1 text-[11px] text-muted-foreground">Kayıtlı öğrenci ve yönetici</p></div>
           <div className="ui-surface rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4 text-altin" /><span className="text-xs font-semibold">Yönetici hesabı</span></div><p className="mt-2 text-3xl font-extrabold">{hesaplar.filter((h) => h.admin).length}</p><p className="mt-1 text-[11px] text-muted-foreground">Yetkili panel erişimi</p></div>
