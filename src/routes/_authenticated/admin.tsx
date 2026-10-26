@@ -6,7 +6,7 @@ import { ChevronDown, Search, ShieldCheck, Trash2, UsersRound, UserRoundPlus, Bo
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { VeriYukleme } from "@/components/VeriYukleme";
-import { SuperYonetim } from "@/routes/_authenticated/sunucu";
+import { DestekYonetim, Duyuru, SuperYonetim } from "@/routes/_authenticated/sunucu";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
 import { HesapDuzenle } from "@/components/HesapDuzenle";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,6 +136,19 @@ function Admin() {
 
   if (orijinal && gorunum === "super") return <SuperYonetim adminGorunumuneDon={() => setGorunum("admin")} />;
 
+  if (!orijinal) return (
+    <AppShell baslik="Yönetim" aciklama="Destek taleplerini ve duyuruları yönet">
+      <div className="mx-auto max-w-4xl space-y-4">
+        <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5">
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-teorik">Admin araçları</p>
+          <h2 className="mt-1 text-lg font-bold">İletişim merkezi</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Öğrenci şikâyetlerini incele ve gerektiğinde hedefli duyuru yayınla.</p>
+        </section>
+        <AdminIletisim />
+      </div>
+    </AppShell>
+  );
+
   const sekmeler: { id: AdminSekme; ad: string; aciklama: string; ikon: typeof ShieldCheck }[] = [
     { id: "genel", ad: "Genel bakış", aciklama: "Dosyalar ve seçmeli durumu", ikon: ShieldCheck },
     { id: "programlar", ad: "Programlar", aciklama: "Dönem ve ders verileri", ikon: BookMarked },
@@ -188,6 +201,17 @@ function Admin() {
       </div>
     </AppShell>
   );
+}
+
+function AdminIletisim() {
+  const [sekme, setSekme] = useState<"destek" | "duyuru">("destek");
+  return <section className="ui-surface overflow-hidden rounded-3xl border border-border bg-surface">
+    <div className="flex border-b border-border bg-accent/45 p-1.5">
+      <button onClick={() => setSekme("destek")} className={`ui-control flex-1 rounded-xl px-3 py-2 text-sm font-bold ${sekme === "destek" ? "bg-surface text-primary shadow-sm" : "text-muted-foreground"}`}>Destek talepleri</button>
+      <button onClick={() => setSekme("duyuru")} className={`ui-control flex-1 rounded-xl px-3 py-2 text-sm font-bold ${sekme === "duyuru" ? "bg-surface text-primary shadow-sm" : "text-muted-foreground"}`}>Duyurular</button>
+    </div>
+    <div className="p-4 md:p-5">{sekme === "destek" ? <DestekYonetim /> : <Duyuru />}</div>
+  </section>;
 }
 
 function Bilgi({ etiket, deger }: { etiket: string; deger: string }) {
