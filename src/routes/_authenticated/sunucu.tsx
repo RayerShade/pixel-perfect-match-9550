@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users, CheckCircle2, AlertTriangle, CalendarClock, Play, Plus, X, Timer, Crown } from "lucide-react";
+import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users, ShieldCheck, CheckCircle2, AlertTriangle, CalendarClock, Play, Plus, X, Timer, Crown } from "lucide-react";
 import { IslemGecmisi, OgrenciDevam } from "@/components/SunucuEk";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
