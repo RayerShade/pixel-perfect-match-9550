@@ -238,7 +238,7 @@ function Takvim() {
           </div>
         ) : null}
 
-        <div className="mt-4 flex gap-1.5 overflow-x-auto rounded-2xl bg-accent/50 p-1.5 no-scrollbar" aria-label="Gün seçici">
+        {gorunum === "gun" ? <div className="mt-4 flex gap-1.5 overflow-x-auto rounded-2xl bg-accent/50 p-1.5 no-scrollbar" aria-label="Gün seçici">
           {gorunenGunler.map((g) => {
             const sec = sameDay(g, imlec);
             const bu = sameDay(g, bugun);
@@ -246,7 +246,7 @@ function Takvim() {
             const sayi = olaylar.filter((o) => sameDay(o.date, g)).length;
             return <button key={isoDate(g)} onClick={() => setImlec(g)} className={`ui-control relative flex min-w-[3.3rem] flex-1 flex-col items-center rounded-xl px-2 py-2 text-xs ${sec ? "bg-primary text-primary-foreground shadow-sm" : bu ? "bg-teorik-soft text-teorik" : "text-muted-foreground hover:bg-surface"}`}><span className="font-semibold">{GUN_KISA[gunIndex]}</span><span className="mt-0.5 text-lg font-extrabold">{g.getDate()}</span><span className={`mt-1 h-1.5 w-1.5 rounded-full ${sayi ? sec ? "bg-primary-foreground" : "bg-pratik" : "bg-transparent"}`} /></button>;
           })}
-        </div>
+        </div> : null}
 
         <div className={`mt-4 grid gap-4 ${gununPlaniGorunsun ? "xl:grid-cols-[minmax(0,1fr)_15.5rem]" : ""}`}>
           <div
