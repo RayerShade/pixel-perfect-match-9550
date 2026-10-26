@@ -69,13 +69,13 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
         </div>
       </section>
 
-      {yonet && <DilimYonetimi dersler={dersler} onDegis={onDegis} ekstra={ekstra} setEkstra={setEkstra} />}
-      {toplu && <TopluDuzen dersler={dersler} onDegis={onDegis} secenek={secenek} />}
+      {yonet ? <DilimYonetimi dersler={dersler} onDegis={onDegis} ekstra={ekstra} setEkstra={setEkstra} /> : null}
+      {!yonet && toplu ? <TopluDuzen dersler={dersler} onDegis={onDegis} secenek={secenek} /> : null}
       <datalist id="pt-dilimler">{secenek.dilimler.map((x) => <option key={x} value={x} />)}</datalist>
       <datalist id="pt-derslikler">{derslikler.map((x) => <option key={x} value={x} />)}</datalist>
       <datalist id="pt-dallar">{secenek.dallar.map((x) => <option key={x} value={x} />)}</datalist>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
+      {!yonet ? <div className="overflow-x-auto rounded-2xl border border-border bg-surface p-1 shadow-sm">
         <div className="grid min-w-[900px]" style={{ gridTemplateColumns: "48px repeat(7, 1fr)" }}>
           <div />
           {gunler.map((g, i) => (
@@ -113,7 +113,7 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
             </div>
           ))}
         </div>
-      </div>
+      </div> : <section className="rounded-2xl border border-dashed border-border bg-accent/35 p-5 text-center"><p className="text-sm font-bold">Dilim ve ana dal ayarları açık</p><p className="mt-1 text-xs text-muted-foreground">Burada dilim ağacını düzenle. Ders takvimine dönmek için üstteki “Takvim” sekmesine bas.</p></section>}
 
       {duzen && <DersFormu ders={duzen} tumDersler={dersler} yeniMi={!dersler.some((r) => r.id === duzen.id)} kapat={() => setDuzen(null)} kaydet={kaydet}
         sil={() => { onDegis(dersler.filter((r) => r.id !== duzen.id)); setDuzen(null); }}
