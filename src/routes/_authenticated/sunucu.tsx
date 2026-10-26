@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
@@ -109,17 +109,17 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Server className="h-4 w-4" /></div>
           <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">Yönetim</p><h1 className="truncate text-sm font-extrabold">Süper admin paneli</h1></div>
           <nav className="hidden items-center gap-1 rounded-xl bg-accent/60 p-1 lg:flex" aria-label="Öğrenci sayfaları">
-            <a href="/" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><CalendarRange className="h-3.5 w-3.5" />Takvim</a>
-            <a href="/dersler" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><BookOpen className="h-3.5 w-3.5" />Dersler</a>
-            <a href="/yemek" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><UtensilsCrossed className="h-3.5 w-3.5" />Yemek</a>
-            <a href="/destek" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><LifeBuoy className="h-3.5 w-3.5" />Destek</a>
-            <a href="/ayarlar" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><Settings className="h-3.5 w-3.5" />Ayarlar</a>
+            <Link to="/" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><CalendarRange className="h-3.5 w-3.5" />Takvim</Link>
+            <Link to="/dersler" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><BookOpen className="h-3.5 w-3.5" />Dersler</Link>
+            <Link to="/yemek" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><UtensilsCrossed className="h-3.5 w-3.5" />Yemek</Link>
+            <Link to="/destek" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><LifeBuoy className="h-3.5 w-3.5" />Destek</Link>
+            <Link to="/ayarlar" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><Settings className="h-3.5 w-3.5" />Ayarlar</Link>
           </nav>
           {adminGorunumuneDon ? <div role="group" aria-label="Yönetim görünümü" className="relative ml-auto grid grid-cols-2 rounded-xl bg-accent p-1">
             <span aria-hidden="true" className="absolute inset-y-1 w-[calc(50%-0.25rem)] translate-x-[calc(100%+0.25rem)] rounded-lg bg-primary shadow-sm" />
             <button onClick={adminGorunumuneDon} className="relative z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" />Admin</button>
             <button aria-pressed="true" className="relative z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-primary-foreground"><Crown className="h-3.5 w-3.5" />Süper</button>
-          </div> : null}<a href="/" className={`${btn} ${adminGorunumuneDon ? "" : "ml-auto"}`}>Siteye dön</a>
+          </div> : null}<Link to="/" className={`${btn} ${adminGorunumuneDon ? "" : "ml-auto"}`}>Siteye dön</Link>
         </div>
       </header>
 
