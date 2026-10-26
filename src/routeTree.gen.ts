@@ -23,6 +23,7 @@ import { Route as AuthenticatedYemekRouteImport } from './routes/_authenticated/
 import { Route as ApiHesabimiSilRouteImport } from './routes/api/hesabimi-sil'
 import { Route as ApiPublicDuyuruPlanlariniGonderRouteImport } from './routes/api/public/duyuru-planlarini-gonder'
 import { Route as ApiPublicSheetsKontrolRouteImport } from './routes/api/public/sheets-kontrol'
+import { Route as ApiTakvimIcsRouteImport } from './routes/api/takvim.ics'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
@@ -96,6 +97,11 @@ const ApiPublicSheetsKontrolRoute = ApiPublicSheetsKontrolRouteImport.update({
   path: '/api/public/sheets-kontrol',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTakvimIcsRoute = ApiTakvimIcsRouteImport.update({
+  id: '/api/takvim/ics',
+  path: '/api/takvim/ics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/api/hesabimi-sil': typeof ApiHesabimiSilRoute
   '/api/public/duyuru-planlarini-gonder': typeof ApiPublicDuyuruPlanlariniGonderRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
+  '/api/takvim/ics': typeof ApiTakvimIcsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/api/public/duyuru-planlarini-gonder': typeof ApiPublicDuyuruPlanlariniGonderRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
+  '/api/takvim/ics': typeof ApiTakvimIcsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/public/duyuru-planlarini-gonder': typeof ApiPublicDuyuruPlanlariniGonderRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
+  '/api/takvim/ics': typeof ApiTakvimIcsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/api/hesabimi-sil'
     | '/api/public/duyuru-planlarini-gonder'
     | '/api/public/sheets-kontrol'
+    | '/api/takvim/ics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api/public/duyuru-planlarini-gonder'
     | '/api/public/sheets-kontrol'
+    | '/api/takvim/ics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/api/public/duyuru-planlarini-gonder'
     | '/api/public/sheets-kontrol'
+    | '/api/takvim/ics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   ApiHesabimiSilRoute: typeof ApiHesabimiSilRoute
   ApiPublicDuyuruPlanlariniGonderRoute: typeof ApiPublicDuyuruPlanlariniGonderRoute
   ApiPublicSheetsKontrolRoute: typeof ApiPublicSheetsKontrolRoute
+  ApiTakvimIcsRoute: typeof ApiTakvimIcsRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSheetsKontrolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/takvim/ics': {
+      id: '/api/takvim/ics'
+      path: '/api/takvim/ics'
+      fullPath: '/api/takvim/ics'
+      preLoaderRoute: typeof ApiTakvimIcsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -375,6 +395,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHesabimiSilRoute: ApiHesabimiSilRoute,
   ApiPublicDuyuruPlanlariniGonderRoute: ApiPublicDuyuruPlanlariniGonderRoute,
   ApiPublicSheetsKontrolRoute: ApiPublicSheetsKontrolRoute,
+  ApiTakvimIcsRoute: ApiTakvimIcsRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }

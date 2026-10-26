@@ -10,7 +10,7 @@ const groupMatch = (groups: string[] = [], group = "", sub = "") => {
   const g = String(group).replace(/\s/g, "").toUpperCase(), a = String(sub).replace(/\s/g, "").toUpperCase(), full = a && !a.startsWith(g) ? g + a : a || g;
   return groups.some((x) => { const v = String(x).replace(/\s/g, "").toUpperCase(); return v === g || v === a || v === full || (v.length === 1 && g.startsWith(v)); });
 };
-export const Route = createFileRoute("/api/takvim.ics")({ server: { handlers: { GET: async ({ request }) => {
+export const Route = createFileRoute("/api/takvim/ics")({ server: { handlers: { GET: async ({ request }) => {
   const token = new URL(request.url).searchParams.get("t") || "";
   if (!/^[a-z0-9]{20,}$/i.test(token)) return new Response("Takvim bağlantısı geçersiz.", { status: 404 });
   const { data: row } = await supabaseAdmin.from("user_data").select("ayarlar,secmeliler,veri").filter("ayarlar->>takvimAbonelikToken", "eq", token).maybeSingle();
