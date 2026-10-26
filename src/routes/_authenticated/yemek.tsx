@@ -41,7 +41,7 @@ function Yemek() {
 
   return (
     <AppShell baslik="Yemek Listesi" aciklama="İÜ SKS kaynağından güncel menü">
-      <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5">
+      <section className="workspace-panel p-4 md:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <UtensilsCrossed className="h-5 w-5 text-primary" />
@@ -86,7 +86,7 @@ function Yemek() {
             const buGunMu = !!bugun && gun.tarih === bugun;
             const gecti = !!bugun && gun.tarih < bugun;
             return (
-              <article key={gun.tarih} className={`ui-control rounded-2xl border p-3 ${buGunMu ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30" : "border-border"} ${gecti ? "opacity-60" : ""}`}>
+              <article key={gun.tarih} className={`workspace-row rounded-2xl border p-3 ${buGunMu ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30" : "border-border"} ${gecti ? "opacity-60" : ""}`}>
                 <h3 className="flex items-center gap-2 text-sm font-bold capitalize">
                   {gunAdi(gun.tarih)}
                   {buGunMu ? <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Bugün</span> : null}
