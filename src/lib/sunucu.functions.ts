@@ -7,6 +7,21 @@ import { adminYeniSifreSemasi } from "./admin-sifre";
 export const TABLOLAR = { profiles: "id", user_data: "user_id", user_roles: "id", global_data: "anahtar" } as const;
 const tabloSema = z.enum(["profiles", "user_data", "user_roles", "global_data"]);
 const KOVA = "ogrenci-dosyalari";
+/** Yazılabilir alanlar: istemciden gelen satırlar yalnızca bu sütunlara indirgenir. */
+const ALANLAR: Record<keyof typeof TABLOLAR, readonly string[]> = {
+  profiles: ["id", "email", "ad_soyad", "ogrenci_no"],
+  user_data: ["user_id", "veri", "ayarlar", "secmeliler", "manuel_amfi"],
+  user_roles: ["user_id", "role"],
+  global_data: ["anahtar", "veri"],
+};
+function alanSuz(t: keyof typeof TABLOLAR, satir: unknown): Record<string, unknown> {
+  if (!satir || typeof satir !== "object" || Array.isArray(satir)) throw new Error(`${t}: geçersiz satır.`);
+  const out: Record<string, unknown> = {};
+  for (const k of ALANLAR[t]) if (k in (satir as Record<string, unknown>)) out[k] = (satir as Record<string, unknown>)[k];
+  if (t === "user_roles" && !["admin", "user"].includes(String(out["role"]))) throw new Error("Geçersiz rol.");
+  return out;
+}
+const IZINLI_KOKENLER = ["https://itftakvim.xyz", "https://www.itftakvim.xyz", "https://pixel-perfect-match-9550.lovable.app", "https://id-preview--9d101627-0336-4f17-a11a-3c2dfd782f81.lovable.app", "http://localhost:8080"];
 
 async function logla(ctx: unknown, islem: string, detay = "") {
   const c = ctx as { userId: string };
@@ -78,8 +93,9 @@ export const satirKaydet = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const db = await yetkili(context as never);
     const pk = TABLOLAR[data.tablo];
-    if (data.satir[pk] == null && data.tablo !== "user_roles") throw new Error(`${pk} gerekli.`);
-    const { error } = await db.from(data.tablo).upsert(data.satir as never, { onConflict: pk });
+    if (data.tablo === "user_roles" ? !data.satir["user_id"] : data.satir[pk] == null) throw new Error(`${pk} gerekli.`);
+    const satir = alanSuz(data.tablo, data.satir);
+    const { error } = await db.from(data.tablo).upsert(satir as never, { onConflict: data.tablo === "user_roles" ? "user_id,role" : pk });
     if (error) throw new Error(error.message);
     await logla(context, `Tablo satırı kaydedildi: ${data.tablo}`, String(data.satir[pk] ?? ""));
     return { ok: true };
@@ -189,7 +205,7 @@ export const kullaniciEkIslem = createServerFn({ method: "POST" })
     const tip = data.islem === "sifreLinki" ? "recovery" : "magiclink";
     const { data: l, error } = await db.auth.admin.generateLink({
       type: tip, email,
-      ...(data.origin ? { options: { redirectTo: `${data.origin}${tip === "recovery" ? "/reset-password" : "/"}` } } : {}),
+      ...(data.origin && IZINLI_KOKENLER.includes(new URL(data.origin).origin) ? { options: { redirectTo: `${new URL(data.origin).origin}${tip === "recovery" ? "/reset-password" : "/"}` } } : {}),
     });
     if (error) throw new Error(error.message);
     return { link: l.properties?.action_link ?? null };
@@ -289,7 +305,8 @@ export const yedekGeriYukle = createServerFn({ method: "POST" })
     for (const [t, pk] of Object.entries(TABLOLAR)) {
       const rows = y[t];
       if (!Array.isArray(rows) || !rows.length) continue;
-      const { error } = await db.from(t).upsert(rows as never, { onConflict: t === "user_roles" ? "user_id,role" : pk });
+      const temiz = rows.map((r) => alanSuz(t as keyof typeof TABLOLAR, r));
+      const { error } = await db.from(t).upsert(temiz as never, { onConflict: t === "user_roles" ? "user_id,role" : pk });
       if (error) throw new Error(`${t}: ${error.message}`);
       sonuc[t] = rows.length;
     }
