@@ -321,8 +321,11 @@ export type Database = {
           anahtar: string
           aralik_dk: number
           created_at: string
+          hafta_gunleri: number[]
           hata: string | null
           id: string
+          kontrol_tipi: string
+          saatler: Json
           son_degisim: string | null
           son_hash: string | null
           son_kontrol: string | null
@@ -335,8 +338,11 @@ export type Database = {
           anahtar: string
           aralik_dk?: number
           created_at?: string
+          hafta_gunleri?: number[]
           hata?: string | null
           id?: string
+          kontrol_tipi?: string
+          saatler?: Json
           son_degisim?: string | null
           son_hash?: string | null
           son_kontrol?: string | null
@@ -349,8 +355,11 @@ export type Database = {
           anahtar?: string
           aralik_dk?: number
           created_at?: string
+          hafta_gunleri?: number[]
           hata?: string | null
           id?: string
+          kontrol_tipi?: string
+          saatler?: Json
           son_degisim?: string | null
           son_hash?: string | null
           son_kontrol?: string | null
@@ -464,6 +473,7 @@ export type Database = {
       okul_epostasi_zorunlu_mu: { Args: never; Returns: boolean }
       orijinal_admin_mi: { Args: never; Returns: boolean }
       panel_sifre_dene: { Args: { _sifre: string }; Returns: boolean }
+      sheets_cron_token_dogrula: { Args: { _token: string }; Returns: boolean }
       super_admin_ayarla: {
         Args: { _user_id: string; _ver: boolean }
         Returns: undefined
