@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users, CheckCircle2, AlertTriangle, CalendarClock, Play, Plus, X, Timer } from "lucide-react";
+import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users, CheckCircle2, AlertTriangle, CalendarClock, Play, Plus, X, Timer, Crown } from "lucide-react";
 import { IslemGecmisi, OgrenciDevam } from "@/components/SunucuEk";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
@@ -107,12 +107,16 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
       <header className="sticky top-0 z-20 px-2 pt-2 md:px-4 md:pt-3">
         <div className="ui-surface mx-auto flex max-w-7xl items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Server className="h-4 w-4" /></div>
-          <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">Yönetim</p><h1 className="truncate text-sm font-extrabold">Sunucu paneli</h1></div>
-          {adminGorunumuneDon ? <button onClick={adminGorunumuneDon} className={btn}>Admin görünümü</button> : null}<a href="/" className={`${btn} ${adminGorunumuneDon ? "" : "ml-auto"}`}>Siteye dön</a>
+          <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">Yönetim</p><h1 className="truncate text-sm font-extrabold">Süper admin paneli</h1></div>
+          {adminGorunumuneDon ? <div role="group" aria-label="Yönetim görünümü" className="relative ml-auto grid grid-cols-2 rounded-xl bg-accent p-1">
+            <span aria-hidden="true" className="absolute inset-y-1 w-[calc(50%-0.25rem)] translate-x-[calc(100%+0.25rem)] rounded-lg bg-primary shadow-sm" />
+            <button onClick={adminGorunumuneDon} className="relative z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" />Admin</button>
+            <button aria-pressed="true" className="relative z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-primary-foreground"><Crown className="h-3.5 w-3.5" />Süper</button>
+          </div> : null}<a href="/" className={`${btn} ${adminGorunumuneDon ? "" : "ml-auto"}`}>Siteye dön</a>
         </div>
       </header>
 
-      <nav aria-label="Sunucu paneli bölümleri" className="mx-auto mt-3 flex max-w-7xl gap-1 overflow-x-auto px-3 no-scrollbar md:hidden">
+      <nav aria-label="Süper admin bölümleri" className="mx-auto mt-3 flex max-w-7xl gap-1 overflow-x-auto px-3 no-scrollbar md:hidden">
         {SEKMELER.map(({ id, ad, ikon: Ikon }) => <button key={id} onClick={() => setSekme(id)} className={`ui-control flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold ${sekme === id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface text-muted-foreground"}`}><Ikon className="h-3.5 w-3.5" />{ad}</button>)}
       </nav>
 
@@ -125,7 +129,7 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
         <main className="min-w-0 space-y-4">
           <section className="ui-surface flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface p-4">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-primary"><I className="h-5 w-5" /></div>
-            <div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Sunucu paneli</p><h2 className="text-lg font-bold">{aktifSekme.ad}</h2></div>
+            <div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Süper admin</p><h2 className="text-lg font-bold">{aktifSekme.ad}</h2></div>
           </section>
           {icerik}
         </main>
