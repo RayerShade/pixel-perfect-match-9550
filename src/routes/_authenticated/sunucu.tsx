@@ -317,7 +317,7 @@ function Kullanicilar() {
           </div>
         </div>
         <div className="grid grid-cols-2 border-t border-border sm:grid-cols-4">
-          {([ as const
+          {([
             ["Toplam hesap", sayilar.toplam, "hepsi"],
             ["Onay bekleyen", sayilar.onaysiz, "onaysiz"],
             ["Admin", sayilar.admin, "admin"],
