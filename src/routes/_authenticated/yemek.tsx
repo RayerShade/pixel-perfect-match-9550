@@ -41,20 +41,20 @@ function Yemek() {
 
   return (
     <AppShell baslik="Yemek Listesi" aciklama="İÜ SKS kaynağından güncel menü">
-      <section className="rounded-3xl border border-border bg-surface p-4 shadow-card md:p-5">
+      <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <UtensilsCrossed className="h-5 w-5 text-primary" />
             <h2 className="text-base font-bold">{AYLAR[ay - 1]} {yil}</h2>
           </div>
           <div className="flex items-center gap-1">
-            <button aria-label="Önceki ay" onClick={() => setImlec(new Date(yil, ay - 2, 1))} className="grid h-8 w-8 place-items-center rounded-lg border border-border hover:bg-accent"><ChevronLeft className="h-4 w-4" /></button>
-            <button onClick={() => setImlec(new Date())} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">Bu ay</button>
-            <button aria-label="Sonraki ay" onClick={() => setImlec(new Date(yil, ay, 1))} className="grid h-8 w-8 place-items-center rounded-lg border border-border hover:bg-accent"><ChevronRight className="h-4 w-4" /></button>
+            <button aria-label="Önceki ay" onClick={() => setImlec(new Date(yil, ay - 2, 1))} className="ui-control grid h-8 w-8 place-items-center rounded-xl border border-border hover:bg-accent"><ChevronLeft className="h-4 w-4" /></button>
+            <button onClick={() => setImlec(new Date())} className="ui-control rounded-xl border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">Bu ay</button>
+            <button aria-label="Sonraki ay" onClick={() => setImlec(new Date(yil, ay, 1))} className="ui-control grid h-8 w-8 place-items-center rounded-xl border border-border hover:bg-accent"><ChevronRight className="h-4 w-4" /></button>
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-3 rounded-xl bg-accent p-1 text-xs font-semibold">
+        <div className="mt-4 grid grid-cols-3 rounded-2xl bg-accent/70 p-1.5 text-xs font-semibold">
           {([
             ["kahvalti", "Kahvaltı", "07:30–09:00"],
             ["ogle", "Öğle", "11:00–14:00"],
@@ -86,7 +86,7 @@ function Yemek() {
             const buGunMu = !!bugun && gun.tarih === bugun;
             const gecti = !!bugun && gun.tarih < bugun;
             return (
-              <article key={gun.tarih} className={`rounded-xl border p-3 ${buGunMu ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30" : "border-border"} ${gecti ? "opacity-60" : ""}`}>
+              <article key={gun.tarih} className={`ui-control rounded-2xl border p-3 ${buGunMu ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30" : "border-border"} ${gecti ? "opacity-60" : ""}`}>
                 <h3 className="flex items-center gap-2 text-sm font-bold capitalize">
                   {gunAdi(gun.tarih)}
                   {buGunMu ? <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Bugün</span> : null}
