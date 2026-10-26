@@ -317,12 +317,12 @@ function Kullanicilar() {
           </div>
         </div>
         <div className="grid grid-cols-2 border-t border-border sm:grid-cols-4">
-          {[
-            ["Toplam hesap", sayilar.toplam, "hepsi" as const],
-            ["Onay bekleyen", sayilar.onaysiz, "onaysiz" as const],
-            ["Admin", sayilar.admin, "admin" as const],
-            ["Yasaklı", sayilar.yasakli, "yasakli" as const],
-          ].map(([ad, sayi, id]) => <button key={ad} onClick={() => setFiltre(id)} className={"border-r border-t border-border p-3 text-left last:border-r-0 hover:bg-accent/60 " + (filtre === id ? "bg-primary/5" : "")}>
+          {([
+            ["Toplam hesap", sayilar.toplam, "hepsi"],
+            ["Onay bekleyen", sayilar.onaysiz, "onaysiz"],
+            ["Admin", sayilar.admin, "admin"],
+            ["Yasaklı", sayilar.yasakli, "yasakli"],
+          ] as const).map(([ad, sayi, id]) => <button key={ad} onClick={() => setFiltre(id)} className={"border-r border-t border-border p-3 text-left last:border-r-0 hover:bg-accent/60 " + (filtre === id ? "bg-primary/5" : "")}>
             <p className="text-xl font-bold tabular-nums">{sayi}</p><p className="text-xs text-muted-foreground">{ad}</p>
           </button>)}
         </div>
