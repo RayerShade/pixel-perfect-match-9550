@@ -22,9 +22,9 @@ function DestekSayfasi() {
   const [akim, setAkim] = useState<Talep["tur"] | null>(null);
   return (
     <AppShell baslik="Destek" aciklama="Şikâyet veya önerini ilet.">
-      <div className="mx-auto max-w-3xl space-y-4 pb-28">
+      <div className="mx-auto max-w-3xl space-y-5 pb-28">
         {akim ? <YeniTalep tur={akim} onOlustu={() => setAkim(null)} vazgec={() => setAkim(null)} /> : <TalepTuruSecici sec={setAkim} />}
-        <div className="grid gap-3 sm:grid-cols-2"><TanitimTusu /><KrokiTusu /></div>
+        <section className="workspace-panel grid gap-3 p-3 sm:grid-cols-2"><TanitimTusu /><KrokiTusu /></section>
       </div>
     </AppShell>
   );
