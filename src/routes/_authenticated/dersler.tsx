@@ -87,7 +87,7 @@ function TopluTus({ olaylar, katilim, ayarla }: { olaylar: DersOlayi[]; katilim:
         e.stopPropagation();
         ayarla(yapilan.map((o) => o.key), !hepsi);
       }}
-      className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] font-semibold ${hepsi ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}
+      className={`ui-control shrink-0 rounded-xl border px-2 py-1 text-[11px] font-semibold ${hepsi ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}
     >
       {hepsi ? "✓ Tümüne girdim" : "Tümüne girdim"}
     </button>
@@ -114,18 +114,18 @@ function Dersler() {
 
   return (
     <AppShell baslik="Dersler" aciklama="Dilim ve anabilim dalına göre · devam takibi">
-      <div className="space-y-3">
+      <div className="space-y-4">
         <input
           value={arama}
           onChange={(e) => setArama(e.target.value)}
           placeholder="Dilim, anabilim dalı, konu veya hoca ara…"
-          className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className="ui-surface w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm outline-none"
         />
         <p className="px-1 text-[11px] text-muted-foreground">
           Geçmiş derslere katıldığını işaretleyebilir; dilim başlıklarında katılımını ve yapılan devamsızlık sayını görebilirsin.
         </p>
         {!agac.length ? (
-          <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+          <p className="rounded-3xl border border-dashed border-border bg-surface/60 p-8 text-center text-sm text-muted-foreground">
             Döneminin yıllık programı yüklendiğinde dersler burada görünür.
           </p>
         ) : null}
@@ -139,7 +139,7 @@ function Dersler() {
           const acikDl = acik.has(dl.ad) || Boolean(q);
           let sonTur: string | null = null;
           return (
-            <section key={dl.ad} data-tur="dilim" className="overflow-hidden rounded-2xl border border-border bg-surface">
+            <section key={dl.ad} data-tur="dilim" className="ui-surface overflow-hidden rounded-2xl border border-border bg-surface">
               <div className="flex items-center gap-2 p-4">
                 <button onClick={() => ac(dl.ad)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${acikDl ? "rotate-180" : ""}`} />
@@ -168,7 +168,7 @@ function Dersler() {
                             {bolum === "telafi" ? "Telafi uygulamaları" : d.tur === "uygulama" ? "Uygulamalar" : "Teorik dersler"}
                           </p>
                         ) : null}
-                        <div className="rounded-xl bg-accent/40">
+                        <div className="rounded-2xl bg-accent/50">
                           <div className="flex items-center gap-2 px-3 py-2">
                             <button onClick={() => ac(dalKey)} className="min-w-0 flex-1 text-left">
                               <p className="text-sm font-semibold">{d.ad}</p>
@@ -179,7 +179,7 @@ function Dersler() {
                           {acik.has(dalKey) || q ? (
                             <ul className="space-y-1 px-2 pb-2">
                               {d.liste.map(([ad, konuOlaylari]) => (
-                                <li key={ad} className="rounded-lg bg-surface px-3 py-2">
+                                <li key={ad} className="rounded-xl bg-surface/90 px-3 py-2 shadow-sm">
                                   <div className="flex items-start gap-2">
                                     <button onClick={() => ac(`${dalKey}|${ad}`)} className="min-w-0 flex-1 text-left">
                                       <p className="text-sm font-medium">{ad}</p>

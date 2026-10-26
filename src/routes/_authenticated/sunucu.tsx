@@ -62,10 +62,10 @@ const SEKMELER: { id: Sekme; ad: string; ikon: typeof Users }[] = [
   { id: "yedek", ad: "Yedek", ikon: HardDrive },
   { id: "gecmis", ad: "İşlem Geçmişi", ikon: History },
 ];
-const btn = "inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-accent disabled:opacity-50";
+const btn = "ui-control inline-flex items-center gap-1 rounded-xl border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-accent disabled:opacity-50";
 const ana = `${btn} border-primary bg-primary text-primary-foreground hover:bg-primary/90`;
 const tehlike = `${btn} text-destructive hover:bg-destructive/10`;
-const giris = "rounded-md border border-border bg-background px-2 py-1.5 text-sm";
+const giris = "rounded-xl border border-border bg-background px-3 py-2 text-sm";
 const hata = (e: unknown) => toast.error(e instanceof Error ? e.message : "Hata");
 const tarih = (s?: string | null) => (s ? new Date(s).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—");
 const once = (s?: string | null) => {
@@ -81,7 +81,7 @@ const indirMetin = (ad: string, metin: string, tip = "application/json") => {
 
 function Kart({ baslik, children, sag }: { baslik: string; children: ReactNode; sag?: ReactNode }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+    <section className="ui-surface rounded-2xl border border-border bg-card p-4">
       <div className="mb-3 flex flex-wrap items-center gap-2"><h2 className="text-sm font-semibold">{baslik}</h2><div className="ml-auto flex flex-wrap gap-1">{sag}</div></div>
       {children}
     </section>
@@ -91,14 +91,14 @@ function Kart({ baslik, children, sag }: { baslik: string; children: ReactNode; 
 function Sunucu() {
   const [sekme, setSekme] = useState<Sekme>("ozet");
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-3 py-2">
+    <div className="app-frame min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-10 px-2 pt-2 md:px-4 md:pt-3">
+        <div className="ui-surface mx-auto flex max-w-7xl flex-wrap items-center gap-2 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl">
           <Server className="h-5 w-5 text-primary" />
           <b className="mr-3">Sunucu paneli</b>
-          <nav className="flex flex-wrap gap-1">
+          <nav className="flex flex-wrap gap-1 rounded-xl bg-accent/60 p-1">
             {SEKMELER.map(({ id, ad, ikon: I }) => (
-              <button key={id} onClick={() => setSekme(id)} className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm ${sekme === id ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
+              <button key={id} onClick={() => setSekme(id)} className={`ui-control inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold ${sekme === id ? "bg-surface text-primary shadow-sm" : "hover:bg-accent"}`}>
                 <I className="h-4 w-4" />{ad}
               </button>
             ))}

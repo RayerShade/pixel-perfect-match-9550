@@ -125,20 +125,20 @@ function Takvim() {
 
   return (
     <AppShell baslik="Ders Takvimi" aciklama={ayarlar.donem}>
-      <div className="rounded-3xl border border-border bg-surface p-3 shadow-card md:p-5">
+      <div className="ui-surface rounded-3xl border border-border bg-surface p-3 md:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-1">
             <button
               onClick={() => kaydir(-1)}
               aria-label="Önceki"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border sm:h-8 sm:w-8 sm:rounded-lg border-border hover:bg-accent"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border sm:h-8 sm:w-8 sm:rounded-lg border-border hover:bg-accent ui-control"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={() => kaydir(1)}
               aria-label="Sonraki"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border sm:h-8 sm:w-8 sm:rounded-lg border-border hover:bg-accent"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border sm:h-8 sm:w-8 sm:rounded-lg border-border hover:bg-accent ui-control"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -179,11 +179,11 @@ function Takvim() {
             </button>
             <button
               onClick={() => setImlec(new Date())}
-              className="rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent sm:py-1.5 sm:text-xs"
+              className="ui-control rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent sm:py-1.5 sm:text-xs"
             >
               {gorunum === "gun" ? "Bugün" : gorunum === "hafta" ? "Bu hafta" : "Bu ay"}
             </button>
-            <div className="flex flex-1 rounded-lg border border-border p-0.5 sm:flex-none">
+            <div className="flex flex-1 rounded-xl border border-border bg-accent/40 p-1 sm:flex-none">
               {(
                 [
                   ["gun", "Gün"],
@@ -207,7 +207,7 @@ function Takvim() {
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 rounded-xl bg-accent/60 px-3 py-2 text-[11px] text-muted-foreground">
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 rounded-2xl bg-accent/60 px-3 py-2.5 text-[11px] text-muted-foreground">
           <span><strong className="font-semibold text-foreground">Amfi bilgisi:</strong> {guncellemeZamani(veri.guncellemeler?.amfi)}</span>
           <span><strong className="font-semibold text-foreground">Ders programı:</strong> {guncellemeZamani(veri.guncellemeler?.program)}</span>
         </div>
@@ -222,7 +222,7 @@ function Takvim() {
 
         {gorunum === "hafta" ? (
           <div className="mt-3 flex justify-end">
-            <button onClick={() => isaretle(olaylar)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">
+            <button onClick={() => isaretle(olaylar)} className="ui-control rounded-xl border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">
               Tüm haftaya girdim olarak işaretle / kaldır
             </button>
           </div>
@@ -303,7 +303,7 @@ function Takvim() {
         onClick={() => setEkle(true)}
         aria-label="Ders ekle" data-tur="ekle"
         title="Kendi dersini ekle"
-        className="fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 md:bottom-8 md:right-8"
+        className="fixed bottom-28 right-5 z-40 grid h-14 w-14 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg transition hover:scale-105 md:bottom-8 md:right-8"
       >
         <Plus className="h-7 w-7" />
       </button>

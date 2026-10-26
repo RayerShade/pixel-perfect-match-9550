@@ -8,7 +8,7 @@ import { Tanitim } from "@/components/Tanitim";
 import { NumaraBilgi, useNumaraSorgu } from "@/components/NumaraBilgi";
 
 import { useAyarlar } from "@/lib/store";
-import { CalendarDays, BookOpen, Settings, LifeBuoy, LogOut, ShieldCheck, Loader2, Info, UtensilsCrossed } from "lucide-react";
+import { CalendarDays, BookOpen, Settings, LifeBuoy, LogOut, ShieldCheck, Loader2, Info, UtensilsCrossed, GraduationCap } from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Takvim", icon: CalendarDays },
@@ -32,63 +32,66 @@ export function AppShell({
   const eksik = hazir && user && profil && !profil.ogrenci_no;
   const uyariGoster = hazir && user && profil && !eksik && !ayarlar.bilgilendirmeGordu;
   const turGoster = hazir && user && profil && !eksik && ayarlar.bilgilendirmeGordu && !ayarlar.turGordu;
+  const ad = profil?.ad_soyad?.trim() || user?.email || "Öğrenci";
+  const basHarf = ad.charAt(0).toLocaleUpperCase("tr-TR");
+
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
-      <header className="sticky top-0 z-30 border-b border-border/70 bg-surface/90 backdrop-blur">
-        <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 md:flex md:justify-between">
+    <div className="app-frame bg-background pb-24 md:pb-0">
+      <header className="sticky top-0 z-30 px-2 pt-2 md:px-4 md:pt-3">
+        <div className="ui-surface mx-auto grid max-w-[76rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl md:flex md:justify-between md:px-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <CalendarDays className="h-4.5 w-4.5" />
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+              <GraduationCap className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-base font-bold md:text-lg">{baslik}</h1>
-              {aciklama ? (
-                <p className="truncate text-xs text-muted-foreground">{aciklama}</p>
-              ) : null}
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">İTF Takvim</p>
+              <h1 className="truncate text-sm font-extrabold tracking-tight md:text-base">{baslik}</h1>
             </div>
           </div>
-          <nav className="hidden items-center gap-1 md:flex">
+
+          <nav className="hidden items-center rounded-2xl bg-accent/70 p-1 md:flex">
             {NAV.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}
                 data-tur={`nav-${to}`}
                 activeOptions={{ exact: to === "/" }}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent data-[status=active]:bg-teorik-soft data-[status=active]:text-teorik"
+                className="ui-control flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground data-[status=active]:bg-surface data-[status=active]:text-primary data-[status=active]:shadow-sm"
               >
                 <Icon className="h-4 w-4" />
                 {label}
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-1 md:ml-2">
+
+          <div className="flex items-center gap-1.5">
             {isAdmin ? (
               <Link
                 to="/admin"
-                className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-altin hover:bg-accent data-[status=active]:bg-accent"
+                className="ui-control hidden items-center gap-1.5 rounded-xl bg-secmeli-soft px-3 py-2 text-sm font-bold text-altin md:flex"
                 title="Admin paneli"
               >
                 <ShieldCheck className="h-4 w-4" />
-                <span className="hidden lg:inline">Admin</span>
+                <span className="hidden lg:inline">Yönetim</span>
               </Link>
             ) : null}
-            <span className="hidden max-w-[10rem] truncate px-1 text-xs text-muted-foreground lg:inline">
-              {profil?.ad_soyad || user?.email}
-            </span>
             <span data-tur="zil" className="inline-flex"><BildirimZili /></span>
             <button
               onClick={() => void cikis()}
               title="Çıkış yap"
               aria-label="Çıkış yap"
-              className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="ui-control grid h-9 w-9 place-items-center rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <LogOut className="h-4 w-4" />
             </button>
+            <span title={ad} className="hidden h-9 min-w-9 place-items-center rounded-xl bg-primary px-2 text-xs font-extrabold text-primary-foreground lg:grid">
+              {basHarf}
+            </span>
           </div>
         </div>
       </header>
       {!hazir ? (
-        <div className="flex items-center justify-center gap-2 bg-accent py-1.5 text-xs text-muted-foreground">
+        <div className="mx-auto mt-2 flex max-w-[76rem] items-center justify-center gap-2 rounded-xl bg-accent/70 py-2 text-xs text-muted-foreground">
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Hesabındaki veriler yükleniyor…
         </div>
       ) : null}
@@ -97,9 +100,16 @@ export function AppShell({
       {turGoster ? <Tanitim /> : null}
       <DuyuruBandi />
 
-      <main className="mx-auto max-w-6xl px-3 py-4 md:px-4 md:py-6">{children}</main>
+      <main className="app-content mx-auto px-3 py-4 md:px-4 md:py-6">
+        <section className="page-intro">
+          <p className="page-intro__eyebrow"><span className="h-1.5 w-1.5 rounded-full bg-pratik" /> İTF Takvim</p>
+          <h2 className="page-intro__title">{baslik}</h2>
+          {aciklama ? <p className="page-intro__description">{aciklama}</p> : null}
+        </section>
+        {children}
+      </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-surface/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-3 bottom-3 z-30 rounded-2xl border border-white/70 bg-surface/95 p-1.5 shadow-[0_12px_36px_oklch(0.2_0.04_250_/_0.18)] backdrop-blur-xl md:hidden">
         <div className="grid grid-cols-5">
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
@@ -107,9 +117,9 @@ export function AppShell({
               to={to}
               data-tur={`nav-${to}`}
               activeOptions={{ exact: to === "/" }}
-              className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium text-muted-foreground transition-colors data-[status=active]:text-teorik"
+              className="flex min-w-0 flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-bold text-muted-foreground data-[status=active]:bg-teorik-soft data-[status=active]:text-teorik"
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-4.5 w-4.5" />
               <span className="truncate px-1">{label}</span>
             </Link>
           ))}
