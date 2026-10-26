@@ -45,6 +45,8 @@ function Ayarlar() {
   const donemAdi = donemler.find((d) => d.id === ayarlar.donemId)?.ad ?? "";
   const dilEtiket = ayarlar.dil ? DIL_ETIKET[ayarlar.dil] : "";
   const [secmeliAcik, setSecmeliAcik] = useState(false);
+  const [takvimToken, setTakvimToken] = useState<string>(() => ayarlar.takvimAbonelikToken ?? "");
+  const takvimUrl = takvimToken ? `${window.location.origin}/api/takvim.ics?t=${takvimToken}` : "";
 
   // Ad, grup ve dönem yüklenen dosyalardan gelir; bulununca tercih olarak da kaydedilir.
   useEffect(() => {
@@ -202,6 +204,8 @@ function Ayarlar() {
           </label>
           <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="mt-4 w-full rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">Seçmeli derslerini seç</button>
         </section>
+
+        <section className="ui-surface rounded-2xl border border-border bg-surface p-4"><h2 className="text-sm font-bold">Takvim aboneliği</h2><p className="mt-1 text-xs text-muted-foreground">Derslerin, amfilerin ve program değişikliklerin “İTF Takvim” adıyla Apple veya Google Calendar’da güncel kalır.</p>{!takvimToken ? <button className="mt-3 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground" onClick={() => { const t = crypto.randomUUID().replace(/-/g, ""); setTakvimToken(t); guncelle({ takvimAbonelikToken: t }); }}>Bağlantıyı oluştur</button> : <div className="mt-3 space-y-2"><input readOnly value={takvimUrl} onFocus={(e) => e.target.select()} className="w-full rounded-xl border border-border bg-background px-3 py-2 font-mono text-xs" /><div className="flex flex-wrap gap-2"><a className="rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground" href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(takvimUrl)}`} target="_blank" rel="noreferrer">Google Calendar’a ekle</a><a className="rounded-xl border border-border px-3 py-2 text-sm font-semibold" href={takvimUrl.replace(/^https:/, "webcal:")}>Apple Calendar’a ekle</a><button className="rounded-xl border border-border px-3 py-2 text-sm font-semibold" onClick={() => void navigator.clipboard.writeText(takvimUrl).then(() => toast.success("Bağlantı kopyalandı"))}>Bağlantıyı kopyala</button></div><p className="text-[11px] text-muted-foreground">Google’da açılan pencerede “Ekle”yi seç. Bağlantıyı yalnızca sen kullan; yenilersen eski bağlantı geçersiz olur.</p></div>}</section>
 
         <PwaKurulum />
 

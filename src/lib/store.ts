@@ -62,6 +62,8 @@ export interface Ayarlar {
   katilim?: Record<string, true>;
   /** Devamsızlık uyarısı kapatılan dilimler. */
   devamUyariKapali?: string[];
+  /** Apple ve Google Calendar aboneliği için kişisel anahtar. */
+  takvimAbonelikToken?: string;
 }
 
 export const VARSAYILAN_AYARLAR: Ayarlar = {
