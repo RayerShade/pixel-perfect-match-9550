@@ -307,3 +307,41 @@
   .page-intro__title { font-size: 1.22rem; }
   .page-intro__description { font-size: .78rem; }
 }
+
+
+/* High-craft çalışma alanı: sakin katmanlar, yakın eylemler ve mobilde kart önceliği. */
+.workspace-panel {
+  border: 1px solid oklch(1 0 0 / .62);
+  border-radius: 1.5rem;
+  background: linear-gradient(145deg, oklch(1 0 0 / .78), oklch(.97 .012 250 / .56));
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / .76), var(--shadow-card);
+  backdrop-filter: blur(18px);
+}
+.workspace-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .65rem;
+  padding: .75rem;
+  border: 1px solid oklch(1 0 0 / .58);
+  border-radius: 1.15rem;
+  background: oklch(1 0 0 / .42);
+  backdrop-filter: blur(14px);
+}
+.workspace-kpi {
+  min-width: 8.5rem;
+  border: 1px solid oklch(1 0 0 / .58);
+  border-radius: 1.15rem;
+  background: oklch(1 0 0 / .5);
+  padding: .85rem;
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / .68);
+}
+.workspace-row {
+  transition: background-color 160ms ease, transform 160ms ease, border-color 160ms ease;
+}
+.workspace-row:hover { background: oklch(.96 .018 250 / .8); }
+@media (max-width: 767px) {
+  .workspace-panel { border-radius: 1.25rem; }
+  .workspace-toolbar { border-radius: 1rem; }
+  .workspace-kpi { min-width: calc(50% - .4rem); flex: 1; }
+}
