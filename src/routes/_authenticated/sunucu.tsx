@@ -7,6 +7,7 @@ import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpread
 import { IslemGecmisi, OgrenciDevam } from "@/components/SunucuEk";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
+import { AppShell } from "@/components/AppShell";
 import { VeriYukleme } from "@/components/VeriYukleme";
 import { useDonemler } from "@/components/DonemSecici";
 import type { Hedef } from "@/lib/hedef";
@@ -103,36 +104,23 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
   const I = aktifSekme.ikon;
   const icerik = sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "ortak" ? <OrtakYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "kontrol" ? <SheetsKontroller /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />;
   return (
-    <div className="app-frame min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 px-2 pt-2 md:px-4 md:pt-3">
-        <div className="ui-surface mx-auto flex max-w-7xl items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Server className="h-4 w-4" /></div>
-          <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">Yönetim</p><h1 className="truncate text-sm font-extrabold">Süper admin paneli</h1></div>
-          <nav className="hidden items-center gap-1 rounded-xl bg-accent/60 p-1 lg:flex" aria-label="Öğrenci sayfaları">
-            <Link to="/" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><CalendarRange className="h-3.5 w-3.5" />Takvim</Link>
-            <Link to="/dersler" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><BookOpen className="h-3.5 w-3.5" />Dersler</Link>
-            <Link to="/yemek" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><UtensilsCrossed className="h-3.5 w-3.5" />Yemek</Link>
-            <Link to="/destek" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><LifeBuoy className="h-3.5 w-3.5" />Destek</Link>
-            <Link to="/ayarlar" className="ui-control flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:bg-surface"><Settings className="h-3.5 w-3.5" />Ayarlar</Link>
-          </nav>
-          {adminGorunumuneDon ? <div role="group" aria-label="Yönetim görünümü" className="relative ml-auto grid grid-cols-2 rounded-xl bg-accent p-1">
-            <span aria-hidden="true" className="absolute inset-y-1 w-[calc(50%-0.25rem)] translate-x-[calc(100%+0.25rem)] rounded-lg bg-primary shadow-sm" />
-            <button onClick={adminGorunumuneDon} className="relative z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" />Admin</button>
-            <button aria-pressed="true" className="relative z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-primary-foreground"><Crown className="h-3.5 w-3.5" />Süper</button>
-          </div> : null}<Link to="/" className={`${btn} ${adminGorunumuneDon ? "" : "ml-auto"}`}>Siteye dön</Link>
-        </div>
-      </header>
-
-      <nav aria-label="Süper admin bölümleri" className="mx-auto mt-3 flex max-w-7xl gap-1 overflow-x-auto px-3 no-scrollbar md:hidden">
+    <AppShell baslik="Yönetim" aciklama="Sistem, akademik veri ve iletişim araçlarını yönet.">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3">
+        <div className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Crown className="h-4 w-4" /></span><div><p className="text-xs font-bold">Süper admin görünümü</p><p className="text-[11px] text-muted-foreground">Tüm yönetim araçları açık.</p></div></div>
+        {adminGorunumuneDon ? <div role="group" aria-label="Yönetim görünümü" className="relative grid grid-cols-2 rounded-xl bg-accent p-1">
+          <span aria-hidden="true" className="absolute inset-y-1 w-[calc(50%-0.25rem)] translate-x-[calc(100%+0.25rem)] rounded-lg bg-primary shadow-sm" />
+          <button onClick={adminGorunumuneDon} className="relative z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" />Admin</button>
+          <button aria-pressed="true" className="relative z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-primary-foreground"><Crown className="h-3.5 w-3.5" />Süper</button>
+        </div> : null}
+      </div>
+      <nav aria-label="Süper admin bölümleri" className="mb-4 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-1.5 no-scrollbar md:hidden">
         {SEKMELER.map(({ id, ad, ikon: Ikon }) => <button key={id} onClick={() => setSekme(id)} className={`ui-control flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold ${sekme === id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface text-muted-foreground"}`}><Ikon className="h-3.5 w-3.5" />{ad}</button>)}
       </nav>
-
-      <div className="mx-auto grid max-w-7xl gap-4 p-3 md:grid-cols-[13.5rem_minmax(0,1fr)] md:p-5">
+      <div className="grid gap-4 md:grid-cols-[13.5rem_minmax(0,1fr)]">
         <aside className="ui-surface hidden h-fit rounded-3xl border border-border bg-surface p-2 md:block">
           <div className="px-2 py-2"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Bölümler</p></div>
           {SEKME_GRUPLARI.map((grup) => <div key={grup.baslik} className="mb-3 last:mb-0"><p className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">{grup.baslik}</p><div className="space-y-0.5">{grup.ids.map((id) => { const item = SEKMELER.find((x) => x.id === id)!; const Ikon = item.ikon; return <button key={id} onClick={() => setSekme(id)} className={`ui-control flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs font-bold ${sekme === id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Ikon className="h-4 w-4" />{item.ad}</button>; })}</div></div>)}
         </aside>
-
         <main className="min-w-0 space-y-4">
           <section className="ui-surface flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface p-4">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-primary"><I className="h-5 w-5" /></div>
@@ -141,7 +129,7 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
           {icerik}
         </main>
       </div>
-    </div>
+    </AppShell>
   );
 }
 function OrtakYonetim() {
