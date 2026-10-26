@@ -1,5 +1,4 @@
 import { SheetsTusu, type SheetsTur } from "@/components/SheetsTusu";
-import { SheetsTakip } from "@/components/SheetsTakip";
 import { ProgramTakvim } from "@/components/ProgramTakvim";
 import { AiAsistan, UygulamaToplu, VeriKontrol } from "@/components/VeriKontrol";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -396,8 +395,6 @@ export function ProgramYonetimi() {
                   </div>
                 ))}
               </div>
-
-              <SheetsTakip anahtarlar={[programAnahtari(donemId, dil)]} />
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-accent/40 p-3 text-xs">
                 <span>Excel yazım farklarını, ders türlerini, dilim/ana dal adlarını ve uygulama grup kodlarını otomatik temizle.</span>
                 <button
