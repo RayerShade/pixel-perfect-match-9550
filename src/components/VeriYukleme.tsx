@@ -1,5 +1,4 @@
 import { SheetsTusu, type SheetsTur } from "@/components/SheetsTusu";
-import { SheetsTakip } from "@/components/SheetsTakip";
 import { useRef, useState } from "react";
 import { BookMarked, CalendarRange, ChevronDown, FileSpreadsheet, FlaskConical, Trash2, Upload, Users } from "lucide-react";
 import { ogrenciListesiOku, uygulamaTablosuOku } from "@/lib/uygulama-import";
@@ -229,8 +228,6 @@ export function VeriYukleme({ tur = "kisisel" }: { tur?: "kisisel" | "genel" }) 
         onSil={() => { kaydet({ ogrenciler: null, ogrenciDosya: undefined }); bulut("ogrenci"); }}
       />
       ) : null}
-      
-      {g ? <div className="sm:col-span-2"><SheetsTakip anahtarlar={["amfi", "secmeli"]} /></div> : null}
     </div>
   );
 }
