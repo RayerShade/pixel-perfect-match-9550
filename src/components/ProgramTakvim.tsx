@@ -73,6 +73,7 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
       {!yonet && toplu ? <TopluDuzen dersler={dersler} onDegis={onDegis} secenek={secenek} /> : null}
       <datalist id="pt-dilimler">{secenek.dilimler.map((x) => <option key={x} value={x} />)}</datalist>
       <datalist id="pt-derslikler">{derslikler.map((x) => <option key={x} value={x} />)}</datalist>
+      <datalist id="pt-hocalar">{[...new Set(dersler.map((d) => d.instructor.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr")).map((x) => <option key={x} value={x} />)}</datalist>
       <datalist id="pt-dallar">{secenek.dallar.map((x) => <option key={x} value={x} />)}</datalist>
 
       {!yonet ? <div className="overflow-x-auto rounded-2xl border border-border bg-surface p-1 shadow-sm">
@@ -148,11 +149,11 @@ function DersFormu({ ders, tumDersler, yeniMi, kapat, kaydet, sil, kopya }: { de
           <div className="mt-2 flex flex-wrap items-center gap-1.5"><span className="mr-1 text-[11px] text-muted-foreground">Hızlı süre:</span>{[50, 60, 90, 120].map((sure) => <button key={sure} type="button" onClick={() => saatEkle(sure)} className="rounded-full border border-border bg-surface px-2 py-1 text-[11px] font-bold hover:bg-background">{sure} dk</button>)}</div>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-xs">Derslik
+          <label className="text-xs font-semibold">Derslik
             <input role="combobox" aria-autocomplete="list" aria-describedby="pt-derslik-ipucu" list="pt-derslikler" className={girdi} value={d.defaultClassroom}
-              placeholder="Listeden seç ya da yaz" onChange={(e) => setD({ ...d, defaultClassroom: e.target.value, ...(e.target.value ? {} : { sinifKesin: undefined }) })} />
+              placeholder="Derslik listesinden seç" onChange={(e) => setD({ ...d, defaultClassroom: e.target.value, ...(e.target.value ? {} : { sinifKesin: undefined }) })} />
           </label>
-          <label className="text-xs">Hoca<input className={girdi} value={d.instructor} onChange={(e) => k("instructor", e.target.value)} /></label>
+          <label className="text-xs font-semibold">Hoca<input role="combobox" aria-autocomplete="list" list="pt-hocalar" className={girdi} value={d.instructor} placeholder="Listeden seç ya da yaz" onChange={(e) => k("instructor", e.target.value)} /></label>
         </div>
         <p id="pt-derslik-ipucu" className="-mt-2 text-[11px] text-muted-foreground">Listede yoksa dersliği yazabilirsin; kesin atama öğrenci kartında vurgulanır.</p>
         {cakisan.length ? <div className="flex gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><span><b>Amfi çakışması olabilir.</b> Aynı saat ve derslikte: {cakisan.map((x) => x.courseName).join(", ")}.</span></div> : null}
@@ -166,8 +167,8 @@ function DersFormu({ ders, tumDersler, yeniMi, kapat, kaydet, sil, kopya }: { de
               {(Object.keys(DERS_TURU_ETIKET) as DersTuru[]).map((t) => <option key={t} value={t}>{DERS_TURU_ETIKET[t]}</option>)}
             </select>
           </label>
-          <label className="text-xs">Dilim<input list="pt-dilimler" className={girdi} value={d.dilim ?? ""} placeholder={oto.dilim} onChange={(e) => k("dilim", e.target.value || undefined)} /></label>
-          <label className="text-xs">Ana dal<input list="pt-dallar" className={girdi} value={d.dal ?? ""} placeholder={oto.dal} onChange={(e) => k("dal", e.target.value || undefined)} /></label>
+          <label className="text-xs font-semibold">Dilim<input role="combobox" aria-autocomplete="list" list="pt-dilimler" className={girdi} value={d.dilim ?? ""} placeholder={oto.dilim} onChange={(e) => k("dilim", e.target.value || undefined)} /></label>
+          <label className="text-xs font-semibold">Ana dal<input role="combobox" aria-autocomplete="list" list="pt-dallar" className={girdi} value={d.dal ?? ""} placeholder={oto.dal} onChange={(e) => k("dal", e.target.value || undefined)} /></label>
         </div>
         <p className="text-[11px] text-muted-foreground">Dilim / ana dal boş kalırsa dosyadan otomatik okunur (soluk yazan).</p>
         <label className="block text-xs">Not<input className={girdi} value={d.notes} onChange={(e) => k("notes", e.target.value)} /></label>
