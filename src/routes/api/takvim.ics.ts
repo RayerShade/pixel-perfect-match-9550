@@ -25,4 +25,4 @@ export const Route = createFileRoute("/api/takvim.ics")({ server: { handlers: { 
   for (const o of ayar.ozelDersler || []) if (o.tarih >= today) push("ozel-"+o.id,o.ad,o.tarih,o.startTime,o.endTime,o.yer,o.not);
   const ics = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//ITF Takvim//TR","X-WR-CALNAME:İTF Takvim","CALSCALE:GREGORIAN",...events,"END:VCALENDAR",""].join("\r\n");
   return new Response(ics,{headers:{"content-type":"text/calendar; charset=utf-8","cache-control":"no-store","content-disposition":"inline; filename=itf-takvim.ics"}});
-}}});
+}}}});
