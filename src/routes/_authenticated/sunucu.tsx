@@ -431,6 +431,8 @@ function SheetsKaynakKarti({
       </button>
     </div>
 
+    {!aktif ? <p className="mt-4 rounded-xl border border-dashed border-border bg-accent/40 px-3 py-2 text-xs text-muted-foreground">Otomatik kontrol kapalı. Plan ayarlarını değiştirmek için önce otomatik kontrolü aç.</p> : null}
+    <fieldset disabled={!aktif} className={aktif ? "" : "pointer-events-none opacity-45"}>
     <div className="mt-4 grid gap-2 md:grid-cols-3">
       {planlar.map(({ id, baslik, aciklama, ikon: Ikon }) => <button key={id} type="button" onClick={() => setTip(id)} className={`ui-control flex items-start gap-2 rounded-xl border p-3 text-left ${tip === id ? "border-primary bg-primary/8 text-primary ring-1 ring-primary/20" : "border-border bg-surface hover:bg-accent"}`}>
         <Ikon className="mt-0.5 h-4 w-4 shrink-0" /><span><b className="block text-xs">{baslik}</b><span className="block text-[11px] text-muted-foreground">{aciklama}</span></span>
@@ -458,6 +460,7 @@ function SheetsKaynakKarti({
     </div> : null}
 
     <div className="mt-4 flex justify-end border-t border-border pt-3"><button type="button" disabled={bekliyor || (tip !== "aralik" && !saatler.length) || (tip === "haftalik" && !gunler.length)} className={ana} onClick={() => void kaydet()}><CheckCircle2 className="h-3.5 w-3.5" />Planı kaydet</button></div>
+    </fieldset>
   </article>;
 }
 
