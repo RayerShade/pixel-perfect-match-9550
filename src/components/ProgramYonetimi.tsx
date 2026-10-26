@@ -17,6 +17,9 @@ import {
   donemleriKaydet,
   programGetir,
   programKaydet,
+  programTaslagiGetir,
+  programTaslagiKaydet,
+  programTaslagiSil,
   type Dil,
   type ProgramVerisi,
 } from "@/lib/program";
@@ -201,6 +204,7 @@ export function ProgramYonetimi() {
   const [yeniAd, setYeniAd] = useState("");
   const [gecmis, setGecmis] = useState<ProgramVerisi[]>([]);
   const [kopyaHedef, setKopyaHedef] = useState<{ donemId: string; dil: Dil } | null>(null);
+  const [taslak, setTaslak] = useState<ProgramVerisi | null>(null);
 
   useEffect(() => {
     if (!donemId && donemler[0]) setDonemId(donemler[0].id);
@@ -209,7 +213,11 @@ export function ProgramYonetimi() {
     setProg(null);
     setKirli(false);
     setGecmis([]);
-    if (donemId) void programGetir(donemId, dil).then(setProg);
+    setTaslak(null);
+    if (donemId) {
+      void programGetir(donemId, dil).then(setProg);
+      void programTaslagiGetir(donemId, dil).then(setTaslak);
+    }
   }, [donemId, dil]);
 
   const donemYenile = () => qc.invalidateQueries({ queryKey: ["donemler"] });
@@ -233,6 +241,20 @@ export function ProgramYonetimi() {
     const v = { ...(prog ?? {}), ...p };
     setProg(v);
     await kaydet(v);
+  };
+  const taslagiKaydet = async () => {
+    if (!prog || !donemId) return;
+    try { await programTaslagiKaydet(donemId, dil, prog); setTaslak(prog); toast.success("Taslak kaydedildi. Öğrenciler henüz görmez."); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Taslak kaydedilemedi."); }
+  };
+  const taslagiAc = () => {
+    if (!taslak || !confirm("Taslak düzenleyiciye yüklenecek. Kaydedilmemiş değişikliklerin varsa kaybolur. Devam?")) return;
+    setProg(taslak); setKirli(true); toast.info("Taslak açıldı. Yayınlamak için Değişiklikleri kaydet'e bas.");
+  };
+  const taslagiSil = async () => {
+    if (!donemId || !confirm("Bu ortak taslak silinsin mi? Yayındaki program etkilenmez.")) return;
+    try { await programTaslagiSil(donemId, dil); setTaslak(null); toast.success("Taslak silindi."); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Taslak silinemedi."); }
   };
 
   const ogrListe = useMemo(() => Object.values(prog?.ogrenciler ?? {}), [prog?.ogrenciler]);
@@ -487,13 +509,12 @@ export function ProgramYonetimi() {
                 >↶ Son değişikliği geri al ({gecmis.length})</button>
               ) : null}
 
-              <button
-                disabled={!kirli}
-                onClick={() => void kaydet()}
-                className="sticky bottom-20 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-card disabled:opacity-50 md:bottom-4"
-              >
-                <Save className="h-4 w-4" /> {kirli ? "Değişiklikleri kaydet" : "Kaydedildi"}
-              </button>
+              <section className="sticky bottom-20 z-10 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface/95 p-3 shadow-card backdrop-blur md:bottom-4">
+                <div className="mr-auto"><p className="text-xs font-bold">{kirli ? "Yayınlanmamış değişiklikler var" : "Yayındaki program güncel"}</p><p className="text-[11px] text-muted-foreground">Taslak, öğrencileri etkilemeden ekip içinde kontrol içindir.</p></div>
+                {taslak ? <><button onClick={taslagiAc} className="rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-accent">Taslağı aç</button><button onClick={() => void taslagiSil()} className="rounded-xl border border-border px-3 py-2 text-xs font-bold text-destructive hover:bg-destructive/10">Taslağı sil</button></> : null}
+                <button disabled={!kirli} onClick={() => void taslagiKaydet()} className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-accent disabled:opacity-50">Taslağı kaydet</button>
+                <button disabled={!kirli} onClick={() => void kaydet()} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm disabled:opacity-50"><Save className="h-4 w-4" /> {kirli ? "Kontrol et ve yayınla" : "Yayında"}</button>
+              </section>
             </>
           )}
         </div>
