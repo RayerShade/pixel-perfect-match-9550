@@ -61,6 +61,7 @@ function Takvim() {
   const [secili, setSecili] = useState<DersOlayi | null>(null);
   const [ekle, setEkle] = useState(false);
   const [pdfHazirlaniyor, setPdfHazirlaniyor] = useState(false);
+  const [onemliAcik, setOnemliAcik] = useState(false);
 
   const { secili: secmeliler } = useSecmeliler();
   const { manuel, ata } = useManuelAmfiler();
@@ -129,6 +130,7 @@ function Takvim() {
   const gununPlaniGorunsun = gorunum === "ay"
     || (gorunum === "gun" && !sameDay(imlec, bugun))
     || (gorunum === "hafta" && !sameDay(monday, startOfWeek(bugun)));
+  const sinavlar = useMemo(() => olaylar.filter((o) => o.ders.courseType === "sinav").sort((a, b) => a.date.getTime() - b.date.getTime() || a.ders.startTime.localeCompare(b.ders.startTime)), [olaylar]);
 
   return (
     <AppShell baslik="Ders Takvimi" aciklama={ayarlar.donem}>
@@ -153,6 +155,9 @@ function Takvim() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <button onClick={() => setOnemliAcik(true)} className="ui-control flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent sm:py-1.5 sm:text-xs" title="Sınavlar ve önemli tarihler">
+              <CalendarDays className="h-4 w-4" /><span className="hidden sm:inline">Önemli tarihler</span>
+            </button>
             <button
               disabled={pdfHazirlaniyor}
               onClick={async () => {
@@ -277,6 +282,13 @@ function Takvim() {
           ))}
         </div>
       </div>
+
+      {onemliAcik ? <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4" onClick={() => setOnemliAcik(false)}>
+        <section className="w-full max-w-lg max-h-[min(42rem,calc(100dvh-2rem))] overflow-y-auto rounded-3xl border border-border bg-surface p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-start justify-between gap-3 border-b border-border pb-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">Akademik ajanda</p><h2 className="mt-1 text-lg font-bold">Sınavlar ve önemli tarihler</h2><p className="mt-1 text-xs text-muted-foreground">Görüntülenen zaman aralığındaki sınav kayıtları.</p></div><button className="rounded-xl p-2 hover:bg-accent" onClick={() => setOnemliAcik(false)} aria-label="Kapat">×</button></div>
+          {sinavlar.length ? <ol className="mt-4 space-y-2">{sinavlar.map((o) => <li key={o.key}><button onClick={() => { setSecili(o); setOnemliAcik(false); }} className="flex w-full items-center gap-3 rounded-2xl border border-border p-3 text-left hover:bg-accent"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secmeli-soft text-xs font-extrabold text-altin">{o.date.getDate()}<small className="text-[9px]">{AYLAR[o.date.getMonth()]?.slice(0, 3)}</small></span><span className="min-w-0 flex-1"><b className="block truncate text-sm">{o.ders.courseName}</b><span className="mt-0.5 block text-xs text-muted-foreground">{o.ders.startTime}–{o.ders.endTime}{o.amfi ? ` · ${o.amfi}` : ""}</span></span></button></li>)}</ol> : <div className="mt-4 rounded-2xl bg-accent/60 p-5 text-center text-sm text-muted-foreground">Bu zaman aralığında sınav kaydı yok.</div>}
+        </section>
+      </div> : null}
 
       <button
         onClick={() => setEkle(true)}
