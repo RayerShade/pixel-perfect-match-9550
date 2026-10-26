@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Download, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Plus, CalendarDays, Clock3 } from "lucide-react";
 import { toast } from "sonner";
 import { programPdfIndir } from "@/lib/pdf-indir";
 import { AppShell } from "@/components/AppShell";
@@ -122,6 +122,10 @@ function Takvim() {
         : `${AYLAR[imlec.getMonth()]} ${imlec.getFullYear()}`;
   const guncellemeZamani = (zaman?: string) =>
     zaman ? new Date(zaman).toLocaleString("tr-TR", { dateStyle: "medium", timeStyle: "short" }) : "Henüz güncellenmedi";
+  const seciliGunOlaylari = useMemo(
+    () => olaylar.filter((o) => sameDay(o.date, imlec)).sort((a, b) => a.ders.startTime.localeCompare(b.ders.startTime)),
+    [olaylar, imlec],
+  );
 
   return (
     <AppShell baslik="Ders Takvimi" aciklama={ayarlar.donem}>
@@ -228,67 +232,37 @@ function Takvim() {
           </div>
         ) : null}
 
-        {gorunum === "gun" ? (
-          <div className={`mt-3 grid gap-1 ${ayarlar.haftaSonuGoster ? "grid-cols-7" : "grid-cols-5"}`}>
-            {gorunenGunler.map((g) => {
-              const sec = sameDay(g, imlec);
-              const bu = sameDay(g, bugun);
-              const gunIndex = (g.getDay() + 6) % 7;
-              return (
-                <button
-                  key={isoDate(g)}
-                  onClick={() => setImlec(g)}
-                  className={`flex flex-col items-center rounded-xl py-1.5 text-xs transition-colors ${
-                    sec ? "bg-primary text-primary-foreground" : bu ? "bg-teorik-soft text-teorik" : "text-muted-foreground hover:bg-accent"
-                  }`}
-                >
-                  <span className="font-medium">{GUN_KISA[gunIndex]}</span>
-                  <span className="text-base font-bold">{g.getDate()}</span>
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
-
-        <div
-          className="mt-4"
-          onTouchStart={(e) => { const t = e.touches[0]; if (t) dokunma.current = { x: t.clientX, y: t.clientY }; }}
-          onTouchEnd={(e) => {
-            const b = dokunma.current; const t = e.changedTouches[0]; dokunma.current = null;
-            if (!b || !t || gorunum === "hafta") return;
-            const dx = t.clientX - b.x; const dy = t.clientY - b.y;
-            if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) kaydir(dx < 0 ? 1 : -1);
-          }}
-        >
-          {gorunum === "hafta" ? (
-            <HaftaGorunumu
-              monday={monday}
-              olaylar={olaylar}
-              onSec={setSecili}
-              haftaSonu={ayarlar.haftaSonuGoster}
-              baslangic={ayarlar.gunBaslangic}
-              bitis={ayarlar.gunBitis}
-              bugun={bugun}
-              katilim={katilim}
-              onGunIsaretle={gunIsaretle}
-            />
-          ) : null}
-          {gorunum === "gun" ? (
-            <GunGorunumu gun={imlec} olaylar={olaylar} onSec={setSecili} bugun={bugun} katilim={katilim} onGunIsaretle={gunIsaretle} />
-          ) : null}
-          {gorunum === "ay" ? (
-            <AyGorunumu
-              ay={imlec}
-              olaylar={olaylar}
-              bugun={bugun}
-              onGunSec={(g) => {
-                setImlec(g);
-                setGorunum("gun");
-              }}
-            />
-          ) : null}
+        <div className="mt-4 flex gap-1.5 overflow-x-auto rounded-2xl bg-accent/50 p-1.5 no-scrollbar" aria-label="Gün seçici">
+          {gorunenGunler.map((g) => {
+            const sec = sameDay(g, imlec);
+            const bu = sameDay(g, bugun);
+            const gunIndex = (g.getDay() + 6) % 7;
+            const sayi = olaylar.filter((o) => sameDay(o.date, g)).length;
+            return <button key={isoDate(g)} onClick={() => setImlec(g)} className={`ui-control relative flex min-w-[3.3rem] flex-1 flex-col items-center rounded-xl px-2 py-2 text-xs ${sec ? "bg-primary text-primary-foreground shadow-sm" : bu ? "bg-teorik-soft text-teorik" : "text-muted-foreground hover:bg-surface"}`}><span className="font-semibold">{GUN_KISA[gunIndex]}</span><span className="mt-0.5 text-lg font-extrabold">{g.getDate()}</span><span className={`mt-1 h-1.5 w-1.5 rounded-full ${sayi ? sec ? "bg-primary-foreground" : "bg-pratik" : "bg-transparent"}`} /></button>;
+          })}
         </div>
 
+        <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_15.5rem]">
+          <div
+            className="min-w-0 rounded-2xl border border-border/70 bg-background/30 p-2 sm:p-3"
+            onTouchStart={(e) => { const t = e.touches[0]; if (t) dokunma.current = { x: t.clientX, y: t.clientY }; }}
+            onTouchEnd={(e) => {
+              const b = dokunma.current; const t = e.changedTouches[0]; dokunma.current = null;
+              if (!b || !t || gorunum === "hafta") return;
+              const dx = t.clientX - b.x; const dy = t.clientY - b.y;
+              if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) kaydir(dx < 0 ? 1 : -1);
+            }}
+          >
+            {gorunum === "hafta" ? <HaftaGorunumu monday={monday} olaylar={olaylar} onSec={setSecili} haftaSonu={ayarlar.haftaSonuGoster} baslangic={ayarlar.gunBaslangic} bitis={ayarlar.gunBitis} bugun={bugun} katilim={katilim} onGunIsaretle={gunIsaretle} /> : null}
+            {gorunum === "gun" ? <GunGorunumu gun={imlec} olaylar={olaylar} onSec={setSecili} bugun={bugun} katilim={katilim} onGunIsaretle={gunIsaretle} /> : null}
+            {gorunum === "ay" ? <AyGorunumu ay={imlec} olaylar={olaylar} bugun={bugun} onGunSec={(g) => { setImlec(g); setGorunum("gun"); }} /> : null}
+          </div>
+
+          <aside className="rounded-2xl border border-border bg-surface p-3">
+            <div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-teorik-soft text-teorik"><CalendarDays className="h-4 w-4" /></span><div><p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">Günün planı</p><h3 className="text-sm font-bold">{formatLong(imlec)}</h3></div></div>
+            {seciliGunOlaylari.length ? <ol className="mt-3 space-y-2">{seciliGunOlaylari.map((o) => <li key={o.key}><button onClick={() => setSecili(o)} className="flex w-full gap-2 rounded-xl p-2 text-left transition hover:bg-accent"><span className="w-10 shrink-0 pt-0.5 text-[10px] font-bold text-muted-foreground">{o.ders.startTime}</span><span className="min-w-0 flex-1 border-l-2 border-teorik pl-2"><span className="block truncate text-xs font-bold">{o.ders.courseName}</span><span className="mt-0.5 block truncate text-[10px] text-muted-foreground">{o.amfi ?? "Amfi bekleniyor"}</span></span></button></li>)}</ol> : <div className="mt-4 rounded-xl bg-accent/60 p-3 text-center"><Clock3 className="mx-auto h-4 w-4 text-muted-foreground" /><p className="mt-2 text-xs font-semibold">Bu gün ders yok</p><p className="mt-1 text-[10px] text-muted-foreground">Başka bir güne dokunarak planını gör.</p></div>}
+          </aside>
+        </div>
         <div className="mt-4 flex flex-wrap gap-3 border-t border-border/70 pt-3">
           {Object.entries(DERS_TURU_ETIKET).map(([k, v]) => (
             <span key={k} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
