@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users } from "lucide-react";
+import { Activity, History, LifeBuoy, CalendarRange, Clock, Database, FileSpreadsheet, HardDrive, Megaphone, RefreshCw, Server, Users, CheckCircle2, AlertTriangle, CalendarClock, Play, Plus, X, Timer } from "lucide-react";
 import { IslemGecmisi, OgrenciDevam } from "@/components/SunucuEk";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramYonetimi } from "@/components/ProgramYonetimi";
@@ -96,7 +96,7 @@ function Sunucu() {
         <div className="ui-surface mx-auto flex max-w-7xl flex-wrap items-center gap-2 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl">
           <Server className="h-5 w-5 text-primary" />
           <b className="mr-3">Sunucu paneli</b>
-          <nav className="flex flex-wrap gap-1 rounded-xl bg-accent/60 p-1">
+          <nav className="flex flex-nowrap gap-1 overflow-x-auto no-scrollbar rounded-xl bg-accent/60 p-1">
             {SEKMELER.map(({ id, ad, ikon: I }) => (
               <button key={id} onClick={() => setSekme(id)} className={`ui-control inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold ${sekme === id ? "bg-surface text-primary shadow-sm" : "hover:bg-accent"}`}>
                 <I className="h-4 w-4" />{ad}
@@ -369,41 +369,130 @@ function Kullanicilar() {
   );
 }
 
+type SheetsKaynak = {
+  id: string; anahtar: string; tur: string; aktif: boolean; aralik_dk: number;
+  kontrol_tipi?: "aralik" | "gunluk" | "haftalik" | null; saatler?: unknown; hafta_gunleri?: unknown;
+  son_kontrol?: string | null; son_degisim?: string | null; hata?: string | null;
+};
+
+function SheetsKaynakKarti({
+  kaynak, onKaydet, onHemen, bekliyor,
+}: {
+  kaynak: SheetsKaynak;
+  onKaydet: (veri: { id: string; aktif: boolean; aralikDk: number; tip: "aralik" | "gunluk" | "haftalik"; saatler: string[]; haftaGunleri: number[] }) => Promise<void>;
+  onHemen: (id: string) => void;
+  bekliyor: boolean;
+}) {
+  const [aktif, setAktif] = useState(kaynak.aktif);
+  const [tip, setTip] = useState<"aralik" | "gunluk" | "haftalik">(kaynak.kontrol_tipi ?? "aralik");
+  const [aralik, setAralik] = useState(kaynak.aralik_dk || 60);
+  const [saat, setSaat] = useState("08:00");
+  const [saatler, setSaatler] = useState<string[]>(() => Array.isArray(kaynak.saatler) ? [...new Set(kaynak.saatler.filter((x): x is string => typeof x === "string"))].sort() : []);
+  const [gunler, setGunler] = useState<number[]>(() => Array.isArray(kaynak.hafta_gunleri) ? kaynak.hafta_gunleri.filter((x): x is number => typeof x === "number").sort((a, b) => a - b) : []);
+  const gunAdlari = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+  const planlar: { id: typeof tip; baslik: string; aciklama: string; ikon: typeof Timer }[] = [
+    { id: "aralik", baslik: "Aralıklı", aciklama: "Belirli dakikada bir", ikon: Timer },
+    { id: "gunluk", baslik: "Her gün", aciklama: "Seçtiğin saatlerde", ikon: Clock },
+    { id: "haftalik", baslik: "Haftalık", aciklama: "Seçtiğin gün ve saatlerde", ikon: CalendarClock },
+  ];
+  const saatEkle = () => setSaatler((onceki) => onceki.includes(saat) ? onceki : [...onceki, saat].sort());
+  const gunDegistir = (gun: number) => setGunler((onceki) => onceki.includes(gun) ? onceki.filter((x) => x !== gun) : [...onceki, gun].sort((a, b) => a - b));
+  const kaydet = async () => {
+    try {
+      await onKaydet({ id: kaynak.id, aktif, aralikDk: aralik, tip, saatler, haftaGunleri: gunler });
+      toast.success(`${kaynak.anahtar} planı kaydedildi.`);
+    } catch (e) { hata(e); }
+  };
+  const durum = !aktif ? { metin: "Pasif", sinif: "bg-muted text-muted-foreground", ikon: Clock }
+    : kaynak.hata ? { metin: "Kontrol gerekli", sinif: "bg-destructive/10 text-destructive", ikon: AlertTriangle }
+    : { metin: "Çalışıyor", sinif: "bg-pratik-soft text-pratik", ikon: CheckCircle2 };
+  const DurumIkon = durum.ikon;
+
+  return <article className="rounded-2xl border border-border bg-background/45 p-4 shadow-sm">
+    <div className="flex flex-wrap items-start gap-3">
+      <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary"><FileSpreadsheet className="h-5 w-5" /></div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-mono text-sm font-bold">{kaynak.anahtar}</h3>
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{kaynak.tur}</span>
+          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${durum.sinif}`}><DurumIkon className="h-3 w-3" />{durum.metin}</span>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">Son kontrol: {tarih(kaynak.son_kontrol)} · Son değişim: {tarih(kaynak.son_degisim)}</p>
+      </div>
+      <button type="button" className={btn} disabled={bekliyor} onClick={() => onHemen(kaynak.id)}><Play className="h-3.5 w-3.5" />Şimdi kontrol et</button>
+    </div>
+
+    {kaynak.hata ? <p className="mt-3 rounded-xl bg-destructive/8 px-3 py-2 text-xs text-destructive"><b>Son hata:</b> {kaynak.hata}</p> : null}
+
+    <div className="mt-4 flex items-center justify-between rounded-xl bg-accent/55 px-3 py-2">
+      <div><p className="text-sm font-semibold">Otomatik kontrol</p><p className="text-[11px] text-muted-foreground">Bu kaynağın güncellemesini arka planda izle.</p></div>
+      <button type="button" role="switch" aria-checked={aktif} onClick={() => setAktif((x) => !x)} className={`relative h-7 w-12 rounded-full transition-colors ${aktif ? "bg-primary" : "bg-muted-foreground/35"}`}>
+        <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${aktif ? "translate-x-6" : "translate-x-1"}`} />
+      </button>
+    </div>
+
+    <div className="mt-4 grid gap-2 md:grid-cols-3">
+      {planlar.map(({ id, baslik, aciklama, ikon: Ikon }) => <button key={id} type="button" onClick={() => setTip(id)} className={`ui-control flex items-start gap-2 rounded-xl border p-3 text-left ${tip === id ? "border-primary bg-primary/8 text-primary ring-1 ring-primary/20" : "border-border bg-surface hover:bg-accent"}`}>
+        <Ikon className="mt-0.5 h-4 w-4 shrink-0" /><span><b className="block text-xs">{baslik}</b><span className="block text-[11px] text-muted-foreground">{aciklama}</span></span>
+      </button>)}
+    </div>
+
+    {tip === "aralik" ? <div className="mt-4 rounded-xl border border-border bg-surface p-3">
+      <label className="block text-xs font-semibold">Kontrol aralığı</label>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {[15, 30, 60, 120].map((dakika) => <button key={dakika} type="button" onClick={() => setAralik(dakika)} className={`ui-control rounded-lg border px-3 py-1.5 text-xs font-bold ${aralik === dakika ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}>{dakika} dk</button>)}
+        <label className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">Özel <input type="number" min="5" max="10080" value={aralik} onChange={(e) => setAralik(Math.max(5, Number(e.target.value) || 5))} className={giris + " w-20"} /> dk</label>
+      </div>
+    </div> : <div className="mt-4 rounded-xl border border-border bg-surface p-3">
+      <p className="text-xs font-semibold">Kontrol saatleri <span className="font-normal text-muted-foreground">(İstanbul saati)</span></p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <input aria-label="Kontrol saati" type="time" value={saat} onChange={(e) => setSaat(e.target.value)} className={giris} />
+        <button type="button" onClick={saatEkle} className={btn}><Plus className="h-3.5 w-3.5" />Saat ekle</button>
+        {saatler.length ? saatler.map((s) => <span key={s} className="inline-flex items-center gap-1 rounded-full bg-teorik-soft px-2 py-1 text-xs font-bold text-teorik">{s}<button type="button" aria-label={`${s} saatini kaldır`} onClick={() => setSaatler((x) => x.filter((v) => v !== s))}><X className="h-3 w-3" /></button></span>) : <span className="text-xs text-muted-foreground">Henüz saat seçilmedi.</span>}
+      </div>
+    </div>}
+
+    {tip === "haftalik" ? <div className="mt-3 rounded-xl border border-border bg-surface p-3">
+      <p className="text-xs font-semibold">Çalışacağı günler</p>
+      <div className="mt-2 flex flex-wrap gap-2">{gunAdlari.map((ad, gun) => <button key={ad} type="button" onClick={() => gunDegistir(gun)} className={`ui-control rounded-lg border px-3 py-1.5 text-xs font-bold ${gunler.includes(gun) ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}>{ad}</button>)}</div>
+    </div> : null}
+
+    <div className="mt-4 flex justify-end border-t border-border pt-3"><button type="button" disabled={bekliyor || (tip !== "aralik" && !saatler.length) || (tip === "haftalik" && !gunler.length)} className={ana} onClick={() => void kaydet()}><CheckCircle2 className="h-3.5 w-3.5" />Planı kaydet</button></div>
+  </article>;
+}
+
 function SheetsKontroller() {
   const listele = useServerFn(sheetsKaynakListele);
   const planla = useServerFn(sheetsKaynakPlanGuncelle);
   const simdi = useServerFn(sheetsSimdiKontrol);
   const q = useQuery({ queryKey: ["sheets-kaynaklari"], queryFn: () => listele() });
-  const kaydet = async (e: React.FormEvent<HTMLFormElement>, id: string) => {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const saatler = String(f.get("saatler") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-    try {
-      await planla({ data: { id, aktif: f.get("aktif") === "on", aralikDk: Number(f.get("aralik") || 60), tip: String(f.get("tip")) as "aralik" | "gunluk" | "haftalik", saatler, haftaGunleri: f.getAll("gun").map(Number) } });
-      toast.success("Kontrol planı kaydedildi."); void q.refetch();
-    } catch (e) { hata(e); }
+  const [hemenBekle, setHemenBekle] = useState<string | null>(null);
+  const planKaydet = async (veri: { id: string; aktif: boolean; aralikDk: number; tip: "aralik" | "gunluk" | "haftalik"; saatler: string[]; haftaGunleri: number[] }) => {
+    await planla({ data: veri }); await q.refetch();
   };
   const hemen = async (id?: string) => {
-    try { const r = await simdi({ data: id ? { id } : {} }); toast.success(String(r.length) + " kaynak kontrol edildi."); void q.refetch(); } catch (e) { hata(e); }
+    setHemenBekle(id ?? "hepsi");
+    try { const r = await simdi({ data: id ? { id } : {} }); toast.success(`${String(r.length)} kaynak kontrol edildi.`); await q.refetch(); } catch (e) { hata(e); } finally { setHemenBekle(null); }
   };
-  const gunler = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
-  return <Kart baslik="Google Sheets kontrolleri" sag={<><button className={ana} onClick={() => void hemen()}>Hepsini şimdi kontrol et</button><button className={btn} onClick={() => void q.refetch()}><RefreshCw className="h-3 w-3" />yenile</button></>}>
-    <p className="mb-3 text-xs text-muted-foreground">Aralıklı planda kaynak belirlenen dakikada bir; günlük planda seçilen saatlerde; haftalık planda seçilen gün ve saatlerde kontrol edilir. Saatler İstanbul saatidir.</p>
-    <div className="space-y-3">{(q.data ?? []).map((k) => {
-      const saatler = Array.isArray(k.saatler) ? k.saatler.join(", ") : "";
-      const seciliGunler = new Set(Array.isArray(k.hafta_gunleri) ? k.hafta_gunleri : []);
-      return <form key={k.id} onSubmit={(e) => void kaydet(e, k.id)} className="rounded-lg border border-border p-3">
-        <div className="mb-2 flex flex-wrap items-center gap-2"><b className="font-mono text-sm">{k.anahtar}</b><span className="rounded bg-muted px-1.5 py-0.5 text-xs">{k.tur}</span><span className="text-xs text-muted-foreground">Son kontrol: {tarih(k.son_kontrol)} · Son değişim: {tarih(k.son_degisim)}</span><button type="button" className={btn + " ml-auto"} onClick={() => void hemen(k.id)}>Şimdi kontrol et</button></div>
-        {k.hata ? <p className="mb-2 text-xs text-destructive">Son hata: {k.hata}</p> : null}
-        <div className="grid gap-2 md:grid-cols-4"><label className="text-xs"><input name="aktif" type="checkbox" defaultChecked={k.aktif} className="mr-1 accent-primary" />Aktif</label>
-          <label className="text-xs">Plan<select name="tip" defaultValue={k.kontrol_tipi ?? "aralik"} className={giris + " mt-0.5 w-full"}><option value="aralik">Belirli dakikada bir</option><option value="gunluk">Her gün belirli saatlerde</option><option value="haftalik">Haftanın seçili gün/saatlerinde</option></select></label>
-          <label className="text-xs">Aralık (dk)<input name="aralik" type="number" min="5" max="10080" defaultValue={k.aralik_dk} className={giris + " mt-0.5 w-full"} /></label>
-          <label className="text-xs">Saatler (virgülle)<input name="saatler" placeholder="08:00, 16:30" defaultValue={saatler} className={giris + " mt-0.5 w-full"} /></label></div>
-        <div className="mt-2 flex flex-wrap gap-2">{gunler.map((g, i) => <label key={g} className="text-xs"><input name="gun" type="checkbox" value={i} defaultChecked={seciliGunler.has(i)} className="mr-1 accent-primary" />{g}</label>)}</div>
-        <button type="submit" className={ana + " mt-3"}>Planı kaydet</button>
-      </form>;
-    })}</div>
-  </Kart>;
+  const kaynaklar = (q.data ?? []) as SheetsKaynak[];
+  const calisan = kaynaklar.filter((k) => k.aktif && !k.hata).length;
+  return <div className="space-y-4">
+    <section className="ui-surface rounded-3xl border border-border bg-card p-5">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><CalendarClock className="h-5 w-5" /></div>
+        <div className="min-w-0 flex-1"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-teorik">Otomasyon merkezi</p><h2 className="mt-1 text-lg font-bold">Google Sheets kontrolleri</h2><p className="mt-1 max-w-2xl text-xs text-muted-foreground">Her kaynak için ne zaman bakılacağını görsel olarak ayarla. Düzenli kontrol, ilgili dosya değiştiğinde programı güncel tutar.</p></div>
+        <div className="flex flex-wrap gap-2"><button className={ana} disabled={hemenBekle !== null} onClick={() => void hemen()}><Play className="h-3.5 w-3.5" />Tümünü şimdi kontrol et</button><button className={btn} onClick={() => void q.refetch()}><RefreshCw className="h-3.5 w-3.5" />Yenile</button></div>
+      </div>
+      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+        <div className="rounded-2xl bg-pratik-soft p-3"><p className="text-xs text-muted-foreground">Çalışan kaynak</p><p className="mt-1 text-2xl font-extrabold text-pratik">{calisan}</p></div>
+        <div className="rounded-2xl bg-teorik-soft p-3"><p className="text-xs text-muted-foreground">Toplam kaynak</p><p className="mt-1 text-2xl font-extrabold text-teorik">{kaynaklar.length}</p></div>
+        <div className="rounded-2xl bg-accent p-3"><p className="text-xs text-muted-foreground">Kontrol zaman dilimi</p><p className="mt-1 text-sm font-bold">Türkiye · UTC+3</p></div>
+      </div>
+    </section>
+    {q.isLoading ? <p className="p-6 text-center text-sm text-muted-foreground">Kaynaklar yükleniyor…</p> : null}
+    {q.error ? <p className="rounded-2xl bg-destructive/10 p-4 text-sm text-destructive">Kaynaklar alınamadı. Sayfayı yenileyip tekrar dene.</p> : null}
+    <div className="space-y-3">{kaynaklar.map((k) => <SheetsKaynakKarti key={k.id} kaynak={k} onKaydet={planKaydet} onHemen={(id) => void hemen(id)} bekliyor={hemenBekle !== null} />)}</div>
+  </div>;
 }
 
 function Veri() {

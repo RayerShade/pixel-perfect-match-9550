@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { ChevronDown, Search, ShieldCheck, Trash2 } from "lucide-react";
+import { ChevronDown, Search, ShieldCheck, Trash2, UsersRound, UserRoundPlus, BookMarked } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { VeriYukleme } from "@/components/VeriYukleme";
@@ -133,7 +133,25 @@ function Admin() {
   return (
     <AppShell baslik="Admin Paneli" aciklama={`${hesaplar.length} hesap`}>
       <div className="space-y-6">
-        <section className="space-y-3">
+        <section className="grid gap-3 sm:grid-cols-3">
+          <div className="ui-surface rounded-2xl border border-border bg-surface p-4">
+            <div className="flex items-center gap-2 text-muted-foreground"><UsersRound className="h-4 w-4 text-teorik" /><span className="text-xs font-semibold">Toplam hesap</span></div>
+            <p className="mt-2 text-3xl font-extrabold">{hesaplar.length}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Kayıtlı öğrenci ve yönetici</p>
+          </div>
+          <div className="ui-surface rounded-2xl border border-border bg-surface p-4">
+            <div className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4 text-altin" /><span className="text-xs font-semibold">Yönetici hesabı</span></div>
+            <p className="mt-2 text-3xl font-extrabold">{hesaplar.filter((h) => h.admin).length}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Yetkili panel erişimi</p>
+          </div>
+          <div className="ui-surface rounded-2xl border border-border bg-surface p-4">
+            <div className="flex items-center gap-2 text-muted-foreground"><BookMarked className="h-4 w-4 text-pratik" /><span className="text-xs font-semibold">Seçmeli tercihi</span></div>
+            <p className="mt-2 text-3xl font-extrabold">{hesaplar.reduce((toplam, h) => toplam + h.secmeliler.length, 0)}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Tüm öğrencilerin seçimi</p>
+          </div>
+        </section>
+
+        <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5 space-y-3">
           <h2 className="flex items-center gap-2 text-sm font-bold">
             <ShieldCheck className="h-4 w-4 text-altin" /> Herkes için ortak dosyalar
           </h2>
@@ -143,7 +161,7 @@ function Admin() {
           <VeriYukleme tur="genel" />
         </section>
 
-        <section className="space-y-3">
+        <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5 space-y-3">
           <h2 className="flex items-center gap-2 text-sm font-bold">
             <ShieldCheck className="h-4 w-4 text-altin" /> Dönem programları
           </h2>
@@ -156,7 +174,7 @@ function Admin() {
         <YeniHesap onOlustu={() => void qc.invalidateQueries({ queryKey: ["admin-hesaplar"] })} />
 
         {secmeliSayim.length ? (
-          <section className="rounded-2xl border border-border bg-surface p-4">
+          <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5">
             <h2 className="mb-2 text-sm font-bold">Seçmeli tercihleri</h2>
             <div className="grid gap-1.5 sm:grid-cols-2">
               {secmeliSayim.map(([id, n]) => (
@@ -172,8 +190,9 @@ function Admin() {
           </section>
         ) : null}
 
-        <section className="space-y-3">
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
+        <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-base font-bold">Kullanıcı yönetimi</h2><p className="mt-1 text-xs text-muted-foreground">Hesapları ara, açıp ayrıntılarını düzenle veya yetkilerini yönet.</p></div><span className="rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-muted-foreground">{liste.length} sonuç</span></div>
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-background/55 px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
               value={ara}
@@ -184,12 +203,12 @@ function Admin() {
           </div>
           {isLoading ? <p className="text-sm text-muted-foreground">Hesaplar yükleniyor…</p> : null}
           {error ? <p className="text-sm text-destructive">Hesaplar alınamadı.</p> : null}
-          <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+          <div className="overflow-hidden rounded-2xl border border-border bg-background/35">
             {liste.map((h) => {
               const a = acik === h.id;
               return (
                 <div key={h.id} className="border-b border-border/70 last:border-0">
-                  <button onClick={() => setAcik(a ? null : h.id)} className="flex w-full items-center gap-3 p-3 text-left hover:bg-accent/50">
+                  <button onClick={() => setAcik(a ? null : h.id)} className="flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-accent/60">
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
                         {h.ad_soyad || "(adsız)"}
@@ -355,9 +374,9 @@ function YeniHesap({ onOlustu }: { onOlustu: () => void }) {
     }
   };
   return (
-    <section className="rounded-2xl border border-border bg-surface p-4">
+    <section className="ui-surface rounded-3xl border border-border bg-surface p-4">
       <button onClick={() => setAcik((a) => !a)} className="flex w-full items-center justify-between text-sm font-bold">
-        Yeni hesap oluştur <ChevronDown className={`h-4 w-4 transition ${acik ? "rotate-180" : ""}`} />
+        <span className="flex items-center gap-2"><UserRoundPlus className="h-4 w-4 text-primary" />Yeni hesap oluştur</span> <ChevronDown className={`h-4 w-4 transition ${acik ? "rotate-180" : ""}`} />
       </button>
       {acik ? (
         <form onSubmit={gonder} className="mt-3 grid gap-2 sm:grid-cols-2">
