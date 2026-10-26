@@ -136,9 +136,10 @@ function Admin() {
 
   if (orijinal && gorunum === "super") return <SuperYonetim adminGorunumuneDon={() => setGorunum("admin")} />;
 
-  if (!orijinal) return (
+  if (gorunum === "admin") return (
     <AppShell baslik="Yönetim" aciklama="Destek taleplerini ve duyuruları yönet">
       <div className="mx-auto max-w-4xl space-y-4">
+        {orijinal ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3"><div><p className="text-xs font-bold">Yönetim görünümü</p><p className="text-[11px] text-muted-foreground">Kalkan görünümü düz admin yetkilerini gösterir.</p></div><div role="group" aria-label="Yönetim görünümü" className="relative grid grid-cols-2 rounded-xl bg-accent p-1"><span aria-hidden="true" className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-primary shadow-sm transition-transform duration-200" style={{ transform: "translateX(0.25rem)" }} /><button onClick={() => setGorunum("admin")} aria-pressed="true" className="relative z-10 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-primary-foreground"><ShieldCheck className="h-4 w-4" />Admin</button><button onClick={() => setGorunum("super")} className="relative z-10 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-muted-foreground"><Crown className="h-4 w-4" />Süper</button></div></div> : null}
         <section className="ui-surface rounded-3xl border border-border bg-surface p-4 md:p-5">
           <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-teorik">Admin araçları</p>
           <h2 className="mt-1 text-lg font-bold">İletişim merkezi</h2>
