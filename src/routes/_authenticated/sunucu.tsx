@@ -204,6 +204,7 @@ function Kullanicilar() {
   const [link, setLink] = useState<{ ad: string; url: string } | null>(null);
   const [yeni, setYeni] = useState(false);
   const [duz, setDuz] = useState<string | null>(null);
+  const [seciliId, setSeciliId] = useState<string | null>(null);
 
   const profMap = useMemo(() => new Map((prof.data ?? []).map((p) => [p.id, p])), [prof.data]);
   const ayarMap = useMemo(() => new Map((ud.data ?? []).map((x) => [x.user_id, x.ayarlar ?? {}])), [ud.data]);
@@ -292,108 +293,128 @@ function Kullanicilar() {
     indirMetin("kullanicilar.csv", "\uFEFF" + satir.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n"), "text/csv");
   };
 
+  const secili = liste.find((u) => u.id === seciliId) ?? liste[0] ?? null;
+  const sayilar = {
+    toplam: q.data?.length ?? 0,
+    onaysiz: (q.data ?? []).filter((u) => !u.onayli).length,
+    yasakli: (q.data ?? []).filter((u) => u.yasakli).length,
+    admin: (q.data ?? []).filter((u) => adminler.has(u.id)).length,
+  };
+
   return (
-    <Kart baslik={`Kullanıcılar (${liste.length}/${q.data?.length ?? 0})`} sag={<>
-      <button className={ana} onClick={() => setYeni((v) => !v)}>{yeni ? "Kapat" : "+ Yeni kullanıcı"}</button>
-      <button className={okul.data ? ana : btn} onClick={() => void okulAyarla()} disabled={okul.isLoading}>
-        Okul e-postası: {okul.isLoading ? "…" : okul.data ? "zorunlu" : "kapalı"}
-      </button>
-      <button className={btn} onClick={csv}>CSV indir</button>
-      <button className={btn} onClick={yenile}><RefreshCw className="h-3 w-3" />yenile</button>
-    </>}>
-      {yeni ? (
-        <form onSubmit={(e) => void yeniKaydet(e)} className="mb-3 grid gap-2 rounded-lg border border-primary/40 bg-primary/5 p-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-4">
+      <section className="ui-surface overflow-hidden rounded-3xl border border-border bg-surface">
+        <div className="flex flex-wrap items-start justify-between gap-4 p-5">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-primary">Hesap merkezi</p>
+            <h3 className="mt-1 text-xl font-bold tracking-tight">Kullanıcıları tek yerden yönet</h3>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Arama, yetki, erişim ve öğrenci bilgileri aynı çalışma alanında. Soldan bir kullanıcı seçerek ayrıntıları aç.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button className={ana} onClick={() => setYeni((v) => !v)}>{yeni ? "Yeni kullanıcıyı kapat" : "+ Yeni kullanıcı"}</button>
+            <button className={btn} onClick={csv}>CSV indir</button>
+            <button className={btn} onClick={yenile}><RefreshCw className="h-3.5 w-3.5" />Yenile</button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 border-t border-border sm:grid-cols-4">
+          {[
+            ["Toplam hesap", sayilar.toplam, "hepsi" as const],
+            ["Onay bekleyen", sayilar.onaysiz, "onaysiz" as const],
+            ["Admin", sayilar.admin, "admin" as const],
+            ["Yasaklı", sayilar.yasakli, "yasakli" as const],
+          ].map(([ad, sayi, id]) => <button key={ad} onClick={() => setFiltre(id)} className={"border-r border-t border-border p-3 text-left last:border-r-0 hover:bg-accent/60 " + (filtre === id ? "bg-primary/5" : "")}>
+            <p className="text-xl font-bold tabular-nums">{sayi}</p><p className="text-xs text-muted-foreground">{ad}</p>
+          </button>)}
+        </div>
+      </section>
+
+      {yeni ? <section className="ui-surface rounded-2xl border border-primary/30 bg-primary/5 p-4">
+        <div className="mb-3 flex items-center justify-between"><div><h4 className="font-semibold">Yeni kullanıcı oluştur</h4><p className="text-xs text-muted-foreground">Hesap onaylı açılır; kullanıcı doğrudan giriş yapabilir.</p></div><button className={btn} onClick={() => setYeni(false)}>Kapat</button></div>
+        <form onSubmit={(e) => void yeniKaydet(e)} className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           <input name="ad" placeholder="Ad soyad" className={giris} />
           <input name="no" placeholder="Öğrenci no" className={giris} />
           <input name="email" type="email" required placeholder="E-posta *" className={giris} />
-          <input name="sifre" required placeholder="Şifre *" className={giris} />
+          <input name="sifre" required placeholder="Geçici şifre *" className={giris} />
           <select name="dil" defaultValue="tr" className={giris}><option value="tr">Türkçe program</option><option value="en">İngilizce program</option></select>
-          <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-4">
-            <button type="submit" className={ana}>Hesabı oluştur</button>
-            <span className="text-xs text-muted-foreground">E-posta otomatik onaylı açılır, öğrenci hemen girebilir.</span>
-          </div>
+          <div className="md:col-span-2 xl:col-span-5"><button type="submit" className={ana}>Hesabı oluştur</button></div>
         </form>
-      ) : null}
-      <div className="mb-3 flex flex-wrap gap-2">
-        <input value={ara} onChange={(e) => setAra(e.target.value)} placeholder="ad, no, e-posta, id ara" className={`${giris} w-64`} />
-        <select value={filtre} onChange={(e) => setFiltre(e.target.value as typeof filtre)} className={giris}>
-          <option value="hepsi">Hepsi</option><option value="onaysiz">Onaysız</option><option value="yasakli">Yasaklı</option><option value="admin">Adminler</option><option value="hic">Hiç giriş yapmamış</option>
-        </select>
-        <select value={sira} onChange={(e) => setSira(e.target.value as typeof sira)} className={giris}>
-          <option value="olusturma">Yeni kayıt önce</option><option value="sonGiris">Son giriş önce</option><option value="email">E-posta A-Z</option>
-        </select>
-      </div>
-      {link ? (
-        <div className="mb-3 rounded-lg border border-altin/50 bg-altin/10 p-3 text-sm">
-          <p className="mb-1 font-medium">{link.ad}</p>
-          <p className="mb-2 text-xs text-muted-foreground">Tek kullanımlık bağlantı. Giriş bağlantısını kendi tarayıcında açarsan o hesaba geçersin (önce kendi hesabından çıkış yapılır).</p>
-          <div className="flex gap-1"><input readOnly value={link.url} className={`${giris} flex-1 font-mono text-xs`} onFocus={(e) => e.target.select()} />
-            <button className={btn} onClick={() => { void navigator.clipboard.writeText(link.url); toast.success("Kopyalandı"); }}>kopyala</button>
-            <button className={btn} onClick={() => setLink(null)}>kapat</button></div>
+      </section> : null}
+
+      <section className="ui-surface flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface p-3">
+        <input value={ara} onChange={(e) => setAra(e.target.value)} placeholder="Ad, öğrenci no veya e-posta ara…" className={giris + " min-w-[15rem] flex-1"} />
+        <div className="flex flex-wrap gap-1">
+          {([["hepsi","Tümü"],["onaysiz","Onaysız"],["admin","Admin"],["yasakli","Yasaklı"],["hic","Hiç giriş yok"]] as const).map(([id,ad]) => <button key={id} className={filtre === id ? ana : btn} onClick={() => setFiltre(id)}>{ad}</button>)}
         </div>
-      ) : null}
+        <select value={sira} onChange={(e) => setSira(e.target.value as typeof sira)} className={giris}><option value="olusturma">Yeni kayıt önce</option><option value="sonGiris">Son giriş önce</option><option value="email">E-posta A–Z</option></select>
+        <button className={okul.data ? ana : btn} onClick={() => void okulAyarla()} disabled={okul.isLoading}>Okul e-postası: {okul.isLoading ? "…" : okul.data ? "zorunlu" : "kapalı"}</button>
+      </section>
+
+      {link ? <section className="rounded-2xl border border-altin/50 bg-altin/10 p-4">
+        <div className="mb-2 flex items-center justify-between gap-2"><div><p className="font-semibold">{link.ad}</p><p className="text-xs text-muted-foreground">Tek kullanımlık bağlantı; güvenli bir kanaldan paylaş.</p></div><button className={btn} onClick={() => setLink(null)}>Kapat</button></div>
+        <div className="flex gap-2"><input readOnly value={link.url} className={giris + " min-w-0 flex-1 font-mono text-xs"} onFocus={(e) => e.target.select()} /><button className={btn} onClick={() => { void navigator.clipboard.writeText(link.url); toast.success("Kopyalandı"); }}>Kopyala</button></div>
+      </section> : null}
+
       {q.error ? <p className="text-destructive">{String(q.error)}</p> : null}
-      {q.isLoading ? <p className="text-sm text-muted-foreground">yükleniyor…</p> : null}
-      <div className="space-y-2">
-        {liste.map((u) => {
-          const p = profMap.get(u.id);
-          const adm = adminler.has(u.id);
-          return (
-            <details key={u.id} className="group rounded-lg border border-border">
-              <summary className="flex cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 p-2.5 text-sm">
-                <span className="font-medium">{p?.ad_soyad || "(adsız)"}</span>
-                <span className="text-muted-foreground">{u.email}</span>
-                {p?.ogrenci_no ? <span className="font-mono text-xs">{p.ogrenci_no}</span> : null}
-                <span className="ml-auto flex flex-wrap gap-1 text-[10px] font-semibold">
-                  {superler.has(u.id) || u.email.toLowerCase() === "cerandeniz435@gmail.com" ? <span className="rounded bg-primary/15 px-1.5 py-0.5 text-primary">SUPER ADMİN</span> : null}
-                  {adm ? <span className="rounded bg-altin/20 px-1.5 py-0.5 text-altin">ADMİN</span> : null}
-                  {u.yasakli ? <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-destructive">YASAKLI</span> : u.onayli ? null : <span className="rounded bg-muted px-1.5 py-0.5">ONAYSIZ</span>}
-                  <span className="rounded bg-muted px-1.5 py-0.5">{u.yontem || "?"}</span>
-                  <span className="font-normal text-muted-foreground">{once(u.sonGiris)}</span>
-                </span>
-              </summary>
-              <div className="space-y-2 border-t border-border p-3 text-xs">
-                <div className="grid gap-1 sm:grid-cols-2">
-                  <div><span className="text-muted-foreground">ID: </span><span className="font-mono">{u.id}</span></div>
-                  <div><span className="text-muted-foreground">Kayıt: </span>{tarih(u.olusturma)}</div>
-                  <div><span className="text-muted-foreground">Son giriş: </span>{tarih(u.sonGiris)}</div>
-                  <div><span className="text-muted-foreground">Durum: </span>{u.yasakli ? "yasaklı" : u.onayli ? "onaylı" : "onaysız"}</div>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  <button className={btn} onClick={() => setDuz(duz === u.id ? null : u.id)}>{duz === u.id ? "Düzenlemeyi kapat" : "Bilgileri düzenle"}</button>
-                  {!u.onayli ? <button className={btn} onClick={() => void yap(u, "onayla", "onayla")}>E-postayı onayla</button> : null}
-                  <button className={btn} onClick={() => void ekYap(u, "sifreLinki", "şifre sıfırlama bağlantısı")}>Şifre sıfırlama bağlantısı</button>
-                  <button className={btn} onClick={() => void ekYap(u, "girisLinki", "giriş bağlantısı")}>Hesaba giriş bağlantısı</button>
-                  <button className={btn} onClick={() => void yap(u, "cikisYaptir", "tüm cihazlardan çıkış")}>Tüm cihazlardan çıkar</button>
-                  <button className={btn} onClick={() => void ekYap(u, adm ? "adminAl" : "adminVer", adm ? "admin yetkisini al" : "admin yap")}>{adm ? "Admin yetkisini al" : "Admin yap"}</button>
-                  {u.email.toLowerCase() !== "cerandeniz435@gmail.com" ? (
-                    <button className={btn} onClick={() => void superYap(u, !superler.has(u.id))}>{superler.has(u.id) ? "Super admin yetkisini al" : "Super admin yap"}</button>
-                  ) : null}
-                  {u.yasakli ? <button className={btn} onClick={() => void yap(u, "yasakKaldir", "yasağı kaldır")}>Yasağı kaldır</button> : <button className={tehlike} onClick={() => void yap(u, "yasakla", "yasakla")}>Yasakla</button>}
-                  <button className={tehlike} onClick={() => void ekYap(u, "sil", "sil")}>Hesabı sil</button>
-                </div>
-                {duz === u.id ? (
-                  <form onSubmit={(e) => void duzKaydet(u, e)} className="grid gap-2 rounded-lg border border-primary/40 bg-primary/5 p-3 sm:grid-cols-3">
-                    <label className="text-xs">Ad soyad<input name="ad" defaultValue={p?.ad_soyad ?? ""} className={`${giris} mt-0.5 w-full`} /></label>
-                    <label className="text-xs">Öğrenci no<input name="no" defaultValue={p?.ogrenci_no ?? ""} className={`${giris} mt-0.5 w-full`} /></label>
-                    <label className="text-xs">E-posta<input name="email" type="email" defaultValue={u.email} className={`${giris} mt-0.5 w-full`} /></label>
-                    <label className="text-xs">Yeni şifre (boş = değişmez)<input name="sifre" placeholder="••••••" className={`${giris} mt-0.5 w-full`} /></label>
-                    <label className="text-xs">Program dili<select name="dil" defaultValue={String((ayarMap.get(u.id) ?? {})["dil"] ?? "tr")} className={`${giris} mt-0.5 w-full`}><option value="tr">Türkçe</option><option value="en">İngilizce</option></select></label>
-                    <label className="text-xs">Grup (boş = listeden otomatik)<input name="grup" defaultValue={String(((ayarMap.get(u.id) ?? {})["grupElle"] as { grup?: string } | null)?.grup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
-                    <label className="text-xs">Alt grup<input name="altGrup" defaultValue={String(((ayarMap.get(u.id) ?? {})["grupElle"] as { altGrup?: string } | null)?.altGrup ?? "")} className={`${giris} mt-0.5 w-full`} /></label>
-                    <div className="flex items-end sm:col-span-3"><button type="submit" className={ana}>Kaydet</button></div>
-                  </form>
-                ) : null}
-                <details>
-                  <summary className="cursor-pointer text-xs font-semibold text-primary">Devamsızlık işaretlerini yönet</summary>
-                  <div className="mt-2"><DevamAc userId={u.id} /></div>
-                </details>
+      {q.isLoading ? <p className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted-foreground">Kullanıcılar yükleniyor…</p> : null}
+      {!q.isLoading ? <div className="grid gap-4 xl:grid-cols-[minmax(18rem,.8fr)_minmax(0,1.45fr)]">
+        <aside className="ui-surface overflow-hidden rounded-2xl border border-border bg-surface">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3"><p className="text-sm font-semibold">{liste.length} kullanıcı</p><span className="text-xs text-muted-foreground">Seçerek aç</span></div>
+          <div className="max-h-[58vh] divide-y divide-border overflow-y-auto">
+            {liste.length ? liste.map((u) => {
+              const p = profMap.get(u.id); const adm = adminler.has(u.id); const aktif = secili?.id === u.id;
+              return <button key={u.id} onClick={() => { setSeciliId(u.id); setDuz(null); }} className={"w-full px-4 py-3 text-left transition-colors hover:bg-accent/70 " + (aktif ? "bg-primary/10" : "")}>
+                <div className="flex items-start gap-2"><span className={"mt-1 h-2 w-2 shrink-0 rounded-full " + (u.yasakli ? "bg-destructive" : !u.onayli ? "bg-altin" : "bg-emerald-500")} /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{p?.ad_soyad || "(Adsız kullanıcı)"}</p><p className="truncate text-xs text-muted-foreground">{u.email}</p><div className="mt-1 flex flex-wrap gap-1">{adm ? <span className="rounded bg-altin/15 px-1.5 py-0.5 text-[10px] font-bold text-altin">ADMİN</span> : null}{superler.has(u.id) || u.email.toLowerCase() === "cerandeniz435@gmail.com" ? <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">SÜPER</span> : null}<span className="text-[10px] text-muted-foreground">{once(u.sonGiris)}</span></div></div></div>
+              </button>;
+            }) : <p className="p-6 text-center text-sm text-muted-foreground">Bu filtrede kullanıcı yok.</p>}
+          </div>
+        </aside>
+        <section className="ui-surface min-w-0 rounded-2xl border border-border bg-surface">
+          {!secili ? <div className="grid min-h-80 place-items-center p-8 text-center text-sm text-muted-foreground">Soldaki listeden bir kullanıcı seç.</div> : (() => {
+            const u = secili; const p = profMap.get(u.id); const adm = adminler.has(u.id);
+            return <div className="p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
+                <div><p className="text-xs font-bold uppercase tracking-[.12em] text-muted-foreground">Seçili kullanıcı</p><h3 className="mt-1 text-xl font-bold">{p?.ad_soyad || "(Adsız kullanıcı)"}</h3><p className="mt-1 text-sm text-muted-foreground">{u.email}</p></div>
+                <div className="flex flex-wrap gap-1">{superler.has(u.id) || u.email.toLowerCase() === "cerandeniz435@gmail.com" ? <span className="rounded-lg bg-primary/15 px-2 py-1 text-xs font-bold text-primary">Süper admin</span> : null}{adm ? <span className="rounded-lg bg-altin/15 px-2 py-1 text-xs font-bold text-altin">Admin</span> : null}<span className="rounded-lg bg-muted px-2 py-1 text-xs font-semibold">{u.yasakli ? "Yasaklı" : u.onayli ? "Onaylı" : "Onay bekliyor"}</span></div>
               </div>
-            </details>
-          );
-        })}
-      </div>
-    </Kart>
+              <div className="grid gap-3 py-4 text-sm sm:grid-cols-2">
+                <div className="rounded-xl bg-accent/60 p-3"><p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Öğrenci no</p><p className="mt-1 font-medium">{p?.ogrenci_no || "Belirtilmemiş"}</p></div>
+                <div className="rounded-xl bg-accent/60 p-3"><p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Son giriş</p><p className="mt-1 font-medium">{tarih(u.sonGiris)}</p></div>
+                <div className="rounded-xl bg-accent/60 p-3"><p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Kayıt</p><p className="mt-1 font-medium">{tarih(u.olusturma)}</p></div>
+                <div className="rounded-xl bg-accent/60 p-3"><p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Giriş yöntemi</p><p className="mt-1 font-medium">{u.yontem || "Bilinmiyor"}</p></div>
+              </div>
+
+              <div className="space-y-3">
+                <div><p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Hızlı işlemler</p><div className="flex flex-wrap gap-2">
+                  <button className={btn} onClick={() => setDuz(duz === u.id ? null : u.id)}>{duz === u.id ? "Düzenlemeyi kapat" : "Bilgileri düzenle"}</button>
+                  {!u.onayli ? <button className={btn} onClick={() => void yap(u, "onayla", "e-postayı onayla")}>E-postayı onayla</button> : null}
+                  <button className={btn} onClick={() => void ekYap(u, "sifreLinki", "şifre sıfırlama bağlantısı")}>Şifre bağlantısı</button>
+                  <button className={btn} onClick={() => void ekYap(u, "girisLinki", "giriş bağlantısı")}>Giriş bağlantısı</button>
+                  <button className={btn} onClick={() => void yap(u, "cikisYaptir", "tüm cihazlardan çıkış")}>Tüm cihazlardan çıkar</button>
+                </div></div>
+                <div><p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Yetki ve erişim</p><div className="flex flex-wrap gap-2">
+                  <button className={btn} onClick={() => void ekYap(u, adm ? "adminAl" : "adminVer", adm ? "admin yetkisini al" : "admin yap")}>{adm ? "Admin yetkisini al" : "Admin yap"}</button>
+                  {u.email.toLowerCase() !== "cerandeniz435@gmail.com" ? <button className={btn} onClick={() => void superYap(u, !superler.has(u.id))}>{superler.has(u.id) ? "Süper admin yetkisini al" : "Süper admin yap"}</button> : null}
+                  {u.yasakli ? <button className={btn} onClick={() => void yap(u, "yasakKaldir", "yasağı kaldır")}>Yasağı kaldır</button> : <button className={tehlike} onClick={() => void yap(u, "yasakla", "yasakla")}>Erişimi yasakla</button>}
+                  <button className={tehlike} onClick={() => void ekYap(u, "sil", "hesabı sil")}>Hesabı sil</button>
+                </div></div>
+              </div>
+
+              {duz === u.id ? <form onSubmit={(e) => void duzKaydet(u, e)} className="mt-4 grid gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 sm:grid-cols-2">
+                <label className="text-xs font-semibold">Ad soyad<input name="ad" defaultValue={p?.ad_soyad ?? ""} className={giris + " mt-1 w-full"} /></label>
+                <label className="text-xs font-semibold">Öğrenci no<input name="no" defaultValue={p?.ogrenci_no ?? ""} className={giris + " mt-1 w-full"} /></label>
+                <label className="text-xs font-semibold">E-posta<input name="email" type="email" defaultValue={u.email} className={giris + " mt-1 w-full"} /></label>
+                <label className="text-xs font-semibold">Yeni şifre <span className="font-normal text-muted-foreground">(boş bırakılabilir)</span><input name="sifre" placeholder="••••••" className={giris + " mt-1 w-full"} /></label>
+                <label className="text-xs font-semibold">Program dili<select name="dil" defaultValue={String((ayarMap.get(u.id) ?? {})["dil"] ?? "tr")} className={giris + " mt-1 w-full"}><option value="tr">Türkçe</option><option value="en">İngilizce</option></select></label>
+                <label className="text-xs font-semibold">Grup <span className="font-normal text-muted-foreground">(boş = otomatik)</span><input name="grup" defaultValue={String(((ayarMap.get(u.id) ?? {})["grupElle"] as { grup?: string } | null)?.grup ?? "")} className={giris + " mt-1 w-full"} /></label>
+                <label className="text-xs font-semibold">Alt grup<input name="altGrup" defaultValue={String(((ayarMap.get(u.id) ?? {})["grupElle"] as { altGrup?: string } | null)?.altGrup ?? "")} className={giris + " mt-1 w-full"} /></label>
+                <div className="flex items-end sm:col-span-2"><button type="submit" className={ana}>Değişiklikleri kaydet</button></div>
+              </form> : null}
+              <details className="mt-4 rounded-xl border border-border p-3"><summary className="cursor-pointer text-sm font-semibold">Devamsızlık işaretlerini yönet</summary><div className="mt-3"><DevamAc userId={u.id} /></div></details>
+            </div>;
+          })()}
+        </section>
+      </div> : null}
+    </div>
   );
 }
 
