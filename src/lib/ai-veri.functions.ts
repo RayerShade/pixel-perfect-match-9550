@@ -26,7 +26,7 @@ const CIKTI_SEMA = {
           alanlar: {
             type: "object",
             additionalProperties: false,
-            required: ["ad", "tur", "dilim", "dal", "derslik", "tarih", "baslangic", "bitis"],
+            required: ["ad", "tur", "dilim", "dal", "derslik", "tarih", "baslangic", "bitis", "telafi", "gruplar"],
             properties: {
               ad: alanSema,
               tur: { type: ["string", "null"], enum: ["teorik", "pratik", "pbl", "secmeli", "sinav", null] },
@@ -36,6 +36,8 @@ const CIKTI_SEMA = {
               tarih: alanSema,
               baslangic: alanSema,
               bitis: alanSema,
+              telafi: { type: ["boolean", "null"] },
+              gruplar: { type: ["array", "null"], items: { type: "string" } },
             },
           },
         },
@@ -47,7 +49,8 @@ const CIKTI_SEMA = {
 const SISTEM = `Sen bir tıp fakültesi ders programı veri düzeltme asistanısın. Sana bir dönemin satırları verilir.
 Satır biçimi: D|id|tarih|saat|ad|tür|dilim|ana dal|derslik|not  (D=ders) ve U|id|tarih|saat|ad|tür|dilim|ana dal|yer|gruplar (U=uygulama).
 Türler: teorik, pratik (laboratuvar/uygulama), pbl (PDÖ), secmeli, sinav.
-Görevin: admin bir talimat verdiyse yalnız o talimatı uygula; vermediyse verideki hataları bul: aynı dilim/ana dalın farklı yazımları, yanlış tür (ör. uygulama/lab dersinin teorik görünmesi), eksik/kesik ders adları, dilimi boş ya da yanlış dersler, mantıksız saatler.
+Görevin: admin bir talimat verdiyse yalnız o talimatı uygula; vermediyse verideki hataları bul: aynı dilim/ana dalın farklı yazımları, yanlış tür (ör. uygulama/lab dersinin teorik görünmesi), eksik/kesik ders adları, dilimi boş ya da yanlış dersler, mantıksız saatler, grup hücrelerindeki açıklama metinlerinin grup harfleri sanılması.
+Telafi kuralı: "telafi", "telafi-tüm gruplar", "T E L A F İ" veya gruplara yanlış ayrılmış T,E,L,A,F,İ gördüğünde uygulamayı telafi:true ve gruplar:["TÜM GRUPLAR"] olarak düzelt; adına (Telafi) ekle. Telafi oturumları her zaman bütün gruplara açıktır. Normal uygulamaları telafiye çevirme ve gerçek grup kodlarını uydurma. U satırlarının son alanı telafi bayrağıdır.
 Kurallar: Yalnız gerçekten emin olduğun değişiklikleri öner. Veri uydurma. Değişmeyen alanlar null olsun. id'leri aynen kopyala. tarih YYYY-AA-GG, saat SS:DD. "neden" kısa Türkçe açıklama. "ozet" Türkçe 1-3 cümle. En fazla 80 değişiklik.`;
 
 export const aiVeriDuzelt = createServerFn({ method: "POST" })
@@ -144,6 +147,7 @@ export const aiVeriDuzelt = createServerFn({ method: "POST" })
             ad: z.string().nullable(), tur: z.enum(["teorik", "pratik", "pbl", "secmeli", "sinav"]).nullable(),
             dilim: z.string().nullable(), dal: z.string().nullable(), derslik: z.string().nullable(),
             tarih: z.string().nullable(), baslangic: z.string().nullable(), bitis: z.string().nullable(),
+            telafi: z.boolean().nullable(), gruplar: z.array(z.string()).nullable(),
           }),
         }),
       ).max(200),
@@ -159,8 +163,8 @@ export const aiVeriDuzelt = createServerFn({ method: "POST" })
   });
 
 const DS_EK = `\n\nYanıtı YALNIZCA şu biçimde geçerli bir JSON nesnesi olarak ver (başka metin yok):
-{"ozet":"...","degisiklikler":[{"hedef":"ders"|"uygulama","id":"...","islem":"guncelle"|"sil","neden":"...","alanlar":{"ad":null,"tur":null,"dilim":null,"dal":null,"derslik":null,"tarih":null,"baslangic":null,"bitis":null}}]}
-"alanlar" içindeki 8 anahtarın hepsi her zaman olsun; değişmeyenler null. tur yalnız teorik|pratik|pbl|secmeli|sinav|null.`;
+{"ozet":"...","degisiklikler":[{"hedef":"ders"|"uygulama","id":"...","islem":"guncelle"|"sil","neden":"...","alanlar":{"ad":null,"tur":null,"dilim":null,"dal":null,"derslik":null,"tarih":null,"baslangic":null,"bitis":null,"telafi":null,"gruplar":null}}]}
+"alanlar" içindeki 10 anahtarın hepsi her zaman olsun; değişmeyenler null. tur yalnız teorik|pratik|pbl|secmeli|sinav|null.`;
 
 async function deepseekCagir(girdi: string, model: string): Promise<{ ok: true; metin: string } | { ok: false; mesaj: string }> {
   const key = process.env["DEEPSEEK_API_KEY"];
