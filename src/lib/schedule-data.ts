@@ -134,7 +134,7 @@ export function programVerisiniTemizle<T extends { dersler?: Ders[] | null; uygu
     dal: d.dal ? programMetniDuzelt(d.dal).replace(/\s*-\s*\d+$/u, "") : d.dal,
     courseType: dersTuruDuzelt(d.courseType, d.courseName, `${d.notes} ${d.defaultClassroom}`, d.turElle),
   }));
-  const uygulamalar = veri.uygulamalar?.map((u) => ({
+  const uygulamalar = veri.uygulamalar?.map(uygulamaTelafiDuzelt).map((u) => ({
     ...u,
     ad: dersAdiDuzelt(u.ad),
     hoca: programMetniDuzelt(u.hoca),
@@ -178,10 +178,27 @@ export interface UygulamaOlayi {
   yer: string;
   dilim: string;
   gruplar: string[]; // "A", "D1" ...
+  /** Telafi oturumları bütün gruplara açıktır. */
+  telafi?: boolean;
   /** Admin tarafından elle değiştirilen tür / ana dal. */
   tur?: DersTuru | undefined;
   dal?: string | undefined;
   turElle?: boolean | undefined;
+}
+
+/** Eski Excel okumalarında harflere bölünmüş TELAFİ değerlerini de tanır. */
+export function telafiMetniMi(metin: string): boolean {
+  const n = metin.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return /telafi|repeat|make[ -]?up/.test(n.replace(/[^a-z]/g, ""));
+}
+
+export function uygulamaTelafiMi(u: Pick<UygulamaOlayi, "ad" | "gruplar" | "telafi">): boolean {
+  return u.telafi === true || telafiMetniMi(u.ad) || telafiMetniMi(u.gruplar.join(""));
+}
+
+export function uygulamaTelafiDuzelt(u: UygulamaOlayi): UygulamaOlayi {
+  if (!uygulamaTelafiMi(u)) return u;
+  return { ...u, telafi: true, gruplar: ["TÜM GRUPLAR"], ad: telafiMetniMi(u.ad) ? u.ad : `${u.ad} (Telafi)` };
 }
 
 /** Uygulama hücresindeki grup ("A" tüm grup, "D1" yalnızca d1 alt grubu) öğrenciye uyuyor mu?
@@ -192,6 +209,7 @@ export const grubaUyar = (gruplar: string[], o: Ogrenci) => {
   const grup = temiz(o.grup);
   const alt = temiz(o.altGrup);
   const tam = alt && !alt.startsWith(grup) ? `${grup}${alt}` : alt || grup;
+  if (telafiMetniMi(gruplar.join("")) || gruplar.some((g) => /^(tumgruplar|allgroups)$/i.test(katla(g).replace(/\s/g, "")))) return true;
   return gruplar.some((deger) => {
     const g = temiz(deger);
     if (!g) return false;
@@ -478,6 +496,7 @@ export function gecerliUygulamalar(veri?: YuklenenVeri): UygulamaOlayi[] {
   const tarihler = (veri?.dersler ?? []).map((d) => d.date).filter((t): t is string => Boolean(t)).sort();
   const ilk = tarihler[0], son = tarihler[tarihler.length - 1];
   const out = liste
+    .map(uygulamaTelafiDuzelt)
     .filter((u) => new Set(u.gruplar).size === u.gruplar.length)
     .map((u) => {
       if (!ilk || !son || !u.date || u.date >= ilk) return u;
@@ -604,7 +623,7 @@ export function haftaninOlaylari(
 ): DersOlayi[] {
   const mondayIso = isoDate(monday);
   // Tekrarlı grup harfi olan kayıtlar (ör. not/açıklama hücresinden yanlış okunmuş "G A A F D…") gerçek oturum değildir.
-  const uyg = ogrenci && veri?.uygulamalar?.length ? gecerliUygulamalar(veri) : null;
+  const uyg = veri?.uygulamalar?.length && (ogrenci || veri.uygulamalar.some(uygulamaTelafiMi)) ? gecerliUygulamalar(veri) : null;
   // Uygulama tablosunda kayıt olan tüm günlerde genel "UYGULAMA" satırı gizlenir (eski davranış)
   const uygTarihleri = new Set(uyg?.map((u) => u.date));
   const pazar = isoDate(addDays(monday, 6));
@@ -616,7 +635,7 @@ export function haftaninOlaylari(
   const saatler = gruplar ? secmeliSaatleri(veri) : [];
 
   const uygOlaylari: DersOlayi[] = (uyg ?? [])
-    .filter((u) => u.date >= mondayIso && u.date <= pazar && !!ogrenci && grubaUyar(u.gruplar, ogrenci))
+    .filter((u) => u.date >= mondayIso && u.date <= pazar && (uygulamaTelafiMi(u) || (!!ogrenci && grubaUyar(u.gruplar, ogrenci))))
     .map((u) => {
       const key = `${mondayIso}-${u.id}`;
       const amfiyeBak = !u.yer || /amfi program/i.test(normalizeTr(u.yer));
