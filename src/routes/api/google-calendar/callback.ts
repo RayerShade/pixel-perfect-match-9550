@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { googleTakvimEsitle } from "@/lib/google-calendar.server";
 const redirectUri = "https://itftakvim.xyz/api/google-calendar/callback";
 export const Route = createFileRoute("/api/google-calendar/callback")({ server: { handlers: { GET: async ({ request }) => {
   const q = new URL(request.url).searchParams, code = q.get("code"), state = q.get("state");
@@ -17,5 +18,6 @@ export const Route = createFileRoute("/api/google-calendar/callback")({ server: 
   const cal = await calRes.json() as { id?: string };
   if (!calRes.ok || !cal.id) return done("calendar_error");
   await (supabaseAdmin.from("google_calendar_connections" as never) as any).upsert({ user_id: pending.user_id, calendar_id: cal.id, refresh_token: token.refresh_token, token_expires_at: new Date(Date.now() + (token.expires_in ?? 3600) * 1000).toISOString(), updated_at: new Date().toISOString() });
+  try { await googleTakvimEsitle(pending.user_id); } catch { return done("sync_error"); }
   return done("connected");
 }}}});
