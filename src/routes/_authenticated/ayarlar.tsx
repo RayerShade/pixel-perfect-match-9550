@@ -49,18 +49,18 @@ function Ayarlar() {
   const [takvimToken, setTakvimToken] = useState<string>(() => ayarlar.takvimAbonelikToken ?? "");
   const takvimUrl = takvimToken && typeof window !== "undefined" ? `${window.location.origin}/api/takvim.ics?t=${takvimToken}` : "";
   const takvimBagla = async (tip: "google" | "apple") => {
-    const t = takvimToken || crypto.randomUUID().replace(/-/g, "");
-    if (!takvimToken) {
-      setTakvimToken(t); guncelle({ takvimAbonelikToken: t });
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) await supabase.from("user_data").upsert({ user_id: user.id, ayarlar: { ...ayarlar, takvimAbonelikToken: t } as never, updated_at: new Date().toISOString() });
-    }
-    const url = `${window.location.origin}/api/takvim.ics?t=${t}`;
     if (tip === "google") {
-      await navigator.clipboard.writeText(url);
-      toast.success("Takvim adresi kopyalandı. Google Calendar’da “URL’den ekle” alanına yapıştır.");
-      window.location.assign("https://calendar.google.com/calendar/u/0/r/settings/addbyurl");
-    } else window.location.assign(url.replace(/^https:/, "webcal:"));
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) { toast.error("Google Calendar bağlamak için oturum gerekli."); return; }
+      const yanit = await fetch("/api/google-calendar/baslat", { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` } });
+      const veri = await yanit.json() as { url?: string; error?: string };
+      if (!yanit.ok || !veri.url) { toast.error(veri.error ?? "Google bağlantısı başlatılamadı."); return; }
+      window.location.assign(veri.url);
+      return;
+    }
+    const t = takvimToken || crypto.randomUUID().replace(/-/g, "");
+    if (!takvimToken) { setTakvimToken(t); guncelle({ takvimAbonelikToken: t }); }
+    window.location.assign(`webcal://${window.location.host}/api/takvim.ics?t=${t}`);
   };
 
   // Ad, grup ve dönem yüklenen dosyalardan gelir; bulununca tercih olarak da kaydedilir.
@@ -220,7 +220,7 @@ function Ayarlar() {
           <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="mt-4 w-full rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">Seçmeli derslerini seç</button>
         </section>
 
-        <section className="ui-surface overflow-hidden rounded-3xl border border-border bg-surface"><div className="border-b border-border bg-gradient-to-br from-primary/10 via-transparent to-altin/10 px-5 py-5"><p className="text-xs font-extrabold uppercase tracking-[.14em] text-primary">İTF Takvim</p><h2 className="mt-1 text-lg font-bold">Takvim uygulamana ekle</h2><p className="mt-1 max-w-xl text-sm text-muted-foreground">Programın, uygulamaların ve amfi değişikliklerin kullandığın takvimde otomatik güncel kalır.</p></div><div className="grid gap-3 p-4 sm:grid-cols-2"><button type="button" onClick={() => void takvimBagla("google")} className="group flex min-h-24 items-center gap-3 rounded-2xl bg-[#202124] p-4 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#303134]"><span aria-hidden="true" className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-white text-base font-extrabold text-[#4285F4] before:absolute before:inset-x-0 before:top-0 before:h-2 before:bg-[#EA4335] after:absolute after:bottom-1 after:left-1 h-0.5 after:w-2 after:rounded-full after:bg-[#34A853]">31</span><span><span className="block text-[11px] text-white/65">Google Calendar’a</span><span className="block text-base font-bold">Kopyala ve ekle</span></span></button><button type="button" onClick={() => void takvimBagla("apple")} className="group flex min-h-24 items-center gap-3 rounded-2xl bg-black p-4 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-800"><span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-xl bg-white text-black"><CalendarDays className="h-6 w-6" strokeWidth={2.25} /></span><span><span className="block text-[11px] text-white/65">Apple Calendar’a</span><span className="block text-base font-bold">Takvimi ekle</span></span></button></div><div className="flex items-center justify-between gap-3 px-5 pb-4 text-[11px] text-muted-foreground"><span>Bağlantı arka planda kişiye özeldir; burada gösterilmez.</span>{takvimToken ? <button type="button" className="font-semibold text-primary hover:underline" onClick={() => { const t = crypto.randomUUID().replace(/-/g, ""); setTakvimToken(t); guncelle({ takvimAbonelikToken: t }); toast.success("Yeni bağlantı oluşturuldu; eski bağlantı geçersizdir."); }}>Bağlantıyı yenile</button> : null}</div></section>
+        <section className="ui-surface overflow-hidden rounded-3xl border border-border bg-surface"><div className="border-b border-border bg-gradient-to-br from-primary/10 via-transparent to-altin/10 px-5 py-5"><p className="text-xs font-extrabold uppercase tracking-[.14em] text-primary">İTF Takvim</p><h2 className="mt-1 text-lg font-bold">Takvim uygulamana ekle</h2><p className="mt-1 max-w-xl text-sm text-muted-foreground">Programın, uygulamaların ve amfi değişikliklerin kullandığın takvimde otomatik güncel kalır.</p></div><div className="grid gap-3 p-4 sm:grid-cols-2"><button type="button" onClick={() => void takvimBagla("google")} className="group flex min-h-24 items-center gap-3 rounded-2xl bg-[#202124] p-4 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#303134]"><span aria-hidden="true" className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-white text-base font-extrabold text-[#4285F4] before:absolute before:inset-x-0 before:top-0 before:h-2 before:bg-[#EA4335] after:absolute after:bottom-1 after:left-1 h-0.5 after:w-2 after:rounded-full after:bg-[#34A853]">31</span><span><span className="block text-[11px] text-white/65">Google Calendar’a</span><span className="block text-base font-bold">Google Calendar’a bağlan</span></span></button><button type="button" onClick={() => void takvimBagla("apple")} className="group flex min-h-24 items-center gap-3 rounded-2xl bg-black p-4 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-800"><span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-xl bg-white text-black"><CalendarDays className="h-6 w-6" strokeWidth={2.25} /></span><span><span className="block text-[11px] text-white/65">Apple Calendar’a</span><span className="block text-base font-bold">Takvimi ekle</span></span></button></div><div className="flex items-center justify-between gap-3 px-5 pb-4 text-[11px] text-muted-foreground"><span>Bağlantı arka planda kişiye özeldir; burada gösterilmez.</span>{takvimToken ? <button type="button" className="font-semibold text-primary hover:underline" onClick={() => { const t = crypto.randomUUID().replace(/-/g, ""); setTakvimToken(t); guncelle({ takvimAbonelikToken: t }); toast.success("Yeni bağlantı oluşturuldu; eski bağlantı geçersizdir."); }}>Bağlantıyı yenile</button> : null}</div></section>
 
         <PwaKurulum />
 
