@@ -1,5 +1,5 @@
 import { normalize, tarihNorm } from "./excel-import";
-import { programMetniDuzelt, programVerisiniTemizle, type Ogrenci, type UygulamaOlayi } from "./schedule-data";
+import { programMetniDuzelt, programVerisiniTemizle, telafiMetniMi, type Ogrenci, type UygulamaOlayi } from "./schedule-data";
 
 async function satirlar(file: File): Promise<unknown[][]> {
   const XLSX = await import("xlsx");
@@ -134,17 +134,20 @@ export async function uygulamaTablosuOku(file: File): Promise<UygulamaOlayi[]> {
     if (a) sonTarih = tarih;
     if (!tarih || !bas || tarih < "2025-01-01") return;
     for (const s of sutunlar) {
-      const g = metin(r[s.i]).toLocaleUpperCase("tr-TR").replace(/\s+/g, "");
+      const hucre = metin(r[s.i]);
+      const telafi = telafiMetniMi(hucre) || telafiMetniMi(s.ad);
+      const g = hucre.toLocaleUpperCase("tr-TR").replace(/\s+/g, "");
       // Hücre yalnız grup kodlarından oluşmalı (A, D1, EF, "A - B"); açıklama metinlerindeki harfler grup sayılmaz.
-      if (!/^[A-ZÇĞİÖŞÜ\d,;\/+&-]*$/.test(g)) continue;
-      const gruplar = [...g.matchAll(/([A-ZÇĞİÖŞÜ])(\d{0,2})/g)].map((m) => `${m[1]}${m[2] ?? ""}`);
+      if (!telafi && !/^[A-ZÇĞİÖŞÜ\d,;\/+&-]*$/.test(g)) continue;
+      const gruplar = telafi ? ["TÜM GRUPLAR"] : [...g.matchAll(/([A-ZÇĞİÖŞÜ])(\d{0,2})/g)].map((m) => `${m[1]}${m[2] ?? ""}`);
       if (!gruplar.length) continue;
       out.push({
         id: `uy-${tarih}-${bas}-${s.i}-${ri}`,
         date: tarih,
         startTime: bas,
         endTime: bit || bas,
-        ad: s.ad,
+        ad: telafi && !telafiMetniMi(s.ad) ? `${s.ad} (Telafi)` : s.ad,
+        ...(telafi ? { telafi: true } : {}),
         hoca: s.hoca,
         yer: yerBul(s.ad),
         dilim,
