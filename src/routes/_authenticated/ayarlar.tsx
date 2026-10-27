@@ -66,9 +66,13 @@ function Ayarlar() {
       window.location.assign(veri.url);
       return;
     }
-    const t = takvimToken || crypto.randomUUID().replace(/-/g, "");
-    if (!takvimToken) { setTakvimToken(t); guncelle({ takvimAbonelikToken: t }); }
-    window.location.assign(`webcal://${window.location.host}/api/takvim.ics?t=${t}`);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) { toast.error("Apple Calendar bağlamak için oturum gerekli."); return; }
+    const yanit = await fetch("/api/apple-calendar/baslat", { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` } });
+    const veri = await yanit.json() as { url?: string; token?: string; error?: string };
+    if (!yanit.ok || !veri.url) { toast.error(veri.error ?? "Apple bağlantısı başlatılamadı."); return; }
+    if (veri.token) { setTakvimToken(veri.token); guncelle({ takvimAbonelikToken: veri.token }); }
+    window.location.assign(veri.url);
   };
 
   // Ad, grup ve dönem yüklenen dosyalardan gelir; bulununca tercih olarak da kaydedilir.
