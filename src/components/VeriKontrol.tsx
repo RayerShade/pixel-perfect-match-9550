@@ -4,7 +4,7 @@ import { Loader2, ShieldCheck, Sparkles } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { aiVeriDuzelt } from "@/lib/ai-veri.functions";
 import { DIGER, dilimDal, yazimFarklari } from "@/lib/dilim";
-import { DERS_TURU_ETIKET, dersTuruDuzelt, uygulamaTuru, type Ders, type DersTuru, type UygulamaOlayi } from "@/lib/schedule-data";
+import { DERS_TURU_ETIKET, dersTuruDuzelt, uygulamaTuru, uygulamaTelafiMi, uygulamaTelafiDuzelt, type Ders, type DersTuru, type UygulamaOlayi } from "@/lib/schedule-data";
 
 const girdi = "rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs";
 const tusS = "rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold hover:bg-accent disabled:opacity-40";
@@ -36,10 +36,11 @@ export function VeriKontrol({
       const gun = new Date(`${tarih}T12:00:00`);
       return gun >= haftaBaslangic && gun <= haftaBitis;
     };
+    const telafiHatalari = uygulamalar.filter((u) => uygulamaTelafiMi(u) && (u.telafi !== true || u.gruplar.length !== 1 || u.gruplar[0] !== "TÜM GRUPLAR" || !/telafi/i.test(u.ad)));
     const eksikler = [
       ...dersler.filter((d) => d.date && !d.defaultClassroom.trim() && buHafta(d.date)).map((d) => ({ tur: "Bu hafta amfisi yok", ad: d.courseName, zaman: d.date! })),
       ...uygulamalar.filter((u) => !u.yer.trim()).map((u) => ({ tur: "Yeri yok", ad: u.ad, zaman: u.date })),
-      ...uygulamalar.filter((u) => !u.gruplar.length).map((u) => ({ tur: "Grubu belirsiz", ad: u.ad, zaman: u.date })),
+      ...uygulamalar.filter((u) => !u.gruplar.length && !uygulamaTelafiMi(u)).map((u) => ({ tur: "Grubu belirsiz", ad: u.ad, zaman: u.date })),
       ...dersler.filter((d) => !Number.isFinite(dakika(d.startTime)) || !Number.isFinite(dakika(d.endTime)) || dakika(d.startTime) >= dakika(d.endTime)).map((d) => ({ tur: "Saat geçersiz", ad: d.courseName, zaman: d.date ?? `Gün ${d.dayOfWeek}` })),
       ...uygulamalar.filter((u) => !Number.isFinite(dakika(u.startTime)) || !Number.isFinite(dakika(u.endTime)) || dakika(u.startTime) >= dakika(u.endTime)).map((u) => ({ tur: "Saat geçersiz", ad: u.ad, zaman: u.date })),
     ];
@@ -52,9 +53,9 @@ export function VeriKontrol({
       const a = yerler[i], b = yerler[j];
       if (a && b && a.yer === b.yer && a.tarih === b.tarih && a.bas < b.bit && b.bas < a.bit) cakismalar.push({ yer: a.yer, tarih: a.tarih, dersler: [a.ad, b.ad] });
     }
-    return { dilimFark: yazimFarklari(dilimler, true), dalFark: yazimFarklari(dallar, false), turDegisen, uygTur, dilimsiz, eksikler, cakismalar };
+    return { dilimFark: yazimFarklari(dilimler, true), dalFark: yazimFarklari(dallar, false), turDegisen, uygTur, dilimsiz, eksikler, cakismalar, telafiHatalari };
   }, [dersler, uygulamalar]);
-  const sorun = rapor.dilimFark.length + rapor.dalFark.length + rapor.turDegisen.length + rapor.uygTur.length + rapor.eksikler.length + rapor.cakismalar.length;
+  const sorun = rapor.dilimFark.length + rapor.dalFark.length + rapor.turDegisen.length + rapor.uygTur.length + rapor.eksikler.length + rapor.cakismalar.length + rapor.telafiHatalari.length;
 
   const dilimBirlestir = () => {
     const m = new Map<string, string>();
@@ -105,6 +106,12 @@ export function VeriKontrol({
               {rapor.cakismalar.map((x, i) => <li key={`c-${i}`}><b className="text-destructive">Amfi çakışması</b> · {x.tarih} · {x.yer}: {x.dersler.join(" / ")}</li>)}
             </ul>
             <p className="mt-1 text-muted-foreground">Bu bölüm yalnızca içinde bulunulan haftanın amfi kaynaklı sorunlarını listeler. Satırı aşağıdaki ders/uygulama ekranından düzenleyip Kaydet'e bas.</p>
+          </section>
+          <section>
+            <p className="font-semibold">Telafi / grup okuma hataları ({rapor.telafiHatalari.length})</p>
+            <p className="text-muted-foreground">Telafi oturumları tüm gruplara açıktır. Açıklamadan üretilmiş grup harfleri temizlenir.</p>
+            <ul className="mt-1 max-h-32 overflow-auto">{rapor.telafiHatalari.map((u) => <li key={u.id}>{u.date} · {u.ad} · {u.gruplar.join(", ") || "Grup yok"} → Telafi / Tüm gruplar</li>)}</ul>
+            <button className={`${tusS} mt-2`} disabled={!rapor.telafiHatalari.length} onClick={() => { onDegis({ uygulamalar: uygulamalar.map(uygulamaTelafiDuzelt) }); toast.success("Telafi kayıtları düzeltildi. Kontrol edip Kaydet'e bas."); }}>Telafi kayıtlarını düzelt</button>
           </section>
           <section>
             <p className="font-semibold">Aynı dilim / ana dalın farklı yazımları</p>
@@ -196,7 +203,7 @@ export function UygulamaToplu({ uygulamalar, onDegis }: { uygulamalar: UygulamaO
 
 type AiDegisiklik = {
   hedef: "ders" | "uygulama"; id: string; islem: "guncelle" | "sil"; neden: string;
-  alanlar: { ad: string | null; tur: DersTuru | null; dilim: string | null; dal: string | null; derslik: string | null; tarih: string | null; baslangic: string | null; bitis: string | null };
+  alanlar: { ad: string | null; tur: DersTuru | null; dilim: string | null; dal: string | null; derslik: string | null; tarih: string | null; baslangic: string | null; bitis: string | null; telafi: boolean | null; gruplar: string[] | null };
 };
 
 /** Admin: yapay zekâ veriyi inceler ya da yazılan talimatı uygular; öneriler önce gösterilir, seçilenler uygulanır (Kaydet'e kadar yayınlanmaz). */
@@ -223,7 +230,7 @@ export function AiAsistan({
   const baslat = async () => {
     const satirlar = [
       ...dersler.map((d) => { const x = dilimDal(d); return `D|${d.id}|${d.date ?? `gün${d.dayOfWeek}`}|${d.startTime}-${d.endTime}|${kisa(d.courseName, 120)}|${d.courseType}|${x.dilim}|${x.dal}|${kisa(d.defaultClassroom, 40)}|${kisa(d.notes, 80)}`; }),
-      ...uygulamalar.map((u) => `U|${u.id}|${u.date}|${u.startTime}-${u.endTime}|${kisa(u.ad, 120)}|${uygulamaTuru(u)}|${kisa(u.dilim, 60)}|${kisa(u.dal ?? "", 60)}|${kisa(u.yer, 40)}|${u.gruplar.join(",")}`),
+      ...uygulamalar.map((u) => `U|${u.id}|${u.date}|${u.startTime}-${u.endTime}|${kisa(u.ad, 120)}|${uygulamaTuru(u)}|${kisa(u.dilim, 60)}|${kisa(u.dal ?? "", 60)}|${kisa(u.yer, 40)}|${u.gruplar.join(",")}|${u.telafi === true ? "telafi" : ""}`),
     ].slice(0, 4000);
     if (!satirlar.length) { toast.error("Bu programda veri yok."); return; }
     setYukleniyor(true); setSonuc(null);
@@ -252,6 +259,8 @@ export function AiAsistan({
       return { baslik: `${d.date ?? ""} ${d.startTime} ${d.courseName}`, p };
     }
     const u = uMap.get(c.id)!;
+    if (a.telafi != null) p.push(`telafi: ${a.telafi ? "Evet (tüm gruplar)" : "Hayır"}`);
+    if (a.gruplar != null) p.push(`gruplar: ${u.gruplar.join(", ")} → ${a.gruplar.join(", ")}`);
     if (a.ad != null) p.push(`ad: ${u.ad || "—"} → ${a.ad}`);
     if (a.tur) p.push(`tür: ${DERS_TURU_ETIKET[uygulamaTuru(u)]} → ${DERS_TURU_ETIKET[a.tur]}`);
     if (a.dilim != null) p.push(`dilim: ${u.dilim || "—"} → ${a.dilim}`);
@@ -277,7 +286,7 @@ export function AiAsistan({
       const c = uS.get(u.id); if (!c) return [u];
       if (c.islem === "sil") return [];
       const a = c.alanlar;
-      return [{ ...u, ...(a.ad != null ? { ad: a.ad } : {}), ...(a.tur ? { tur: a.tur, turElle: true } : {}), ...(a.dilim != null ? { dilim: a.dilim } : {}), ...(a.dal != null ? { dal: a.dal } : {}), ...(a.derslik != null ? { yer: a.derslik } : {}), ...(a.tarih ? { date: a.tarih } : {}), ...(a.baslangic ? { startTime: a.baslangic } : {}), ...(a.bitis ? { endTime: a.bitis } : {}) }];
+      return [uygulamaTelafiDuzelt({ ...u, ...(a.telafi != null ? { telafi: a.telafi } : {}), ...(a.gruplar != null ? { gruplar: a.gruplar } : {}), ...(a.ad != null ? { ad: a.ad } : {}), ...(a.tur ? { tur: a.tur, turElle: true } : {}), ...(a.dilim != null ? { dilim: a.dilim } : {}), ...(a.dal != null ? { dal: a.dal } : {}), ...(a.derslik != null ? { yer: a.derslik } : {}), ...(a.tarih ? { date: a.tarih } : {}), ...(a.baslangic ? { startTime: a.baslangic } : {}), ...(a.bitis ? { endTime: a.bitis } : {}) })];
     });
     onDegis({ dersler: yeniD, uygulamalar: yeniU });
     toast.success(`${sec.length} değişiklik uygulandı. Kontrol edip Kaydet'e bas.`);
