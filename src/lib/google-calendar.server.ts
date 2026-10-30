@@ -19,7 +19,7 @@ async function accessToken(conn: Json) {
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ client_id: id, client_secret: secret, refresh_token: conn.refresh_token, grant_type: "refresh_token" }),
+    body: new URLSearchParams({ client_id: id, client_secret: secret, refresh_token: conn["refresh_token"], grant_type: "refresh_token" }),
   });
   const data = await response.json() as { access_token?: string };
   if (!response.ok || !data.access_token) throw new Error("Google Calendar yetkisi yenilenemedi.");
@@ -34,7 +34,7 @@ export async function googleTakvimEsitle(userId: string) {
   const token = await accessToken(connection);
   const { data: personal } = await db.from("user_data").select("ayarlar,secmeliler,manuel_amfi").eq("user_id", userId).maybeSingle();
   const ayar = (personal?.ayarlar ?? {}) as Json;
-  const key = ayar.donemId && ayar.dil ? `program:${ayar.donemId}:${ayar.dil}` : "";
+  const key = ayar["donemId"] && ayar["dil"] ? `program:${ayar["donemId"]}:${ayar["dil"]}` : "";
   const { data: program } = key ? await db.from("global_data").select("veri").eq("anahtar", key).maybeSingle() : { data: null };
   const events = kisiselTakvimOlaylari((program?.veri ?? {}) as Json, personal).map((olay) =>
     event(olay.baslik, olay.tarih, olay.baslangic, olay.bitis, olay.yer, olay.aciklama),

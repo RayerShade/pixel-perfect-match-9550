@@ -27,10 +27,10 @@ export function kisiselTakvimOlaylari(
   const ayar = kayit?.ayarlar ?? {};
   const secmeliler = kayit?.secmeliler ?? [];
   const manuel = kayit?.manuel_amfi ?? {};
-  const gizliGruplar = Array.isArray(ayar.gizliSecmeliGruplari)
-    ? ayar.gizliSecmeliGruplari.filter((n: unknown): n is number => typeof n === "number")
+  const gizliGruplar = Array.isArray(ayar["gizliSecmeliGruplari"])
+    ? ayar["gizliSecmeliGruplari"].filter((n: unknown): n is number => typeof n === "number")
     : [];
-  const ogrenci = ogrenciBul(veri, String(ayar.ogrenciNo ?? ""), ayar.grupElle);
+  const ogrenci = ogrenciBul(veri, String(ayar["ogrenciNo"] ?? ""), ayar["grupElle"]);
   const ilkTarih = baslangic.toISOString().slice(0, 10);
   const sonTarih = new Date(baslangic.getFullYear(), baslangic.getMonth(), baslangic.getDate() + gunSayisi)
     .toISOString()
@@ -41,9 +41,9 @@ export function kisiselTakvimOlaylari(
   for (let gun = 0; gun < gunSayisi; gun += 7) {
     const hafta = startOfWeek(new Date(baslangic.getFullYear(), baslangic.getMonth(), baslangic.getDate() + gun));
     const olaylar = onlineFiltrele(
-      haftaninOlaylari(hafta, secmeliler, manuel, veri, ogrenci, gizliGruplar, ayar.telafiGoster ?? true),
-      ayar.onlineGorunum ?? "goster",
-      ayar.onlineDersAyarlari ?? {},
+      haftaninOlaylari(hafta, secmeliler, manuel, veri, ogrenci, gizliGruplar, ayar["telafiGoster"] ?? true),
+      ayar["onlineGorunum"] ?? "goster",
+      ayar["onlineDersAyarlari"] ?? {},
     );
     for (const olay of olaylar) {
       const tarih = olay.date.toISOString().slice(0, 10);
@@ -61,7 +61,7 @@ export function kisiselTakvimOlaylari(
     }
   }
 
-  for (const ders of ayar.ozelDersler ?? []) {
+  for (const ders of ayar["ozelDersler"] ?? []) {
     if (!ders?.tarih || ders.tarih < ilkTarih || ders.tarih >= sonTarih) continue;
     sonuc.push({
       key: `ozel-${ders.id ?? `${ders.tarih}-${ders.startTime}-${ders.ad}`}`,

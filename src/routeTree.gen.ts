@@ -21,6 +21,10 @@ import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSunucuRouteImport } from './routes/_authenticated/sunucu'
 import { Route as AuthenticatedYemekRouteImport } from './routes/_authenticated/yemek'
 import { Route as ApiHesabimiSilRouteImport } from './routes/api/hesabimi-sil'
+import { Route as ApiAppleCalendarBaslatRouteImport } from './routes/api/apple-calendar/baslat'
+import { Route as ApiGoogleCalendarBaslatRouteImport } from './routes/api/google-calendar/baslat'
+import { Route as ApiGoogleCalendarCallbackRouteImport } from './routes/api/google-calendar/callback'
+import { Route as ApiGoogleCalendarEsitleRouteImport } from './routes/api/google-calendar/esitle'
 import { Route as ApiPublicDuyuruPlanlariniGonderRouteImport } from './routes/api/public/duyuru-planlarini-gonder'
 import { Route as ApiPublicSheetsKontrolRouteImport } from './routes/api/public/sheets-kontrol'
 import { Route as ApiTakvimIcsRouteImport } from './routes/api/takvim.ics'
@@ -86,6 +90,27 @@ const ApiHesabimiSilRoute = ApiHesabimiSilRouteImport.update({
   path: '/api/hesabimi-sil',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAppleCalendarBaslatRoute = ApiAppleCalendarBaslatRouteImport.update({
+  id: '/api/apple-calendar/baslat',
+  path: '/api/apple-calendar/baslat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGoogleCalendarBaslatRoute = ApiGoogleCalendarBaslatRouteImport.update({
+  id: '/api/google-calendar/baslat',
+  path: '/api/google-calendar/baslat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGoogleCalendarCallbackRoute =
+  ApiGoogleCalendarCallbackRouteImport.update({
+    id: '/api/google-calendar/callback',
+    path: '/api/google-calendar/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiGoogleCalendarEsitleRoute = ApiGoogleCalendarEsitleRouteImport.update({
+  id: '/api/google-calendar/esitle',
+  path: '/api/google-calendar/esitle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDuyuruPlanlariniGonderRoute =
   ApiPublicDuyuruPlanlariniGonderRouteImport.update({
     id: '/api/public/duyuru-planlarini-gonder',
@@ -125,6 +150,10 @@ export interface FileRoutesByFullPath {
   '/sunucu': typeof AuthenticatedSunucuRoute
   '/yemek': typeof AuthenticatedYemekRoute
   '/api/hesabimi-sil': typeof ApiHesabimiSilRoute
+  '/api/apple-calendar/baslat': typeof ApiAppleCalendarBaslatRoute
+  '/api/google-calendar/baslat': typeof ApiGoogleCalendarBaslatRoute
+  '/api/google-calendar/callback': typeof ApiGoogleCalendarCallbackRoute
+  '/api/google-calendar/esitle': typeof ApiGoogleCalendarEsitleRoute
   '/api/public/duyuru-planlarini-gonder': typeof ApiPublicDuyuruPlanlariniGonderRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
   '/api/takvim/ics': typeof ApiTakvimIcsRoute
@@ -143,6 +172,10 @@ export interface FileRoutesByTo {
   '/yemek': typeof AuthenticatedYemekRoute
   '/api/hesabimi-sil': typeof ApiHesabimiSilRoute
   '/': typeof AuthenticatedIndexRoute
+  '/api/apple-calendar/baslat': typeof ApiAppleCalendarBaslatRoute
+  '/api/google-calendar/baslat': typeof ApiGoogleCalendarBaslatRoute
+  '/api/google-calendar/callback': typeof ApiGoogleCalendarCallbackRoute
+  '/api/google-calendar/esitle': typeof ApiGoogleCalendarEsitleRoute
   '/api/public/duyuru-planlarini-gonder': typeof ApiPublicDuyuruPlanlariniGonderRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
   '/api/takvim/ics': typeof ApiTakvimIcsRoute
@@ -163,6 +196,10 @@ export interface FileRoutesById {
   '/_authenticated/yemek': typeof AuthenticatedYemekRoute
   '/api/hesabimi-sil': typeof ApiHesabimiSilRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/api/apple-calendar/baslat': typeof ApiAppleCalendarBaslatRoute
+  '/api/google-calendar/baslat': typeof ApiGoogleCalendarBaslatRoute
+  '/api/google-calendar/callback': typeof ApiGoogleCalendarCallbackRoute
+  '/api/google-calendar/esitle': typeof ApiGoogleCalendarEsitleRoute
   '/api/public/duyuru-planlarini-gonder': typeof ApiPublicDuyuruPlanlariniGonderRoute
   '/api/public/sheets-kontrol': typeof ApiPublicSheetsKontrolRoute
   '/api/takvim/ics': typeof ApiTakvimIcsRoute
@@ -183,6 +220,10 @@ export interface FileRouteTypes {
     | '/sunucu'
     | '/yemek'
     | '/api/hesabimi-sil'
+    | '/api/apple-calendar/baslat'
+    | '/api/google-calendar/baslat'
+    | '/api/google-calendar/callback'
+    | '/api/google-calendar/esitle'
     | '/api/public/duyuru-planlarini-gonder'
     | '/api/public/sheets-kontrol'
     | '/api/takvim/ics'
@@ -201,6 +242,10 @@ export interface FileRouteTypes {
     | '/yemek'
     | '/api/hesabimi-sil'
     | '/'
+    | '/api/apple-calendar/baslat'
+    | '/api/google-calendar/baslat'
+    | '/api/google-calendar/callback'
+    | '/api/google-calendar/esitle'
     | '/api/public/duyuru-planlarini-gonder'
     | '/api/public/sheets-kontrol'
     | '/api/takvim/ics'
@@ -220,6 +265,10 @@ export interface FileRouteTypes {
     | '/_authenticated/yemek'
     | '/api/hesabimi-sil'
     | '/_authenticated/'
+    | '/api/apple-calendar/baslat'
+    | '/api/google-calendar/baslat'
+    | '/api/google-calendar/callback'
+    | '/api/google-calendar/esitle'
     | '/api/public/duyuru-planlarini-gonder'
     | '/api/public/sheets-kontrol'
     | '/api/takvim/ics'
@@ -232,6 +281,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiHesabimiSilRoute: typeof ApiHesabimiSilRoute
+  ApiAppleCalendarBaslatRoute: typeof ApiAppleCalendarBaslatRoute
+  ApiGoogleCalendarBaslatRoute: typeof ApiGoogleCalendarBaslatRoute
+  ApiGoogleCalendarCallbackRoute: typeof ApiGoogleCalendarCallbackRoute
+  ApiGoogleCalendarEsitleRoute: typeof ApiGoogleCalendarEsitleRoute
   ApiPublicDuyuruPlanlariniGonderRoute: typeof ApiPublicDuyuruPlanlariniGonderRoute
   ApiPublicSheetsKontrolRoute: typeof ApiPublicSheetsKontrolRoute
   ApiTakvimIcsRoute: typeof ApiTakvimIcsRoute
@@ -325,6 +378,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHesabimiSilRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/apple-calendar/baslat': {
+      id: '/api/apple-calendar/baslat'
+      path: '/api/apple-calendar/baslat'
+      fullPath: '/api/apple-calendar/baslat'
+      preLoaderRoute: typeof ApiAppleCalendarBaslatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google-calendar/baslat': {
+      id: '/api/google-calendar/baslat'
+      path: '/api/google-calendar/baslat'
+      fullPath: '/api/google-calendar/baslat'
+      preLoaderRoute: typeof ApiGoogleCalendarBaslatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google-calendar/callback': {
+      id: '/api/google-calendar/callback'
+      path: '/api/google-calendar/callback'
+      fullPath: '/api/google-calendar/callback'
+      preLoaderRoute: typeof ApiGoogleCalendarCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google-calendar/esitle': {
+      id: '/api/google-calendar/esitle'
+      path: '/api/google-calendar/esitle'
+      fullPath: '/api/google-calendar/esitle'
+      preLoaderRoute: typeof ApiGoogleCalendarEsitleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/duyuru-planlarini-gonder': {
       id: '/api/public/duyuru-planlarini-gonder'
       path: '/api/public/duyuru-planlarini-gonder'
@@ -393,6 +474,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiHesabimiSilRoute: ApiHesabimiSilRoute,
+  ApiAppleCalendarBaslatRoute: ApiAppleCalendarBaslatRoute,
+  ApiGoogleCalendarBaslatRoute: ApiGoogleCalendarBaslatRoute,
+  ApiGoogleCalendarCallbackRoute: ApiGoogleCalendarCallbackRoute,
+  ApiGoogleCalendarEsitleRoute: ApiGoogleCalendarEsitleRoute,
   ApiPublicDuyuruPlanlariniGonderRoute: ApiPublicDuyuruPlanlariniGonderRoute,
   ApiPublicSheetsKontrolRoute: ApiPublicSheetsKontrolRoute,
   ApiTakvimIcsRoute: ApiTakvimIcsRoute,

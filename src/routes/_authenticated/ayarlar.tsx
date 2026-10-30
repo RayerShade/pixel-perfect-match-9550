@@ -51,7 +51,7 @@ function Ayarlar() {
   const takvimUrl = takvimToken && typeof window !== "undefined" ? `${window.location.origin}/api/takvim.ics?t=${takvimToken}` : "";
   const googleEsitle = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) return toast.error("Oturum bulunamadı.");
+    if (!session?.access_token) { toast.error("Oturum bulunamadı."); return; }
     setGoogleEsitleniyor(true);
     try { const r = await fetch("/api/google-calendar/esitle", { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` } }); const v = await r.json() as { adet?: number; error?: string }; if (!r.ok) throw new Error(v.error); toast.success(`${v.adet ?? 0} etkinlik Google Calendar ile eşitlendi.`); } catch (e) { toast.error(e instanceof Error ? e.message : "Eşitleme başarısız."); } finally { setGoogleEsitleniyor(false); }
   };
