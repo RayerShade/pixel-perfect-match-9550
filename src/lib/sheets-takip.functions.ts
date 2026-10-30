@@ -27,7 +27,7 @@ export const sheetsKaynakListele = createServerFn({ method: "POST" })
 
 export const sheetsKaynakPlanGuncelle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), aktif: z.boolean(), aralikDk: z.number().int().min(5).max(10080), tip: z.enum(["aralik", "gunluk", "haftalik"]), saatler: z.array(z.string().regex(/^([01]\\d|2[0-3]):[0-5]\\d$/)).max(12), haftaGunleri: z.array(z.number().int().min(0).max(6)).max(7) }).parse(d))
+  .inputValidator((d) => z.object({ id: z.string().uuid(), aktif: z.boolean(), aralikDk: z.number().int().min(5).max(10080), tip: z.enum(["aralik", "gunluk", "haftalik"]), saatler: z.array(z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/)).max(12), haftaGunleri: z.array(z.number().int().min(0).max(6)).max(7) }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!admin) throw new Error("Yetkisiz");

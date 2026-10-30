@@ -4,7 +4,7 @@ export const Route = createFileRoute("/api/hesabimi-sil")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const token = request.headers.get("authorization")?.replace(/^Bearer\\s+/i, "");
+        const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
         if (!token) return Response.json({ error: "Oturum gerekli." }, { status: 401 });
         const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
         const { data: kullanici, error: kimlikHata } = await admin.auth.getUser(token);

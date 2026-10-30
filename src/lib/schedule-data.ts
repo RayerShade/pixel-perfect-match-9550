@@ -625,7 +625,7 @@ export function haftaninOlaylari(
   // Tekrarlı grup harfi olan kayıtlar (ör. not/açıklama hücresinden yanlış okunmuş "G A A F D…") gerçek oturum değildir.
   const uyg = veri?.uygulamalar?.length && (ogrenci || veri.uygulamalar.some(uygulamaTelafiMi)) ? gecerliUygulamalar(veri) : null;
   // Uygulama tablosunda kayıt olan tüm günlerde genel "UYGULAMA" satırı gizlenir (eski davranış)
-  const uygTarihleri = new Set(uyg?.map((u) => u.date));
+  const uygTarihleri = new Set((ogrenci ? uyg : uyg?.filter(uygulamaTelafiMi))?.map((u) => u.date));
   const pazar = isoDate(addDays(monday, 6));
   const kayitlar = haftalikAmfiKayitlari(mondayIso, veri);
   const tarihOf = (d: Ders) => d.date ?? isoDate(addDays(monday, d.dayOfWeek - 1));
