@@ -293,7 +293,7 @@ function Kullanicilar() {
     indirMetin("kullanicilar.csv", "\uFEFF" + satir.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n"), "text/csv");
   };
 
-  const secili = liste.find((u) => u.id === seciliId) ?? liste[0] ?? null;
+  const secili = liste.find((u) => u.id === seciliId) ?? null;
   const sayilar = {
     toplam: q.data?.length ?? 0,
     onaysiz: (q.data ?? []).filter((u) => !u.onayli).length,
@@ -307,8 +307,8 @@ function Kullanicilar() {
         <div className="flex flex-wrap items-start justify-between gap-4 p-5">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-primary">Hesap merkezi</p>
-            <h3 className="mt-1 text-xl font-bold tracking-tight">Kullanıcıları tek yerden yönet</h3>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Arama, yetki, erişim ve öğrenci bilgileri aynı çalışma alanında. Soldan bir kullanıcı seçerek ayrıntıları aç.</p>
+            <h3 className="mt-1 text-xl font-bold tracking-tight">Kullanıcılar</h3>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Bir hesap seç; öğrenci bilgilerini, erişimini ve katılım kayıtlarını yönet.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button className={ana} onClick={() => setYeni((v) => !v)}>{yeni ? "Yeni kullanıcıyı kapat" : "+ Yeni kullanıcı"}</button>
@@ -341,13 +341,16 @@ function Kullanicilar() {
       </section> : null}
 
       <section className="ui-surface flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface p-3">
-        <input value={ara} onChange={(e) => setAra(e.target.value)} placeholder="Ad, öğrenci no veya e-posta ara…" className={giris + " min-w-[15rem] flex-1"} />
+        <input type="search" aria-label="Kullanıcı ara" value={ara} onChange={(e) => { setAra(e.target.value); setSeciliId(null); setDuz(null); }} placeholder="Ad, öğrenci no veya e-posta ara…" className={giris + " min-w-0 w-full sm:w-auto sm:flex-1"} />
         <div className="flex flex-wrap gap-1">
           {([["hepsi","Tümü"],["onaysiz","Onaysız"],["admin","Admin"],["yasakli","Yasaklı"],["hic","Hiç giriş yok"]] as const).map(([id,ad]) => <button key={id} className={filtre === id ? ana : btn} onClick={() => setFiltre(id)}>{ad}</button>)}
         </div>
-        <select value={sira} onChange={(e) => setSira(e.target.value as typeof sira)} className={giris}><option value="olusturma">Yeni kayıt önce</option><option value="sonGiris">Son giriş önce</option><option value="email">E-posta A–Z</option></select>
-        <button className={okul.data ? ana : btn} onClick={() => void okulAyarla()} disabled={okul.isLoading}>Okul e-postası: {okul.isLoading ? "…" : okul.data ? "zorunlu" : "kapalı"}</button>
+        <select aria-label="Kullanıcı sıralaması" value={sira} onChange={(e) => setSira(e.target.value as typeof sira)} className={giris}><option value="olusturma">Yeni kayıt önce</option><option value="sonGiris">Son giriş önce</option><option value="email">E-posta A–Z</option></select>
       </section>
+      <details className="rounded-2xl border border-border bg-surface px-4 py-3">
+        <summary className="cursor-pointer text-sm font-medium">Kayıt politikası <span className="ml-2 font-normal text-muted-foreground">{okul.isLoading ? "Yükleniyor…" : okul.data ? "Yalnız okul e-postası" : "Tüm e-posta adresleri"}</span></summary>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Yeni hesapların hangi e-posta adresleriyle açılabileceğini belirler.</p><button className={btn} onClick={() => void okulAyarla()} disabled={okul.isLoading || !!okul.error}>{okul.data ? "Tüm adreslere izin ver" : "Okul e-postasını zorunlu yap"}</button></div>
+      </details>
 
       {link ? <section className="rounded-2xl border border-altin/50 bg-altin/10 p-4">
         <div className="mb-2 flex items-center justify-between gap-2"><div><p className="font-semibold">{link.ad}</p><p className="text-xs text-muted-foreground">Tek kullanımlık bağlantı; güvenli bir kanaldan paylaş.</p></div><button className={btn} onClick={() => setLink(null)}>Kapat</button></div>
@@ -357,21 +360,22 @@ function Kullanicilar() {
       {q.error ? <p className="text-destructive">{String(q.error)}</p> : null}
       {q.isLoading ? <p className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted-foreground">Kullanıcılar yükleniyor…</p> : null}
       {!q.isLoading ? <div className="grid gap-4 xl:grid-cols-[minmax(18rem,.8fr)_minmax(0,1.45fr)]">
-        <aside className="ui-surface overflow-hidden rounded-2xl border border-border bg-surface">
+        <aside className={"ui-surface overflow-hidden rounded-2xl border border-border bg-surface " + (secili ? "hidden xl:block" : "")}>
           <div className="flex items-center justify-between border-b border-border px-4 py-3"><p className="text-sm font-semibold">{liste.length} kullanıcı</p><span className="text-xs text-muted-foreground">Seçerek aç</span></div>
           <div className="max-h-[58vh] divide-y divide-border overflow-y-auto">
             {liste.length ? liste.map((u) => {
               const p = profMap.get(u.id); const adm = adminler.has(u.id); const aktif = secili?.id === u.id;
-              return <button key={u.id} onClick={() => { setSeciliId(u.id); setDuz(null); }} className={"w-full px-4 py-3 text-left transition-colors hover:bg-accent/70 " + (aktif ? "bg-primary/10" : "")}>
+              return <button key={u.id} aria-pressed={aktif} onClick={() => { setSeciliId(u.id); setDuz(null); }} className={"w-full px-4 py-3 text-left transition-colors hover:bg-accent/70 " + (aktif ? "bg-primary/10" : "")}>
                 <div className="flex items-start gap-2"><span className={"mt-1 h-2 w-2 shrink-0 rounded-full " + (u.yasakli ? "bg-destructive" : !u.onayli ? "bg-altin" : "bg-emerald-500")} /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{p?.ad_soyad || "(Adsız kullanıcı)"}</p><p className="truncate text-xs text-muted-foreground">{u.email}</p><div className="mt-1 flex flex-wrap gap-1">{adm ? <span className="rounded bg-altin/15 px-1.5 py-0.5 text-[10px] font-bold text-altin">ADMİN</span> : null}{superler.has(u.id) || u.email.toLowerCase() === "cerandeniz435@gmail.com" ? <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">SÜPER</span> : null}<span className="text-[10px] text-muted-foreground">{once(u.sonGiris)}</span></div></div></div>
               </button>;
             }) : <p className="p-6 text-center text-sm text-muted-foreground">Bu filtrede kullanıcı yok.</p>}
           </div>
         </aside>
-        <section className="ui-surface min-w-0 rounded-2xl border border-border bg-surface">
+        <section className={"ui-surface min-w-0 rounded-2xl border border-border bg-surface " + (!secili ? "hidden xl:block" : "")}>
           {!secili ? <div className="grid min-h-80 place-items-center p-8 text-center text-sm text-muted-foreground">Soldaki listeden bir kullanıcı seç.</div> : (() => {
             const u = secili; const p = profMap.get(u.id); const adm = adminler.has(u.id);
-            return <div className="p-5">
+            return <div key={u.id} className="p-5">
+              <button className={btn + " mb-4 xl:hidden"} onClick={() => { setSeciliId(null); setDuz(null); }}>← Kullanıcı listesine dön</button>
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
                 <div><p className="text-xs font-bold uppercase tracking-[.12em] text-muted-foreground">Seçili kullanıcı</p><h3 className="mt-1 text-xl font-bold">{p?.ad_soyad || "(Adsız kullanıcı)"}</h3><p className="mt-1 text-sm text-muted-foreground">{u.email}</p></div>
                 <div className="flex flex-wrap gap-1">{superler.has(u.id) || u.email.toLowerCase() === "cerandeniz435@gmail.com" ? <span className="rounded-lg bg-primary/15 px-2 py-1 text-xs font-bold text-primary">Süper admin</span> : null}{adm ? <span className="rounded-lg bg-altin/15 px-2 py-1 text-xs font-bold text-altin">Admin</span> : null}<span className="rounded-lg bg-muted px-2 py-1 text-xs font-semibold">{u.yasakli ? "Yasaklı" : u.onayli ? "Onaylı" : "Onay bekliyor"}</span></div>
@@ -391,12 +395,12 @@ function Kullanicilar() {
                   <button className={btn} onClick={() => void ekYap(u, "girisLinki", "giriş bağlantısı")}>Giriş bağlantısı</button>
                   <button className={btn} onClick={() => void yap(u, "cikisYaptir", "tüm cihazlardan çıkış")}>Tüm cihazlardan çıkar</button>
                 </div></div>
-                <div><p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Yetki ve erişim</p><div className="flex flex-wrap gap-2">
+                <details className="rounded-xl border border-border p-3"><summary className="cursor-pointer text-sm font-semibold">Yetki ve erişim işlemleri</summary><p className="mt-2 text-xs text-muted-foreground">Yönetici yetkilerini değiştir, erişimi kısıtla veya hesabı sil.</p><div className="mt-3 flex flex-wrap gap-2">
                   <button className={btn} onClick={() => void ekYap(u, adm ? "adminAl" : "adminVer", adm ? "admin yetkisini al" : "admin yap")}>{adm ? "Admin yetkisini al" : "Admin yap"}</button>
                   {u.email.toLowerCase() !== "cerandeniz435@gmail.com" ? <button className={btn} onClick={() => void superYap(u, !superler.has(u.id))}>{superler.has(u.id) ? "Süper admin yetkisini al" : "Süper admin yap"}</button> : null}
                   {u.yasakli ? <button className={btn} onClick={() => void yap(u, "yasakKaldir", "yasağı kaldır")}>Yasağı kaldır</button> : <button className={tehlike} onClick={() => void yap(u, "yasakla", "yasakla")}>Erişimi yasakla</button>}
                   <button className={tehlike} onClick={() => void ekYap(u, "sil", "hesabı sil")}>Hesabı sil</button>
-                </div></div>
+                </div></details>
               </div>
 
               {duz === u.id ? <form onSubmit={(e) => void duzKaydet(u, e)} className="mt-4 grid gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 sm:grid-cols-2">

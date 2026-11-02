@@ -46,7 +46,13 @@ type Gorunum = "gun" | "hafta" | "ay";
 const sonDurum: { imlec: Date | null; gorunum: Gorunum | null } = { imlec: null, gorunum: null };
 
 function Takvim() {
-  const [bugun] = useState(() => new Date());
+  const [bugun, setBugun] = useState(() => new Date());
+  useEffect(() => {
+    const yenile = () => setBugun(new Date());
+    const timer = window.setInterval(yenile, 60_000);
+    window.addEventListener("focus", yenile);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", yenile); };
+  }, []);
   const [imlec, setImlec] = useState(() => sonDurum.imlec ?? new Date());
   const [gorunum, setGorunum] = useState<Gorunum>(() => sonDurum.gorunum ?? "hafta");
   // Telefonda ilk açılışta tek gün görünümü (haftalık görünüm dar ekranda sığmıyor).
@@ -124,8 +130,17 @@ function Takvim() {
   const guncellemeZamani = (zaman?: string) =>
     zaman ? new Date(zaman).toLocaleString("tr-TR", { dateStyle: "medium", timeStyle: "short" }) : "Henüz güncellenmedi";
   const bugununOlaylari = useMemo(
-    () => olaylar.filter((o) => sameDay(o.date, bugun)).sort((a, b) => a.ders.startTime.localeCompare(b.ders.startTime)),
-    [olaylar, bugun],
+    () => {
+      const hafta = startOfWeek(bugun);
+      return kisiselUygula(
+        onlineFiltrele(
+          haftaninOlaylari(hafta, secmeliler, manuel, veri, ogrenci, ayarlar.gizliSecmeliGruplari ?? [], ayarlar.telafiGoster ?? true),
+          ayarlar.onlineGorunum ?? "goster", ayarlar.onlineDersAyarlari ?? {},
+        ),
+        hafta, addDays(hafta, 6), ayarlar,
+      ).filter((o) => sameDay(o.date, bugun)).sort((a, b) => a.ders.startTime.localeCompare(b.ders.startTime));
+    },
+    [bugun, secmeliler, manuel, veri, ogrenci, ayarlar],
   );
   const gununPlaniGorunsun = gorunum === "ay"
     || (gorunum === "gun" && !sameDay(imlec, bugun))

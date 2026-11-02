@@ -271,10 +271,9 @@
 .page-intro {
   margin-bottom: 1.25rem;
   padding: 1.1rem 1.25rem;
-  border: 1px solid oklch(1 0 0 / 0.76);
+  border: 0;
   border-radius: 1.5rem;
-  background: linear-gradient(135deg, oklch(1 0 0 / 0.86), oklch(0.98 0.012 250 / 0.74));
-  box-shadow: var(--shadow-card);
+  background: transparent;
 }
 .page-intro__eyebrow {
   display: inline-flex;
@@ -291,15 +290,14 @@
 .page-intro__description { max-width: 44rem; margin-top: .35rem; color: var(--muted-foreground); font-size: .875rem; line-height: 1.45; }
 
 .ui-surface {
-  border-color: oklch(1 0 0 / .75) !important;
+  border-color: var(--border);
   box-shadow: var(--shadow-card);
 }
-.ui-surface:hover { box-shadow: 0 3px 4px oklch(0.2 0.04 250 / .04), 0 22px 52px oklch(0.2 0.04 250 / .10); }
 .ui-control {
   border-radius: .95rem;
   transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
 }
-.ui-control:hover { transform: translateY(-1px); }
+.ui-control:hover { filter: brightness(0.98); }
 .ui-control:active { transform: translateY(0); }
 
 @media (max-width: 767px) {
@@ -311,9 +309,9 @@
 
 /* High-craft çalışma alanı: sakin katmanlar, yakın eylemler ve mobilde kart önceliği. */
 .workspace-panel {
-  border: 1px solid oklch(1 0 0 / .62);
+  border: 1px solid var(--border);
   border-radius: 1.5rem;
-  background: linear-gradient(145deg, oklch(1 0 0 / .78), oklch(.97 .012 250 / .56));
+  background: var(--surface);
   box-shadow: inset 0 1px 0 oklch(1 0 0 / .76), var(--shadow-card);
   backdrop-filter: blur(18px);
 }
@@ -323,23 +321,40 @@
   align-items: center;
   gap: .65rem;
   padding: .75rem;
-  border: 1px solid oklch(1 0 0 / .58);
+  border: 1px solid var(--border);
   border-radius: 1.15rem;
-  background: oklch(1 0 0 / .42);
+  background: var(--accent);
   backdrop-filter: blur(14px);
 }
 .workspace-kpi {
   min-width: 8.5rem;
-  border: 1px solid oklch(1 0 0 / .58);
+  border: 1px solid var(--border);
   border-radius: 1.15rem;
-  background: oklch(1 0 0 / .5);
+  background: var(--surface);
   padding: .85rem;
   box-shadow: inset 0 1px 0 oklch(1 0 0 / .68);
 }
 .workspace-row {
   transition: background-color 160ms ease, transform 160ms ease, border-color 160ms ease;
 }
-.workspace-row:hover { background: oklch(.96 .018 250 / .8); }
+.workspace-row:hover { background: var(--accent); }
+
+/* Shared surfaces retain their hierarchy in either appearance. */
+.dark {
+  --background: oklch(.18 .012 260);
+  --surface: oklch(.23 .014 260 / .96);
+  --card: oklch(.23 .014 260);
+  --primary: oklch(.90 .025 250);
+  --primary-foreground: oklch(.20 .015 260);
+  --accent: oklch(.28 .018 260);
+  --border: oklch(.85 .012 260 / .12);
+  --muted-foreground: oklch(.72 .018 260);
+  --shadow-card: inset 0 1px 0 oklch(.95 0 0 / .04), 0 8px 24px oklch(.10 .01 260 / .12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-control, .workspace-row, input, select, textarea { transition: none; }
+}
 @media (max-width: 767px) {
   .workspace-panel { border-radius: 1.25rem; }
   .workspace-toolbar { border-radius: 1rem; }
