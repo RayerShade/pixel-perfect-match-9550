@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAyarlar } from "@/lib/store";
 import { useState } from "react";
-import { CircleHelp, MapPinned, X } from "lucide-react";
+import { CircleHelp, MapPinned } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { AppShell } from "@/components/AppShell";
 import { TalepTuruSecici, YeniTalep, type Talep } from "@/components/Destek";
 import krokiUrl from "@/assets/WhatsApp Image 2026-10-17 at 03.22.17.jpeg";
@@ -43,19 +44,23 @@ function TanitimTusu() {
 
 function KrokiTusu() {
   const [acik, setAcik] = useState(false);
+  const [buyuk, setBuyuk] = useState(false);
   return (
     <>
-      <button type="button" onClick={() => setAcik(true)} className="ui-surface ui-control flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-4 text-left hover:border-primary">
+      <button type="button" onClick={() => { setBuyuk(false); setAcik(true); }} className="ui-surface ui-control flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-4 text-left hover:border-primary">
         <MapPinned className="h-5 w-5 shrink-0 text-primary" />
         <span className="flex-1"><span className="block text-sm font-semibold">Dersim nerede?</span><span className="block text-xs text-muted-foreground">Fakülte Krokisi</span></span>
       </button>
-      {acik ? <div role="dialog" aria-modal="true" aria-label="Fakülte krokisi" className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-3" onClick={() => setAcik(false)}>
-        <div className="relative max-h-[92vh] w-full max-w-5xl overflow-auto rounded-3xl border border-white/80 bg-background p-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-          <div className="mb-2 flex items-center gap-2"><MapPinned className="h-5 w-5 text-primary" /><h2 className="font-semibold">İstanbul Tıp Fakültesi krokisi</h2><button aria-label="Krokiyi kapat" onClick={() => setAcik(false)} className="ml-auto rounded-md p-2 hover:bg-accent"><X className="h-5 w-5" /></button></div>
-          <p className="mb-3 text-xs text-muted-foreground">Amfi ve derslik isimleri krokideki amfi listesiyle birlikte gösterilir.</p>
-          <img src={krokiUrl} alt="İstanbul Tıp Fakültesi kroki ve amfi listesi" className="h-auto w-full rounded-lg border border-border" />
-        </div>
-      </div> : null}
+      <Dialog open={acik} onOpenChange={setAcik}>
+        <DialogContent className="flex max-w-5xl flex-col overflow-hidden p-3 sm:p-4">
+          <DialogTitle className="pr-8">İstanbul Tıp Fakültesi krokisi</DialogTitle>
+          <DialogDescription>Amfi listesini okumak için haritayı büyütebilirsin.</DialogDescription>
+          <button type="button" aria-pressed={buyuk} onClick={() => setBuyuk(!buyuk)} className="self-start rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">{buyuk ? "Ekrana sığdır" : "Haritayı büyüt"}</button>
+          <div tabIndex={0} role="region" aria-label="Kaydırılabilir fakülte krokisi" className="min-h-0 overflow-auto rounded-xl border border-border">
+            <img src={krokiUrl} alt="İstanbul Tıp Fakültesi yerleşim krokisi ve binalara göre amfi listesi" className={buyuk ? "block h-auto min-w-[72rem] max-w-none" : "block h-auto w-full"} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
