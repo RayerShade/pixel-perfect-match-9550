@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { listedenOgrenciAdi } from "@/lib/bulut";
@@ -6,9 +6,11 @@ import { DuyuruBandi } from "@/components/DuyuruBandi";
 import { BildirimZili } from "@/components/Bildirimler";
 import { Tanitim } from "@/components/Tanitim";
 import { NumaraBilgi, useNumaraSorgu } from "@/components/NumaraBilgi";
+import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 import { useAyarlar } from "@/lib/store";
-import { CalendarDays, BookOpen, Settings, LifeBuoy, LogOut, ShieldCheck, Loader2, Info, UtensilsCrossed, GraduationCap } from "lucide-react";
+import { CalendarDays, BookOpen, Settings, LifeBuoy, LogOut, ShieldCheck, Loader2, Info, UtensilsCrossed, GraduationCap, Search } from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Takvim", icon: CalendarDays },
@@ -34,9 +36,26 @@ export function AppShell({
   const turGoster = hazir && user && profil && !eksik && ayarlar.bilgilendirmeGordu && !ayarlar.turGordu;
   const ad = profil?.ad_soyad?.trim() || user?.email || "Öğrenci";
   const basHarf = ad.charAt(0).toLocaleUpperCase("tr-TR");
+  const navigate = useNavigate();
+  const [hizliAcik, setHizliAcik] = useState(false);
+  useEffect(() => {
+    const kisayol = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setHizliAcik((acik) => !acik);
+      }
+    };
+    window.addEventListener("keydown", kisayol);
+    return () => window.removeEventListener("keydown", kisayol);
+  }, []);
+  const git = (to: (typeof NAV)[number]["to"] | "/admin") => {
+    setHizliAcik(false);
+    void navigate({ to });
+  };
 
   return (
     <div className="app-frame bg-background pb-24 md:pb-0">
+      <a href="#ana-icerik" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-3 focus:text-primary-foreground">İçeriğe geç</a>
       <header className="sticky top-0 z-30 px-2 pt-2 md:px-4 md:pt-3">
         <div className="ui-surface mx-auto grid max-w-[76rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl md:flex md:justify-between md:px-4">
           <div className="flex min-w-0 items-center gap-3">
@@ -65,10 +84,12 @@ export function AppShell({
           </nav>
 
           <div className="flex items-center gap-1.5">
+            <button onClick={() => setHizliAcik(true)} aria-label="Hızlı gezinme" title="Hızlı gezinme (Ctrl / ⌘ K)" className="ui-control grid h-9 w-9 place-items-center rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground"><Search className="h-4 w-4" /></button>
             {isAdmin ? (
               <Link
                 to="/admin"
-                className="ui-control hidden items-center gap-1.5 rounded-xl bg-secmeli-soft px-3 py-2 text-sm font-bold text-altin md:flex"
+                className="ui-control inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-secmeli-soft px-3 py-2 text-sm font-bold text-altin"
+                aria-label="Yönetim panelini aç"
                 title="Admin paneli"
               >
                 <ShieldCheck className="h-4 w-4" />
@@ -100,7 +121,7 @@ export function AppShell({
       {turGoster ? <Tanitim /> : null}
       <DuyuruBandi />
 
-      <main className="app-content mx-auto px-3 py-4 md:px-4 md:py-6">
+      <main id="ana-icerik" tabIndex={-1} className="app-content mx-auto px-3 py-4 md:px-4 md:py-6">
         <section className="page-intro">
           <p className="page-intro__eyebrow"><span className="h-1.5 w-1.5 rounded-full bg-pratik" /> İTF Takvim</p>
           <h2 className="page-intro__title">{baslik}</h2>
@@ -108,8 +129,20 @@ export function AppShell({
         </section>
         {children}
       </main>
+      <CommandDialog open={hizliAcik} onOpenChange={setHizliAcik}>
+        <DialogTitle className="sr-only">Hızlı gezinme</DialogTitle>
+        <DialogDescription className="sr-only">Bir sayfa ara. Ok tuşlarıyla seç ve Enter ile aç.</DialogDescription>
+        <CommandInput placeholder="Nereye gitmek istersin?" />
+        <CommandList>
+          <CommandEmpty>Bu isimde bir sayfa yok.</CommandEmpty>
+          <CommandGroup heading="Sayfalar">
+            {NAV.map(({ to, label, icon: Icon }) => <CommandItem key={to} value={label} onSelect={() => git(to)}><Icon className="mr-3 h-4 w-4" /><span>{label}</span></CommandItem>)}
+          </CommandGroup>
+          {isAdmin ? <CommandGroup heading="Yönetim"><CommandItem value="Admin yönetim paneli" onSelect={() => git("/admin")}><ShieldCheck className="mr-3 h-4 w-4" />Yönetim paneli</CommandItem></CommandGroup> : null}
+        </CommandList>
+      </CommandDialog>
 
-      <nav className="fixed inset-x-3 bottom-3 z-30 rounded-2xl border border-white/70 bg-surface/95 p-1.5 shadow-[0_12px_36px_oklch(0.2_0.04_250_/_0.18)] backdrop-blur-xl md:hidden">
+      <nav aria-label="Ana gezinme" style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }} className="fixed inset-x-3 z-30 rounded-2xl border border-border bg-surface/95 p-1.5 shadow-[0_12px_36px_oklch(0.2_0.04_250_/_0.18)] backdrop-blur-xl md:hidden">
         <div className="grid grid-cols-5">
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
