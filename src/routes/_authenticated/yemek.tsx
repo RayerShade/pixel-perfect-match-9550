@@ -20,6 +20,7 @@ const satirlar = (gun: YemekGunu, ogun: Ogun) => (ogun === "kahvalti" ? gun.kahv
 function Yemek() {
   const [imlec, setImlec] = useState(() => new Date());
   const [ogun, setOgun] = useState<Ogun>("ogle");
+  const [gecmisiGoster, setGecmisiGoster] = useState(false);
   const getir = useServerFn(yemekListesiGetir);
   const yil = imlec.getFullYear(), ay = imlec.getMonth() + 1;
   const q = useQuery({ queryKey: ["yemek-listesi", yil, ay], queryFn: () => getir({ data: { yil, ay } }), staleTime: 20 * 60_000 });
@@ -36,6 +37,9 @@ function Yemek() {
   const liste = (q.data?.gunler ?? []).filter((gun) => satirlar(gun, ogun).length);
   const [bugun, setBugun] = useState("");
   useEffect(() => setBugun(isoDate(new Date())), []);
+  const buAy = yil === bugununAyi.yil && ay === bugununAyi.ay;
+  const gecmisSayisi = buAy && bugun ? liste.filter((gun) => gun.tarih < bugun).length : 0;
+  const gorunenGunler = gecmisSayisi && !gecmisiGoster ? liste.filter((gun) => gun.tarih >= bugun) : liste;
   const bugunKaydi = (bugunQ.data?.gunler ?? []).find((gun) => gun.tarih === bugun);
   const bugunSatirlar = bugunKaydi ? satirlar(bugunKaydi, ogun) : [];
 
@@ -60,7 +64,7 @@ function Yemek() {
             ["ogle", "Öğle", "11:00–14:00"],
             ["aksam", "Akşam", "16:00–18:00"],
           ] as const).map(([id, ad, saat]) => (
-            <button key={id} onClick={() => setOgun(id)} className={`rounded-lg px-2 py-2 ${ogun === id ? "bg-surface shadow-sm text-foreground" : "text-muted-foreground"}`}>
+            <button key={id} aria-pressed={ogun === id} onClick={() => setOgun(id)} className={`rounded-lg px-2 py-2 ${ogun === id ? "bg-surface shadow-sm text-foreground" : "text-muted-foreground"}`}>
               <span className="block">{ad}</span><span className="mt-0.5 block text-[10px] font-normal opacity-75">{saat}</span>
             </button>
           ))}
@@ -79,10 +83,15 @@ function Yemek() {
           </div>
         ) : null}
         {q.isLoading ? <p className="py-10 text-center text-sm text-muted-foreground">Yemek listesi yükleniyor…</p> : null}
-        {q.isError ? <p className="py-10 text-center text-sm text-destructive">SKS yemek listesi şu an alınamadı. Biraz sonra tekrar dene.</p> : null}
+        {q.isError ? <p className="py-10 text-center text-sm text-destructive">SKS yemek listesi şu an alınamadı. <button className="rounded-lg border border-border px-3 py-2 text-foreground" disabled={q.isFetching} onClick={() => void q.refetch()}>Tekrar dene</button></p> : null}
         {!q.isLoading && !q.isError && !liste.length ? <p className="py-10 text-center text-sm text-muted-foreground">Bu ay için yayınlanmış {ogun === "kahvalti" ? "kahvaltı" : "yemek"} listesi yok.</p> : null}
+        {liste.length > 0 && <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">{buAy && !gecmisiGoster ? "Bugün ve sonrası" : "Ayın menüleri"}</h3>
+          {gecmisSayisi > 0 && <button type="button" aria-pressed={gecmisiGoster} onClick={() => setGecmisiGoster(!gecmisiGoster)} className="min-h-10 rounded-xl border border-border px-3 text-xs font-semibold hover:bg-accent">{gecmisiGoster ? "Geçmiş günleri gizle" : `Geçmiş günleri göster (${gecmisSayisi})`}</button>}
+        </div>}
+        {liste.length > 0 && !gorunenGunler.length && <p className="mt-2 text-sm text-muted-foreground">Bu ay için ileride yayınlanmış menü yok.</p>}
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {liste.map((gun) => {
+          {gorunenGunler.map((gun) => {
             const buGunMu = !!bugun && gun.tarih === bugun;
             const gecti = !!bugun && gun.tarih < bugun;
             return (
