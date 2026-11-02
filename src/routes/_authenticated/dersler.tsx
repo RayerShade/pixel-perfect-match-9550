@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { SinifUygulamaTablosu } from "@/components/SinifUygulamaTablosu";
 import { AppShell } from "@/components/AppShell";
 import { ogrenciBul, type DersOlayi } from "@/lib/schedule-data";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
@@ -227,6 +228,7 @@ function Dersler() {
             </section>
           );
         })}
+        <SinifUygulamaTablosu oturumlar={veri.uygulamalar} />
       </div>
     </AppShell>
   );
