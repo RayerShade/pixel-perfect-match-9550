@@ -95,6 +95,10 @@ function TopluTus({ olaylar, katilim, ayarla }: { olaylar: DersOlayi[]; katilim:
   );
 }
 
+function aramaAnahtari(metin: string) {
+  return metin.trim().toLocaleLowerCase("tr-TR").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i");
+}
+
 function Dersler() {
   const { veri } = useYuklenenVeri();
   const { ayarlar } = useAyarlar();
@@ -110,13 +114,24 @@ function Dersler() {
   const agac = useMemo(() => agacKur(olaylar), [olaylar]);
   const devam = useMemo(() => devamHesapla(olaylar, katilim), [olaylar, katilim]);
   const devamBul = (dilim: string, tur: OlayTuru, dal?: string) => devam.find((x) => x.dilim === dilim && x.tur === tur && (!dal || x.dal === dal));
-  const q = arama.toLocaleLowerCase("tr-TR").trim();
-  const uyar = (s: string) => !q || s.toLocaleLowerCase("tr-TR").includes(q);
+  const q = aramaAnahtari(arama);
+  const uyar = (s: string) => !q || aramaAnahtari(s).includes(q);
+  const sonuclar = agac.map((dl) => {
+    const dallar = [...dl.dallar.values()].filter((dal) => !telafiDal(dal)).map((dal) => {
+      const liste = [...dal.konular.entries()].filter(([konu, oturumlar]) =>
+        uyar(`${dl.ad} ${dal.ad} ${konu}`) || oturumlar.some((o) => uyar(o.ders.instructor || "")),
+      );
+      return { ...dal, liste };
+    }).filter((dal) => dal.liste.length)
+      .sort((a, b) => bolumSira(a) - bolumSira(b) || a.ad.localeCompare(b.ad, "tr"));
+    return { dl, dallar };
+  }).filter((sonuc) => sonuc.dallar.length);
 
   return (
     <AppShell baslik="Dersler" aciklama="Dilim ve anabilim dalına göre · devam takibi">
       <div className="space-y-5">
         <div className="workspace-toolbar"><input
+          type="search" aria-label="Derslerde ara"
           value={arama}
           onChange={(e) => setArama(e.target.value)}
           placeholder="Dilim, anabilim dalı, konu veya hoca ara…"
@@ -130,12 +145,11 @@ function Dersler() {
             Döneminin yıllık programı yüklendiğinde dersler burada görünür.
           </p>
         ) : null}
-        {agac.map((dl) => {
-          const dallar = [...dl.dallar.values()]
-            .map((d) => ({ ...d, liste: [...d.konular.entries()].filter(([ad, os]) => uyar(`${dl.ad} ${d.ad} ${ad} ${os[0]?.ders.instructor ?? ""}`)) }))
-            .filter((d) => d.liste.length && !telafiDal(d))
-            .sort((a, b) => bolumSira(a) - bolumSira(b) || a.ad.localeCompare(b.ad, "tr"));
-          if (!dallar.length) return null;
+        {q && <div role="status" className="flex items-center justify-between gap-3 rounded-xl bg-accent/50 px-4 py-2 text-sm">
+          <span>{sonuclar.length ? `${sonuclar.length} ders grubu bulundu` : "Aramanla eşleşen ders bulunamadı."}</span>
+          <button type="button" onClick={() => setArama("")} className="min-h-10 rounded-lg px-2 font-semibold hover:bg-accent">Aramayı temizle</button>
+        </div>}
+        {sonuclar.map(({ dl, dallar }) => {
           const tumu = dallar.flatMap((d) => d.liste.flatMap(([, os]) => os));
           const acikDl = acik.has(dl.ad) || Boolean(q);
           let sonTur: string | null = null;
