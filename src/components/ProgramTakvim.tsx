@@ -76,7 +76,29 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
       <datalist id="pt-hocalar">{[...new Set(dersler.map((d) => d.instructor.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr")).map((x) => <option key={x} value={x} />)}</datalist>
       <datalist id="pt-dallar">{secenek.dallar.map((x) => <option key={x} value={x} />)}</datalist>
 
-      {!yonet ? <div className="overflow-x-auto rounded-2xl border border-border bg-surface p-1 shadow-sm">
+      {!yonet && <div className="space-y-3 lg:hidden">
+        {gunler.map((gun, i) => {
+          const tarih = tarihSet[i]!;
+          const liste = haftaDersleri.filter((d) => d.date ? d.date === tarih : d.dayOfWeek === i + 1)
+            .sort((a, b) => dk(a.startTime) - dk(b.startTime));
+          return (
+            <section key={tarih} className="overflow-hidden rounded-2xl border border-border bg-surface">
+              <div className="flex items-center justify-between gap-3 px-4 py-2">
+                <h3 className="text-sm font-semibold">{gun.toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}</h3>
+                <button onClick={() => ekle(i, SAAT_BAS)} aria-label={tarih + " tarihine ders ekle"} className="inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-xs font-semibold text-primary hover:bg-accent"><Plus className="h-4 w-4" />Ders ekle</button>
+              </div>
+              {liste.length ? liste.map((d) => (
+                <button key={d.id} onClick={() => setDuzen(d)} className="flex w-full items-start gap-3 border-t border-border px-4 py-3 text-left hover:bg-accent">
+                  <span className="shrink-0 text-xs tabular-nums">{d.startTime}<span className="block text-muted-foreground">{d.endTime}</span></span>
+                  <span className="min-w-0 flex-1"><strong className="block break-words text-sm">{d.courseName || "İsimsiz ders"}</strong><span className="text-xs text-muted-foreground">{[d.group, d.defaultClassroom, d.instructor].filter(Boolean).join(" · ")}</span></span>
+                  <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </button>
+              )) : <p className="px-4 pb-3 text-xs text-muted-foreground">Ders yok</p>}
+            </section>
+          );
+        })}
+      </div>}
+      {!yonet ? <div className="hidden overflow-x-auto rounded-2xl border border-border bg-surface p-1 shadow-sm lg:block">
         <div className="grid min-w-[900px]" style={{ gridTemplateColumns: "48px repeat(7, 1fr)" }}>
           <div />
           {gunler.map((g, i) => (
@@ -116,7 +138,7 @@ export function ProgramTakvim({ dersler, onDegis, yeni }: { dersler: Ders[]; onD
         </div>
       </div> : <section className="rounded-2xl border border-dashed border-border bg-accent/35 p-5 text-center"><p className="text-sm font-bold">Dilim ve ana dal ayarları açık</p><p className="mt-1 text-xs text-muted-foreground">Burada dilim ağacını düzenle. Ders takvimine dönmek için üstteki “Takvim” sekmesine bas.</p></section>}
 
-      {duzen && <DersFormu ders={duzen} tumDersler={dersler} yeniMi={!dersler.some((r) => r.id === duzen.id)} kapat={() => setDuzen(null)} kaydet={kaydet}
+      {duzen && <DersFormu key={duzen.id} ders={duzen} tumDersler={dersler} yeniMi={!dersler.some((r) => r.id === duzen.id)} kapat={() => setDuzen(null)} kaydet={kaydet}
         sil={() => { onDegis(dersler.filter((r) => r.id !== duzen.id)); setDuzen(null); }}
         kopya={() => setDuzen({ ...duzen, id: crypto.randomUUID() })} />}
     </div>
