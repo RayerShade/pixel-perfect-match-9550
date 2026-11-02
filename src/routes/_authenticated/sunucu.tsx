@@ -635,29 +635,42 @@ function Dosyalar() {
     if (i === "sil" && !confirm(`${yol} silinsin mi?`)) return;
     try { const r = await islem({ data: { yol, islem: i } }); if (r.url) window.location.href = r.url; else { toast.success("Silindi"); void q.refetch(); } } catch (e) { hata(e); }
   };
-  const liste = (q.data ?? []).filter((f) => f.yol.toLowerCase().includes(ara.toLowerCase())).sort((a, b) => String(b.tarih).localeCompare(String(a.tarih)));
-  const toplam = (q.data ?? []).reduce((a, f) => a + f.boyut, 0);
+  const [klasor, setKlasor] = useState("");
+  const [siralama, setSiralama] = useState("tarih");
+  const dosyalar = (q.data ?? []).map((f) => {
+    const parcalar = f.yol.split("/");
+    const ad = parcalar.pop() || f.yol;
+    return { ...f, ad, klasor: parcalar.join("/") };
+  });
+  const klasorler = [...new Set(dosyalar.map((f) => f.klasor).filter(Boolean))].sort();
+  const sorgu = ara.trim().toLocaleLowerCase("tr");
+  const liste = dosyalar.filter((f) => (!klasor || f.klasor === klasor) && f.yol.toLocaleLowerCase("tr").includes(sorgu));
+  liste.sort((a, b) => {
+    if (siralama === "boyut") return b.boyut - a.boyut;
+    if (siralama === "ad") return a.ad.localeCompare(b.ad, "tr", { numeric: true });
+    return String(b.tarih).localeCompare(String(a.tarih));
+  });
+  const toplam = dosyalar.reduce((a, f) => a + f.boyut, 0);
   return (
-    <Kart baslik={`${q.data?.length ?? 0} dosya · ${(toplam / 1024 / 1024).toFixed(2)} MB`} sag={<button className={btn} onClick={() => void q.refetch()}><RefreshCw className="h-3 w-3" />yenile</button>}>
-      <input value={ara} onChange={(e) => setAra(e.target.value)} placeholder="dosya ya da kullanıcı id ara" className={`${giris} mb-3 w-64`} />
-      {q.isLoading ? <p className="text-sm text-muted-foreground">yükleniyor…</p> : null}
-      {q.error ? <p className="text-destructive">{String(q.error)}</p> : null}
-      <div className="divide-y divide-border">
-        {liste.map((f) => {
-          const [kul, tur, ...ad] = f.yol.split("/");
-          return (
-            <div key={f.yol} className="flex flex-wrap items-center gap-2 py-2 text-sm">
-              <FileSpreadsheet className="h-4 w-4 text-primary" />
-              <span className="font-medium">{ad.join("/")}</span>
-              <span className="rounded bg-muted px-1.5 text-[10px]">{tur}</span>
-              <span className="font-mono text-[10px] text-muted-foreground">{kul}</span>
-              <span className="ml-auto text-xs text-muted-foreground">{(f.boyut / 1024).toFixed(1)} KB · {tarih(f.tarih)}</span>
-              <button className={btn} onClick={() => void yap(f.yol, "indir")}>indir</button>
-              <button className={tehlike} onClick={() => void yap(f.yol, "sil")}>sil</button>
-            </div>
-          );
-        })}
+    <Kart baslik="Dosya arşivi" sag={<button className={btn} disabled={q.isFetching} onClick={() => void q.refetch()}><RefreshCw className="h-3 w-3" />Yenile</button>}>
+      <div className="grid gap-2 sm:grid-cols-3">
+        <label className="min-w-0 text-xs font-semibold">Dosya ara<input type="search" value={ara} onChange={(e) => setAra(e.target.value)} placeholder="Dosya adı veya klasör yolu" className={giris + " mt-1 w-full"} /></label>
+        <label className="min-w-0 text-xs font-semibold">Klasör<select value={klasor} onChange={(e) => setKlasor(e.target.value)} className={giris + " mt-1 w-full"}><option value="">Tüm klasörler</option>{klasorler.map((k) => <option key={k} value={k}>{k}</option>)}</select></label>
+        <label className="text-xs font-semibold">Sıralama<select value={siralama} onChange={(e) => setSiralama(e.target.value)} className={giris + " mt-1 w-full"}><option value="tarih">En yeni</option><option value="ad">Ada göre</option><option value="boyut">En büyük</option></select></label>
       </div>
+      {q.isLoading && <p role="status" className="py-4 text-sm">Dosyalar yükleniyor…</p>}
+      {q.error && <p role="alert" className="py-4 text-destructive">{String(q.error)}</p>}
+      {q.data && <p role="status" className="py-3 text-xs text-muted-foreground">{liste.length} / {dosyalar.length} dosya · Arşiv toplamı {(toplam / 1048576).toFixed(2)} MB</p>}
+      {q.data && !liste.length && <div className="rounded-xl bg-accent/40 p-4 text-sm">{dosyalar.length ? <>Eşleşen dosya bulunamadı. <button className={btn} onClick={() => { setAra(""); setKlasor(""); }}>Filtreleri temizle</button></> : "Arşivde dosya yok."}</div>}
+      <ul className="divide-y divide-border">
+        {liste.map((f) => (
+          <li key={f.yol} className="flex flex-wrap items-center gap-3 py-3 text-sm">
+            <FileSpreadsheet aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1 basis-48"><p className="break-words font-semibold">{f.ad}</p><p className="break-all text-xs text-muted-foreground">{f.klasor || "Ana klasör"}</p><p className="mt-1 text-xs text-muted-foreground">{(f.boyut / 1024).toFixed(1)} KB · {tarih(f.tarih)}</p></div>
+            <div className="flex gap-2"><button className={btn} aria-label={f.ad + " indir"} onClick={() => void yap(f.yol, "indir")}>İndir</button><button className={tehlike} aria-label={f.ad + " sil"} onClick={() => void yap(f.yol, "sil")}>Sil</button></div>
+          </li>
+        ))}
+      </ul>
     </Kart>
   );
 }
