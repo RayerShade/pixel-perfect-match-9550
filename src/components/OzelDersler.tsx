@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { CalendarPlus, MapPin, Plus, RotateCcw, X } from "lucide-react";
+import { CalendarPlus, MapPin, RotateCcw } from "lucide-react";
 import { addDays, isoDate } from "@/lib/date-utils";
 import { DERS_TURU_ETIKET, derslikListesi, type Ders, type DersOlayi, type DersTuru } from "@/lib/schedule-data";
 import { dilimDal } from "@/lib/dilim";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAyarlar, useYuklenenVeri, type Ayarlar, type DersDuzeni, type OzelDers, type Tekrar } from "@/lib/store";
 
 export const TEKRAR_ETIKET: Record<Tekrar, string> = {
@@ -112,25 +113,26 @@ export function OzelDersFormu({
   const dallar = [...new Set(programDersleri.filter((d) => !f.dilim || dilimDal(d).dilim === f.dilim).map((d) => dilimDal(d).dal).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr"));
   const hocalar = [...new Set(programDersleri.filter((d) => (!f.dilim || dilimDal(d).dilim === f.dilim) && (!f.dal || dilimDal(d).dal === f.dal)).map((d) => d.instructor.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr"));
   const set = (p: Partial<OzelDers>) => setF((x) => ({ ...x, ...p }));
+  const saatHatasi = !f.startTime || !f.endTime || f.endTime <= f.startTime;
+  const tarihHatasi = f.tekrar !== "yok" && !!f.bitis && f.bitis < f.tarih;
   const kaydet = () => {
-    if (!f.ad.trim() || f.endTime <= f.startTime) return;
+    if (!f.ad.trim() || !f.tarih || saatHatasi || tarihHatasi) return;
     const liste = (ayarlar.ozelDersler ?? []).filter((o) => o.id !== f.id);
     guncelle({ ozelDersler: [...liste, { ...f, ad: f.ad.trim(), bitis: f.tekrar === "yok" ? undefined : f.bitis || undefined }] });
     onClose();
   };
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-foreground/30 backdrop-blur-sm sm:items-center sm:p-4">
-      <button aria-label="Kapat" className="absolute inset-0 cursor-default" onClick={onClose} />
+    <Dialog open onOpenChange={(acik) => { if (!acik) onClose(); }}>
+      <DialogContent className="z-[60] max-w-xl p-0 sm:p-0 [&>button]:right-5 [&>button]:top-5">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           kaydet();
         }}
-        className="relative max-h-[90vh] w-full max-w-md space-y-3 overflow-y-auto rounded-t-3xl border border-border bg-surface p-5 sm:rounded-3xl"
+        className="space-y-4 p-5 sm:p-6"
       >
         <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
-          <div><span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><CalendarPlus className="h-4 w-4" /></span><h2 className="mt-2 text-lg font-bold">{mevcut ? "Kişisel dersi düzenle" : "Takvime ders ekle"}</h2><p className="mt-0.5 text-xs text-muted-foreground">Dersin yerini, türünü ve sınıflandırmasını burada tanımla.</p></div>
-          <button type="button" onClick={onClose} aria-label="Kapat" className="grid h-9 w-9 place-items-center rounded-xl border border-border hover:bg-accent"><X className="h-4 w-4" /></button>
+          <div className="pr-6"><span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><CalendarPlus className="h-4 w-4" /></span><DialogTitle className="mt-3">{mevcut ? "Kişisel dersi düzenle" : "Takvime ders ekle"}</DialogTitle><DialogDescription className="mt-1">Bu kayıt yalnızca senin kişisel takvimine eklenir.</DialogDescription></div>
         </div>
         <label className="block text-xs font-semibold">Ders / etkinlik adı<input required className={`${girdi} mt-1`} placeholder="Örn. Çalışma grubu" value={f.ad} onChange={(e) => set({ ad: e.target.value })} /></label>
         <label className="block text-xs text-muted-foreground">
@@ -147,7 +149,7 @@ export function OzelDersFormu({
             <input type="time" required className={`${girdi} mt-1`} value={f.endTime} onChange={(e) => set({ endTime: e.target.value })} />
           </label>
         </div>
-        {f.endTime <= f.startTime ? <p className="text-xs text-destructive">Bitiş saati başlangıçtan sonra olmalı.</p> : null}
+        {saatHatasi ? <p role="status" className="text-xs text-destructive">Bitiş saati başlangıçtan sonra olmalı.</p> : null}
         <div>
           <span className="text-xs text-muted-foreground">Tekrar</span>
           <div className="mt-1 grid grid-cols-2 gap-2">
@@ -155,6 +157,7 @@ export function OzelDersFormu({
               <button
                 type="button"
                 key={t}
+                aria-pressed={f.tekrar === t}
                 onClick={() => set({ tekrar: t })}
                 className={`rounded-lg border py-2 text-sm font-semibold ${f.tekrar === t ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}
               >
@@ -166,15 +169,26 @@ export function OzelDersFormu({
         {f.tekrar !== "yok" ? (
           <label className="block text-xs text-muted-foreground">
             Son tarih (boş bırakırsan devam eder)
-            <input type="date" className={`${girdi} mt-1`} value={f.bitis ?? ""} onChange={(e) => set({ bitis: e.target.value })} />
+            <input type="date" min={f.tarih} className={`${girdi} mt-1`} value={f.bitis ?? ""} onChange={(e) => set({ bitis: e.target.value })} />
           </label>
         ) : null}
-        <div className="rounded-2xl bg-accent/55 p-3"><p className="flex items-center gap-1.5 text-xs font-bold"><MapPin className="h-3.5 w-3.5 text-primary" />Yer ve ders bilgileri</p><div className="mt-2 grid gap-2 sm:grid-cols-2"><label className="text-xs font-semibold">Derslik<input role="combobox" aria-autocomplete="list" list="ozel-derslikler" className={`${girdi} mt-1`} placeholder="Listeden seç" value={f.yer} onChange={(e) => set({ yer: e.target.value })} /></label><label className="text-xs font-semibold">Hoca<input role="combobox" aria-autocomplete="list" list="ozel-hocalar" className={`${girdi} mt-1`} placeholder="Listeden seç" value={f.instructor ?? ""} onChange={(e) => set({ instructor: e.target.value })} /></label></div><div className="mt-2 grid grid-cols-3 gap-2"><label className="text-xs font-semibold">Tür<select className={`${girdi} mt-1`} value={f.courseType ?? "teorik"} onChange={(e) => set({ courseType: e.target.value as DersTuru })}>{(Object.keys(DERS_TURU_ETIKET) as DersTuru[]).map((t) => <option key={t} value={t}>{DERS_TURU_ETIKET[t]}</option>)}</select></label><label className="text-xs font-semibold">Dilim<input role="combobox" list="ozel-dilimler" className={`${girdi} mt-1`} value={f.dilim ?? ""} onChange={(e) => set({ dilim: e.target.value, dal: "" })} /></label><label className="text-xs font-semibold">Ana dal<input role="combobox" list="ozel-dallar" className={`${girdi} mt-1`} value={f.dal ?? ""} onChange={(e) => set({ dal: e.target.value })} /></label></div></div>
+        {tarihHatasi ? <p role="status" className="text-xs text-destructive">Son tarih ilk tarihten önce olamaz.</p> : null}
+        <fieldset className="space-y-3 rounded-2xl border border-border p-4">
+          <legend className="px-1 text-xs font-semibold">Ders bilgileri</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-xs font-semibold">Dilim<input list="ozel-dilimler" className={`${girdi} mt-1`} placeholder="Dilim seç veya yaz" value={f.dilim ?? ""} onChange={(e) => set({ dilim: e.target.value, dal: "", instructor: "" })} /></label>
+            <label className="text-xs font-semibold">Ana dal<input list="ozel-dallar" className={`${girdi} mt-1`} placeholder="Ana dal seç veya yaz" value={f.dal ?? ""} onChange={(e) => set({ dal: e.target.value, instructor: "" })} /></label>
+            <label className="text-xs font-semibold">Hoca<input list="ozel-hocalar" className={`${girdi} mt-1`} placeholder="Hoca seç veya yaz" value={f.instructor ?? ""} onChange={(e) => set({ instructor: e.target.value })} /><span className="mt-1 block font-normal text-muted-foreground">{hocalar.length} hoca · Seçtiğin dilim ve ana dala göre</span></label>
+            <label className="text-xs font-semibold">Ders türü<select className={`${girdi} mt-1`} value={f.courseType ?? "teorik"} onChange={(e) => set({ courseType: e.target.value as DersTuru })}>{(Object.keys(DERS_TURU_ETIKET) as DersTuru[]).map((t) => <option key={t} value={t}>{DERS_TURU_ETIKET[t]}</option>)}</select></label>
+          </div>
+          <label className="block text-xs font-semibold"><span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />Derslik</span><input list="ozel-derslikler" className={`${girdi} mt-1`} placeholder="Amfi veya derslik seç" value={f.yer} onChange={(e) => set({ yer: e.target.value })} /></label>
+        </fieldset>
         <datalist id="ozel-derslikler">{derslikler.map((x) => <option key={x} value={x} />)}</datalist><datalist id="ozel-hocalar">{hocalar.map((x) => <option key={x} value={x} />)}</datalist><datalist id="ozel-dilimler">{dilimler.map((x) => <option key={x} value={x} />)}</datalist><datalist id="ozel-dallar">{dallar.map((x) => <option key={x} value={x} />)}</datalist>
         <label className="block text-xs font-semibold">Not<input className={`${girdi} mt-1`} placeholder="İsteğe bağlı not" value={f.not} onChange={(e) => set({ not: e.target.value })} /></label>
-        <button className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-sm">Dersi takvime ekle</button>
+        <div className="sticky -bottom-5 flex items-center justify-end gap-2 border-t border-border bg-background/95 py-3 backdrop-blur-sm"><button type="button" onClick={onClose} className="rounded-xl border border-border px-4 py-3 text-sm font-medium hover:bg-accent">Vazgeç</button><button disabled={!f.ad.trim() || !f.tarih || saatHatasi || tarihHatasi} className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-40">{mevcut ? "Değişiklikleri kaydet" : "Takvime ekle"}</button></div>
       </form>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -291,4 +305,3 @@ export function DersDuzenle({ olay, onBitti }: { olay: DersOlayi; onBitti: () =>
     </div>
   );
 }
-
