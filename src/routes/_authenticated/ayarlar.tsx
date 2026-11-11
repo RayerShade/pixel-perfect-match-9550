@@ -7,6 +7,7 @@ import { useDonemler } from "@/components/DonemSecici";
 import { DIL_ETIKET } from "@/lib/program";
 import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/store";
 import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { SecmeliSecici } from "@/components/SecmeliSecici";
 import { PwaKurulum } from "@/components/PwaKurulum";
 import { useAuth } from "@/lib/auth";
@@ -91,8 +92,23 @@ function Ayarlar() {
 
   return (
     <AppShell baslik="Ayarlar" aciklama="Uygulama tercihleri">
-      <div className="space-y-5">        {secmeliAcik ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label="Seçmeli dersler"><div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/80 bg-surface p-5 shadow-xl"><div className="mb-4 flex items-center gap-3"><div className="min-w-0 flex-1"><h2 className="text-lg font-bold">Seçmeli dersler</h2><p className="text-xs text-muted-foreground">Her gruptan bir ders seçebilirsin; seçimin takvimine otomatik eklenir.</p></div><button onClick={() => setSecmeliAcik(false)} className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-accent">Kapat</button></div><SecmeliSecici /></div></div> : null}
-        <section data-tur="ogrenci-bilgi" className="workspace-panel p-4">
+      <div className="space-y-5">
+        <nav aria-label="Ayarlar bölümleri" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="workspace-panel min-h-12 px-3 py-2 text-sm font-semibold hover:bg-accent">
+            Seçmeli dersler <span className="text-muted-foreground">({secili.length})</span>
+          </button>
+          {[["ogrenci", "Öğrenci bilgileri"], ["gorunum", "Takvim görünümü"], ["baglantilar", "Takvim bağlantıları"]].map(([id, ad]) =>
+            <a key={id} href={`#${id}`} className="workspace-panel flex min-h-12 items-center justify-center px-3 py-2 text-center text-sm font-semibold hover:bg-accent">{ad}</a>
+          )}
+        </nav>
+        <Dialog open={secmeliAcik} onOpenChange={setSecmeliAcik}>
+          <DialogContent className="max-w-3xl">
+            <DialogTitle>Seçmeli dersler</DialogTitle>
+            <DialogDescription>Her gruptan bir ders seçebilirsin. Seçimin takvimine eklenir.</DialogDescription>
+            <SecmeliSecici />
+          </DialogContent>
+        </Dialog>
+        <section id="ogrenci" tabIndex={-1} data-tur="ogrenci-bilgi" className="scroll-mt-24 workspace-panel p-4">
           <h2 className="text-sm font-bold">Öğrenci Bilgileri</h2>
           <div className="mt-3 space-y-3">
             <div>
@@ -141,7 +157,7 @@ function Ayarlar() {
           </div>
         </section>
 
-        <section data-tur="takvim-gorunum" className="ui-surface rounded-2xl border border-border bg-surface p-4">
+        <section id="gorunum" tabIndex={-1} data-tur="takvim-gorunum" className="scroll-mt-24 ui-surface rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-bold">Takvim Görünümü</h2>
           <label className="mt-3 flex items-center justify-between gap-3">
             <span className="text-sm">Hafta sonunu göster</span>
@@ -229,10 +245,9 @@ function Ayarlar() {
               className="h-5 w-5 shrink-0 accent-[var(--teorik)]"
             />
           </label>
-          <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="mt-4 w-full rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">Seçmeli derslerini seç</button>
         </section>
 
-        <section className="ui-surface overflow-hidden rounded-3xl border border-border bg-surface"><div className="border-b border-border bg-gradient-to-br from-primary/10 via-transparent to-altin/10 px-5 py-5"><p className="text-xs font-extrabold uppercase tracking-[.14em] text-primary">İTF Takvim</p><h2 className="mt-1 text-lg font-bold">Takvim uygulamana ekle</h2><p className="mt-1 max-w-xl text-sm text-muted-foreground">Programın, uygulamaların ve amfi değişikliklerin kullandığın takvimde otomatik güncel kalır.</p></div><div className="grid gap-3 p-4 sm:grid-cols-2"><button type="button" onClick={() => void takvimBagla("google")} className="group flex min-h-24 items-center gap-3 rounded-2xl bg-[#202124] p-4 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#303134]"><span aria-hidden="true" className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-white text-base font-extrabold text-[#4285F4] before:absolute before:inset-x-0 before:top-0 before:h-2 before:bg-[#EA4335] after:absolute after:bottom-1 after:left-1 h-0.5 after:w-2 after:rounded-full after:bg-[#34A853]">31</span><span><span className="block text-[11px] text-white/65">Google Calendar’a</span><span className="block text-base font-bold">Google Calendar’a bağlan</span></span></button><button type="button" onClick={() => void takvimBagla("apple")} className="group flex min-h-24 items-center gap-3 rounded-2xl bg-black p-4 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-800"><span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-xl bg-white text-black"><CalendarDays className="h-6 w-6" strokeWidth={2.25} /></span><span><span className="block text-[11px] text-white/65">Apple Calendar’a</span><span className="block text-base font-bold">Takvimi ekle</span></span></button></div><div className="flex items-center justify-between gap-3 px-5 pb-4 text-[11px] text-muted-foreground"><div className="flex items-center gap-3"><span>Apple bağlantısı kişiye özeldir; burada gösterilmez.</span><button type="button" className="font-semibold text-primary hover:underline disabled:opacity-50" disabled={googleEsitleniyor} onClick={() => void googleEsitle()}>{googleEsitleniyor ? "Eşitleniyor…" : "Google’ı şimdi eşitle"}</button></div>{takvimToken ? <button type="button" className="font-semibold text-primary hover:underline" onClick={() => { const t = crypto.randomUUID().replace(/-/g, ""); setTakvimToken(t); guncelle({ takvimAbonelikToken: t }); toast.success("Yeni bağlantı oluşturuldu; eski bağlantı geçersizdir."); }}>Bağlantıyı yenile</button> : null}</div></section>
+        <section id="baglantilar" tabIndex={-1} className="scroll-mt-24 ui-surface overflow-hidden rounded-3xl border border-border bg-surface"><div className="border-b border-border bg-gradient-to-br from-primary/10 via-transparent to-altin/10 px-5 py-5"><p className="text-xs font-extrabold uppercase tracking-[.14em] text-primary">İTF Takvim</p><h2 className="mt-1 text-lg font-bold">Takvim uygulamana ekle</h2><p className="mt-1 max-w-xl text-sm text-muted-foreground">Programın, uygulamaların ve amfi değişikliklerin kullandığın takvimde otomatik güncel kalır.</p></div><div className="grid gap-3 p-4 sm:grid-cols-2"><button type="button" onClick={() => void takvimBagla("google")} className="group flex min-h-24 items-center gap-3 rounded-2xl bg-[#202124] p-4 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#303134]"><span aria-hidden="true" className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-white text-base font-extrabold text-[#4285F4] before:absolute before:inset-x-0 before:top-0 before:h-2 before:bg-[#EA4335] after:absolute after:bottom-1 after:left-1 h-0.5 after:w-2 after:rounded-full after:bg-[#34A853]">31</span><span><span className="block text-[11px] text-white/65">Google Calendar’a</span><span className="block text-base font-bold">Google Calendar’a bağlan</span></span></button><button type="button" onClick={() => void takvimBagla("apple")} className="group flex min-h-24 items-center gap-3 rounded-2xl bg-black p-4 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-800"><span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-xl bg-white text-black"><CalendarDays className="h-6 w-6" strokeWidth={2.25} /></span><span><span className="block text-[11px] text-white/65">Apple Calendar’a</span><span className="block text-base font-bold">Takvimi ekle</span></span></button></div><div className="flex items-center justify-between gap-3 px-5 pb-4 text-[11px] text-muted-foreground"><div className="flex items-center gap-3"><span>Apple bağlantısı kişiye özeldir; burada gösterilmez.</span><button type="button" className="font-semibold text-primary hover:underline disabled:opacity-50" disabled={googleEsitleniyor} onClick={() => void googleEsitle()}>{googleEsitleniyor ? "Eşitleniyor…" : "Google’ı şimdi eşitle"}</button></div>{takvimToken ? <button type="button" className="font-semibold text-primary hover:underline" onClick={() => { const t = crypto.randomUUID().replace(/-/g, ""); setTakvimToken(t); guncelle({ takvimAbonelikToken: t }); toast.success("Yeni bağlantı oluşturuldu; eski bağlantı geçersizdir."); }}>Bağlantıyı yenile</button> : null}</div></section>
 
         <PwaKurulum />
 
