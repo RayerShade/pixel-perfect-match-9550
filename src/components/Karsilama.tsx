@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowRight, BookOpen, CalendarDays, MapPin, MessageCircle, Utensils } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { AnaSayfaLogosu, NAV } from "@/components/Marka";
 import kroki from "@/assets/WhatsApp Image 2026-10-17 at 03.22.17.jpeg";
 
 const ornekGunler = [
@@ -24,9 +25,9 @@ export function Karsilama() {
     <div className="bg-background text-foreground">
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4">
-          <a href="#baslangic" className="flex items-center gap-2 font-bold"><CalendarDays size={23} /> İTF Takvim</a>
-          <nav aria-label="Tanıtım bölümleri" className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-medium">
-            <a href="#ozellikler">Özellikler</a><a href="#nasil">Nasıl kullanılır?</a><a href="#sorular">SSS</a><a href="#destek">Destek ol</a>
+          <div className="flex items-center gap-2"><AnaSayfaLogosu /><span className="font-bold">İTF Takvim</span></div>
+          <nav aria-label="Ana gezinme" className="flex max-w-full flex-wrap items-center gap-1 rounded-2xl bg-accent/70 p-1">
+            {NAV.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-xs font-semibold hover:bg-surface sm:px-3 sm:text-sm"><Icon size={16} aria-hidden="true" />{label}</Link>)}
           </nav>
         </div>
       </header>
@@ -68,17 +69,23 @@ export function Karsilama() {
 
         <section id="sorular" className="grid gap-5 border-t border-border py-12 md:grid-cols-[1fr_2fr]"><h2 className="text-3xl font-bold tracking-tight">Sık sorulan sorular</h2>
           <div className="divide-y divide-border">{[
+            ["İTF Takvim ücretli mi?", "Hayır. Uygulamanın tüm öğrenci özelliklerini ücretsiz kullanabilirsin. Projeye katkıda bulunmak tamamen isteğe bağlı."],
+            ["Bu resmi fakülte takvimi mi?", "İTF Takvim öğrenciler tarafından geliştirilen bağımsız bir projedir. Saat veya derslik konusunda farklılık varsa fakültenin güncel duyurusunu esas al."],
+            ["Seçmeli derslerimi nereden değiştiririm?", "Ayarlar sayfasındaki seçmeli ders seçimini aç. Aldığın dersleri seçerek kişisel takviminde hangilerinin görüneceğini belirleyebilirsin."],
+            ["Telafiye katıldığımı nasıl işaretlerim?", "Dersler sekmesinde ilgili dilimi aç. Uygulamanın altındaki telafi satırını işaretlediğinde katılımın o uygulamanın hesabına yansır."],
+            ["Amfiyi biliyorum ama binayı nasıl bulurum?", "Destek sekmesindeki Dersim nerede? düğmesini aç. Krokide binanın yerini, altındaki listede amfi ve derslikleri görebilirsin."],
+            ["Programda hata görürsem ne yapmalıyım?", "Destek sekmesinden ders adını, tarihini ve düzeltilmesi gereken bilgiyi ilet. Gerekirse ekran görüntüsü ekleyebilirsin."],
             ["Neden arkadaşımın takvimi farklı?", "Dönem, program dili, uygulama grubu ve seçmeli ders tercihleri görünen dersleri belirler."],
             ["Sınıfımın tüm uygulamalarını görebilir miyim?", "Sınıfın için ayrı uygulama tablosu yayımlandıysa Dersler sayfasının altında tüm grupları içeren tabloyu açabilirsin."],
             ["Bir dersin amfisi neden henüz görünmüyor?", "Amfi programı ders programından ayrı güncellenir. Takvimdeki son güncelleme bilgilerini ve ders kartındaki eşleşme durumunu kontrol edebilirsin."],
           ].map(([soru, cevap]) => <details key={soru} className="py-3"><summary className="cursor-pointer py-2 font-semibold">{soru}</summary><p className="pb-2 text-sm leading-relaxed text-muted-foreground">{cevap}</p></details>)}</div>
         </section>
         <section id="destek" className="mb-10 flex flex-wrap items-center justify-between gap-5 rounded-3xl border border-border bg-accent p-6 sm:p-9">
-          <div><h2 className="text-2xl font-bold">Bize destek ol</h2><p className="mt-2 text-muted-foreground">İTF Takvim’e katkıda bulunmak için WhatsApp üzerinden iletişime geç.</p></div>
+          <div className="max-w-2xl"><h2 className="text-2xl font-bold">Bize destek ol</h2><p className="mt-2 text-muted-foreground">İTF Takvim tamamen ücretsiz bir öğrenci projesidir. Alan adı ve barındırma gibi masraflarımızı karşılamamıza destek olmak isterseniz WhatsApp üzerinden bizimle iletişime geçebilirsiniz.</p></div>
           <a href="https://wa.me/qr/WPUHSHXNHQXQC1" target="_blank" rel="noopener noreferrer" className={anaTus}><MessageCircle size={17} />WhatsApp’tan ulaş</a>
         </section>
       </main>
-      <footer className="border-t border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-6"><span className="font-semibold">İTF Takvim</span><div className="flex gap-2">{hesap}</div></div></footer>
+      <footer className="border-t border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-6"><span className="font-semibold">İTF Takvim</span><nav aria-label="Yasal bilgiler" className="flex gap-4 text-sm underline"><Link to="/gizlilik">Gizlilik Politikası</Link><Link to="/kullanim-sartlari">Kullanım Şartları</Link></nav><div className="flex gap-2">{hesap}</div></div></footer>
     </div>
   );
 }
