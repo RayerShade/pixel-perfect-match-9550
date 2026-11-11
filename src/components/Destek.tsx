@@ -39,7 +39,7 @@ export function TalepTuruSecici({ sec }: { sec: (tur: Talep["tur"]) => void }) {
     <section className="rounded-2xl border border-border bg-surface p-5 shadow-card">
       <p className="text-sm font-semibold text-primary">Görüşünü ilet</p>
       <h2 className="mt-1 text-xl font-bold">Ne göndermek istiyorsun?</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Şikâyet ve öneriler değerlendirme ekibine iletilir. Gönderimler yanıtlanmaz ve daha sonra bu sayfada görünmez.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Şikâyet ve öneriler değerlendirme ekibine iletilir. Şikâyetlerine gelen yanıtları burada takip edebilirsin. Öneriler tek yönlüdür.</p>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <button onClick={() => sec("destek")} className="group rounded-xl border border-border p-4 text-left transition hover:border-primary hover:bg-primary/5">
           <Megaphone className="h-6 w-6 text-primary" /><b className="mt-3 block">Şikâyet gönder</b>
@@ -85,7 +85,7 @@ export function YeniTalep({ tur, onOlustu, vazgec }: { tur: Talep["tur"]; onOlus
     <section className="space-y-3 rounded-2xl border border-border bg-surface p-5 shadow-card">
       <button type="button" onClick={vazgec} className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="h-3.5 w-3.5" />Tür seçimine dön</button>
       <div><p className="text-xs font-semibold text-primary">{etiket}</p><h2 className="text-lg font-bold">{etiket} gönder</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Gönderimin değerlendirme ekibine iletilir; yanıtlanmaz ve sonradan hesabında görünmez.</p></div>
+        <p className="mt-1 text-xs text-muted-foreground">{tur === "destek" ? "Ekip yanıt verdiğinde Şikâyetlerim bölümünden okuyabilirsin." : "Önerin ekibe iletilir ve gönderimden sonra hesabında görünmez."}</p></div>
       <input value={konu} onChange={(e) => setKonu(e.target.value)} maxLength={200} placeholder="Başlık" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
       <textarea value={metin} onChange={(e) => setMetin(e.target.value)} maxLength={4000} rows={5} placeholder={tur === "destek" ? "Şikâyetini ayrıntısıyla yaz…" : "Önerini ayrıntısıyla yaz…"} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-border p-3">
@@ -106,17 +106,20 @@ export type TalepEki = { id: string; talep_id: string; user_id: string; yol: str
 const saat = (d: string) => new Date(d).toLocaleString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 /** Talepleri çeker; yönetici tümünü, öğrenci yalnızca kendi şikâyetlerini görür. */
-export function useTalepler() {
+export function useTalepler(kendiSikayetleri?: string) {
   const [liste, setListe] = useState<Talep[]>([]);
   const [bekliyor, setBekliyor] = useState(true);
   const yenile = useCallback(async () => {
-    const { data, error } = await supabase
+    let sorgu = supabase
       .from("destek_talepleri")
       .select("id, user_id, konu, aciklama, tur, durum, created_at, updated_at")
       .order("updated_at", { ascending: false });
+    if (kendiSikayetleri) sorgu = sorgu.eq("user_id", kendiSikayetleri).eq("tur", "destek");
+    const { data, error } = await sorgu;
+    if (error) toast.error("Kayıtlar yüklenemedi.");
     if (!error && data) setListe(data as Talep[]);
     setBekliyor(false);
-  }, []);
+  }, [kendiSikayetleri]);
   useEffect(() => { void yenile(); }, [yenile]);
   return { liste, yenile, bekliyor };
 }
@@ -228,7 +231,7 @@ export function TalepSohbet({ talep, yonetici, onDegisti }: { talep: Talep; yone
             : <span key={ek.id} className="rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground">{ek.ad}</span>)}
         </div>
       ) : null}
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+      {talep.tur === "destek" && <><div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
         {mesajlar.length === 0 ? <p className="text-xs text-muted-foreground">Henüz mesaj yok.</p> : mesajlar.map((m) => {
           const kendi = m.user_id === ben;
           return (
@@ -254,7 +257,7 @@ export function TalepSohbet({ talep, yonetici, onDegisti }: { talep: Talep; yone
         <button onClick={() => void yukle()} className="rounded-lg border border-border px-2 py-2 text-muted-foreground hover:bg-accent" aria-label="Yenile">
           <RefreshCw className="h-4 w-4" />
         </button>
-      </div>
+      </div></>}
     </section>
   );
 }
