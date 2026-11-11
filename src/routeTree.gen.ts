@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as GizlilikRouteImport } from './routes/gizlilik'
+import { Route as KullanimSartlariRouteImport } from './routes/kullanim-sartlari'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAyarlarRouteImport } from './routes/_authenticated/ayarlar'
@@ -44,6 +46,16 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GizlilikRoute = GizlilikRouteImport.update({
+  id: '/gizlilik',
+  path: '/gizlilik',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KullanimSartlariRoute = KullanimSartlariRouteImport.update({
+  id: '/kullanim-sartlari',
+  path: '/kullanim-sartlari',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -147,6 +159,8 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/gizlilik': typeof GizlilikRoute
+  '/kullanim-sartlari': typeof KullanimSartlariRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/ayarlar': typeof AuthenticatedAyarlarRoute
@@ -170,6 +184,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/gizlilik': typeof GizlilikRoute
+  '/kullanim-sartlari': typeof KullanimSartlariRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/ayarlar': typeof AuthenticatedAyarlarRoute
@@ -195,6 +211,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/gizlilik': typeof GizlilikRoute
+  '/kullanim-sartlari': typeof KullanimSartlariRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/ayarlar': typeof AuthenticatedAyarlarRoute
@@ -220,6 +238,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/gizlilik'
+    | '/kullanim-sartlari'
     | '/reset-password'
     | '/admin'
     | '/ayarlar'
@@ -243,6 +263,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/gizlilik'
+    | '/kullanim-sartlari'
     | '/reset-password'
     | '/admin'
     | '/ayarlar'
@@ -267,6 +289,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/gizlilik'
+    | '/kullanim-sartlari'
     | '/reset-password'
     | '/_authenticated/admin'
     | '/_authenticated/ayarlar'
@@ -292,6 +316,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  GizlilikRoute: typeof GizlilikRoute
+  KullanimSartlariRoute: typeof KullanimSartlariRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiHesabimiSilRoute: typeof ApiHesabimiSilRoute
   ApiAppleCalendarBaslatRoute: typeof ApiAppleCalendarBaslatRoute
@@ -326,6 +352,20 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gizlilik': {
+      id: '/gizlilik'
+      path: '/gizlilik'
+      fullPath: '/gizlilik'
+      preLoaderRoute: typeof GizlilikRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kullanim-sartlari': {
+      id: '/kullanim-sartlari'
+      path: '/kullanim-sartlari'
+      fullPath: '/kullanim-sartlari'
+      preLoaderRoute: typeof KullanimSartlariRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -493,6 +533,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  GizlilikRoute: GizlilikRoute,
+  KullanimSartlariRoute: KullanimSartlariRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiHesabimiSilRoute: ApiHesabimiSilRoute,
   ApiAppleCalendarBaslatRoute: ApiAppleCalendarBaslatRoute,

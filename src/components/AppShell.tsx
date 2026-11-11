@@ -10,15 +10,9 @@ import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, C
 import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 import { useAyarlar } from "@/lib/store";
-import { CalendarDays, BookOpen, Settings, LifeBuoy, LogOut, ShieldCheck, Loader2, Info, UtensilsCrossed, GraduationCap, Search } from "lucide-react";
+import { LogOut, ShieldCheck, Loader2, Info, Search } from "lucide-react";
 
-const NAV = [
-  { to: "/takvim", label: "Takvim", icon: CalendarDays },
-  { to: "/dersler", label: "Dersler", icon: BookOpen },
-  { to: "/yemek", label: "Yemek", icon: UtensilsCrossed },
-  { to: "/destek", label: "Destek", icon: LifeBuoy },
-  { to: "/ayarlar", label: "Ayarlar", icon: Settings },
-] as const;
+import { AnaSayfaLogosu, NAV } from "@/components/Marka";
 
 export function AppShell({
   baslik,
@@ -59,9 +53,7 @@ export function AppShell({
       <header className="sticky top-0 z-30 px-2 pt-2 md:px-4 md:pt-3">
         <div className="ui-surface mx-auto grid max-w-[76rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl md:flex md:justify-between md:px-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-              <GraduationCap className="h-5 w-5" />
-            </div>
+            <AnaSayfaLogosu />
             <div className="min-w-0">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">İTF Takvim</p>
               <h1 className="truncate text-sm font-extrabold tracking-tight md:text-base">{baslik}</h1>
