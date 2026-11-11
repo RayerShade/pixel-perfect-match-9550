@@ -35,7 +35,7 @@ function TanitimTusu() {
   const { guncelle } = useAyarlar();
   const nav = useNavigate();
   return (
-    <button type="button" onClick={() => { sessionStorage.removeItem("tur-adim"); guncelle({ turGordu: false }); void nav({ to: "/" }); }} className="ui-surface ui-control flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-4 text-left">
+    <button type="button" onClick={() => { sessionStorage.removeItem("tur-adim"); guncelle({ turGordu: false }); void nav({ to: "/takvim" }); }} className="ui-surface ui-control flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-4 text-left">
       <CircleHelp className="h-5 w-5 shrink-0 text-primary" />
       <span className="flex-1"><span className="block text-sm font-semibold">Site tanıtımını tekrar izle</span><span className="block text-xs text-muted-foreground">Özellikleri adım adım gösterir</span></span>
     </button>

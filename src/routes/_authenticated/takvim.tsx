@@ -21,7 +21,7 @@ import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/
 import { useKatilim } from "@/lib/katilim";
 
 
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute("/_authenticated/takvim")({
   head: () => ({
     meta: [
       { title: "Takvim — Tıp Ders Programı" },
