@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { House, CalendarDays, BookOpen, UtensilsCrossed, LifeBuoy, Settings } from "lucide-react";
+import { CalendarDays, BookOpen, UtensilsCrossed, LifeBuoy, Settings } from "lucide-react";
 
 export const NAV = [
-  { to: "/", label: "Ana sayfa", icon: House },
+
   { to: "/takvim", label: "Takvim", icon: CalendarDays },
   { to: "/dersler", label: "Dersler", icon: BookOpen },
   { to: "/yemek", label: "Yemek", icon: UtensilsCrossed },
