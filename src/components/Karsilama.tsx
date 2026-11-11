@@ -1,3 +1,5 @@
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { GizlilikMetni, KullanimMetni } from "@/components/YasalMetinler";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowRight, BookOpen, CalendarDays, MapPin, MessageCircle, Utensils } from "lucide-react";
@@ -85,7 +87,17 @@ export function Karsilama() {
           <a href="https://wa.me/qr/WPUHSHXNHQXQC1" target="_blank" rel="noopener noreferrer" className={anaTus}><MessageCircle size={17} />WhatsApp’tan ulaş</a>
         </section>
       </main>
-      <footer className="border-t border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-6"><span className="font-semibold">İTF Takvim</span><nav aria-label="Yasal bilgiler" className="flex gap-4 text-sm underline"><Link to="/gizlilik">Gizlilik Politikası</Link><Link to="/kullanim-sartlari">Kullanım Şartları</Link></nav><div className="flex gap-2">{hesap}</div></div></footer>
+      <footer className="border-t border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-6"><span className="font-semibold">İTF Takvim</span><nav aria-label="Yasal bilgiler" className="flex flex-wrap gap-4 text-sm">
+            {([{ title: "Gizlilik Politikası", Metin: GizlilikMetni }, { title: "Kullanım Şartları", Metin: KullanimMetni }]).map(({ title, Metin }) => (
+              <Dialog key={title}>
+                <DialogTrigger className="min-h-11 underline underline-offset-4">{title}</DialogTrigger>
+                <DialogContent aria-describedby={undefined} className="flex max-w-2xl flex-col overflow-hidden">
+                  <DialogTitle className="pr-8">{title}</DialogTitle>
+                  <div className="min-h-0 overflow-y-auto overscroll-contain"><Metin /></div>
+                </DialogContent>
+              </Dialog>
+            ))}
+          </nav>{!user && <div className="flex gap-2">{hesap}</div>}</div></footer>
     </div>
   );
 }
