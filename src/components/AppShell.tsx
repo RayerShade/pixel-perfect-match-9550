@@ -18,10 +18,12 @@ export function AppShell({
   baslik,
   aciklama,
   children,
+  anaSayfa = false,
 }: {
   baslik: string;
   aciklama?: string;
   children: ReactNode;
+  anaSayfa?: boolean;
 }) {
   const { user, isAdmin, profil, hazir, cikis } = useAuth();
   const { ayarlar } = useAyarlar();
@@ -48,10 +50,10 @@ export function AppShell({
   };
 
   return (
-    <div className="app-frame bg-background pb-24 md:pb-0">
+    <div className="app-frame bg-background pb-24 xl:pb-0">
       <a href="#ana-icerik" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-3 focus:text-primary-foreground">İçeriğe geç</a>
       <header className="sticky top-0 z-30 px-2 pt-2 md:px-4 md:pt-3">
-        <div className="ui-surface mx-auto grid max-w-[76rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl md:flex md:justify-between md:px-4">
+        <div className="ui-surface mx-auto grid max-w-[76rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl xl:grid xl:grid-cols-[1fr_auto_1fr] md:px-4">
           <div className="flex min-w-0 items-center gap-3">
             <AnaSayfaLogosu />
             <div className="min-w-0">
@@ -60,13 +62,13 @@ export function AppShell({
             </div>
           </div>
 
-          <nav className="hidden items-center rounded-2xl bg-accent/70 p-1 md:flex">
+          <nav className="hidden items-center rounded-2xl bg-accent/70 p-1 xl:flex">
             {NAV.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}
                 data-tur={`nav-${to}`}
-                activeOptions={{ exact: to === "/takvim" }}
+                activeOptions={{ exact: true }}
                 className="ui-control flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground data-[status=active]:bg-surface data-[status=active]:text-primary data-[status=active]:shadow-sm"
               >
                 <Icon className="h-4 w-4" />
@@ -75,7 +77,7 @@ export function AppShell({
             ))}
           </nav>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-end gap-1.5">
             <button onClick={() => setHizliAcik(true)} aria-label="Hızlı gezinme" title="Hızlı gezinme (Ctrl / ⌘ K)" className="ui-control grid h-9 w-9 place-items-center rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground"><Search className="h-4 w-4" /></button>
             {isAdmin ? (
               <Link
@@ -88,7 +90,7 @@ export function AppShell({
                 <span className="hidden lg:inline">Yönetim</span>
               </Link>
             ) : null}
-            <span data-tur="zil" className="inline-flex"><BildirimZili /></span>
+            {user && <><span data-tur="zil" className="inline-flex"><BildirimZili /></span>
             <button
               onClick={() => void cikis()}
               title="Çıkış yap"
@@ -99,7 +101,7 @@ export function AppShell({
             </button>
             <span title={ad} className="hidden h-9 min-w-9 place-items-center rounded-xl bg-primary px-2 text-xs font-extrabold text-primary-foreground lg:grid">
               {basHarf}
-            </span>
+            </span></>}
           </div>
         </div>
       </header>
@@ -108,17 +110,17 @@ export function AppShell({
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Hesabındaki veriler yükleniyor…
         </div>
       ) : null}
-      {eksik ? <ProfilTamamla /> : null}
-      {uyariGoster ? <Bilgilendirme /> : null}
-      {turGoster ? <Tanitim /> : null}
-      <DuyuruBandi />
+      {!anaSayfa && eksik ? <ProfilTamamla /> : null}
+      {!anaSayfa && uyariGoster ? <Bilgilendirme /> : null}
+      {!anaSayfa && turGoster ? <Tanitim /> : null}
+      {user && <DuyuruBandi />}
 
       <main id="ana-icerik" tabIndex={-1} className="app-content mx-auto px-3 py-4 md:px-4 md:py-6">
-        <section className="page-intro">
+        {!anaSayfa && <section className="page-intro">
           <p className="page-intro__eyebrow"><span className="h-1.5 w-1.5 rounded-full bg-pratik" /> İTF Takvim</p>
           <h2 className="page-intro__title">{baslik}</h2>
           {aciklama ? <p className="page-intro__description">{aciklama}</p> : null}
-        </section>
+        </section>}
         {children}
       </main>
       <CommandDialog open={hizliAcik} onOpenChange={setHizliAcik}>
@@ -134,14 +136,14 @@ export function AppShell({
         </CommandList>
       </CommandDialog>
 
-      <nav aria-label="Ana gezinme" style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }} className="fixed inset-x-3 z-30 rounded-2xl border border-border bg-surface/95 p-1.5 shadow-[0_12px_36px_oklch(0.2_0.04_250_/_0.18)] backdrop-blur-xl md:hidden">
-        <div className="grid grid-cols-5">
+      <nav aria-label="Ana gezinme" style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }} className="fixed inset-x-3 z-30 rounded-2xl border border-border bg-surface/95 p-1.5 shadow-[0_12px_36px_oklch(0.2_0.04_250_/_0.18)] backdrop-blur-xl xl:hidden">
+        <div className="grid grid-cols-6">
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}
               data-tur={`nav-${to}`}
-              activeOptions={{ exact: to === "/takvim" }}
+              activeOptions={{ exact: true }}
               className="flex min-w-0 flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-bold text-muted-foreground data-[status=active]:bg-teorik-soft data-[status=active]:text-teorik"
             >
               <Icon className="h-4.5 w-4.5" />

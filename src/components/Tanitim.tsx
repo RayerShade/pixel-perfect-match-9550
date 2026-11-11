@@ -13,7 +13,7 @@ const ADIMLAR: Adim[] = [
   { sayfa: "/takvim", hedef: "nav-/dersler", baslik: "Dersler", gerekli: true, metin: "Derslerin ve uygulamaların dilimlere göre listelenir." },
   { sayfa: "/dersler", hedef: "dilim", baslik: "Dilim ayrıntıları", gerekli: true, metin: "Bir dilime dokunarak ana dalları, teorikleri ve uygulamaları açabilirsin. Devamsızlık hesabı dilimin toplamı üzerinden yapılır; telafi katılımını da burada işaretlersin." },
   { sayfa: "/dersler", hedef: "nav-/yemek", baslik: "Yemek", gerekli: true, metin: "Kahvaltı, öğle ve akşam menülerini ve servis saatlerini buradan görürsün." },
-  { sayfa: "/yemek", hedef: "nav-/destek", baslik: "Destek", gerekli: true, metin: "Şikâyetini veya önerini görsel ekleyerek ekibe iletebilirsin. Gönderimler yanıtlanmaz ve geçmişte görünmez." },
+  { sayfa: "/yemek", hedef: "nav-/destek", baslik: "Destek", gerekli: true, metin: "Şikâyetini veya önerini görsel ekleyerek ekibe iletebilirsin. Şikâyetlerine gelen yanıtları Destek sekmesinden okuyabilirsin." },
   { sayfa: "/destek", hedef: "nav-/ayarlar", baslik: "Ayarlar", gerekli: true, metin: "Takvim görünümünü, online derslerini, seçmelilerini ve uygulama kurulumunu buradan yönetirsin." },
   { sayfa: "/ayarlar", hedef: "ogrenci-bilgi", baslik: "Öğrenci bilgilerin", metin: "Adın, numaran, dönemin ve grubun öğrenci listesinden otomatik bulunur." },
   { sayfa: "/ayarlar", hedef: "takvim-gorunum", baslik: "Takvim görünümü", metin: "Online dersleri, telafi kayıtlarını ve hafta sonunu buradan gösterip gizleyebilirsin." },

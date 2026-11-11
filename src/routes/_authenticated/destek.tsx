@@ -1,10 +1,11 @@
+import { useAuth } from "@/lib/auth";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAyarlar } from "@/lib/store";
 import { useState } from "react";
 import { CircleHelp, MapPinned } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { AppShell } from "@/components/AppShell";
-import { TalepTuruSecici, YeniTalep, type Talep } from "@/components/Destek";
+import { TalepTuruSecici, YeniTalep, TalepListesi, TalepSohbet, useTalepler, type Talep } from "@/components/Destek";
 import krokiUrl from "@/assets/WhatsApp Image 2026-10-17 at 03.22.17.jpeg";
 
 export const Route = createFileRoute("/_authenticated/destek")({
@@ -20,12 +21,27 @@ export const Route = createFileRoute("/_authenticated/destek")({
 });
 
 function DestekSayfasi() {
+  const { user } = useAuth();
   const [akim, setAkim] = useState<Talep["tur"] | null>(null);
   return (
     <AppShell baslik="Destek" aciklama="Şikâyet veya önerini ilet.">
       <div className="mx-auto max-w-3xl space-y-5 pb-28">
         {akim ? <YeniTalep tur={akim} onOlustu={() => setAkim(null)} vazgec={() => setAkim(null)} /> : <TalepTuruSecici sec={setAkim} />}
+        {!akim && user && <Sikayetlerim key={user.id} userId={user.id} />}
         <section className="workspace-panel grid gap-3 p-3 sm:grid-cols-2"><TanitimTusu /><KrokiTusu /></section>
+        <section id="sorular" className="workspace-panel space-y-4 p-5"><h2 className="text-3xl font-bold tracking-tight">Sık sorulan sorular</h2>
+          <div className="divide-y divide-border">{[
+            ["İTF Takvim ücretli mi?", "Hayır. Uygulamanın tüm öğrenci özelliklerini ücretsiz kullanabilirsin. Projeye katkıda bulunmak tamamen isteğe bağlı."],
+            ["Bu resmi fakülte takvimi mi?", "İTF Takvim öğrenciler tarafından geliştirilen bağımsız bir projedir. Saat veya derslik konusunda farklılık varsa fakültenin güncel duyurusunu esas al."],
+            ["Seçmeli derslerimi nereden değiştiririm?", "Ayarlar sayfasındaki seçmeli ders seçimini aç. Aldığın dersleri seçerek kişisel takviminde hangilerinin görüneceğini belirleyebilirsin."],
+            ["Telafiye katıldığımı nasıl işaretlerim?", "Dersler sekmesinde ilgili dilimi aç. Uygulamanın altındaki telafi satırını işaretlediğinde katılımın o uygulamanın hesabına yansır."],
+            ["Amfiyi biliyorum ama binayı nasıl bulurum?", "Destek sekmesindeki Dersim nerede? düğmesini aç. Krokide binanın yerini, altındaki listede amfi ve derslikleri görebilirsin."],
+            ["Programda hata görürsem ne yapmalıyım?", "Destek sekmesinden ders adını, tarihini ve düzeltilmesi gereken bilgiyi ilet. Gerekirse ekran görüntüsü ekleyebilirsin."],
+            ["Neden arkadaşımın takvimi farklı?", "Dönem, program dili, uygulama grubu ve seçmeli ders tercihleri görünen dersleri belirler."],
+            ["Sınıfımın tüm uygulamalarını görebilir miyim?", "Sınıfın için ayrı uygulama tablosu yayımlandıysa Dersler sayfasının altında tüm grupları içeren tabloyu açabilirsin."],
+            ["Bir dersin amfisi neden henüz görünmüyor?", "Amfi programı ders programından ayrı güncellenir. Takvimdeki son güncelleme bilgilerini ve ders kartındaki eşleşme durumunu kontrol edebilirsin."],
+          ].map(([soru, cevap]) => <details key={soru} className="py-3"><summary className="cursor-pointer py-2 font-semibold">{soru}</summary><p className="pb-2 text-sm leading-relaxed text-muted-foreground">{cevap}</p></details>)}</div>
+        </section>
       </div>
     </AppShell>
   );
@@ -63,4 +79,15 @@ function KrokiTusu() {
       </Dialog>
     </>
   );
+}
+
+function Sikayetlerim({ userId }: { userId: string }) {
+  const { liste, bekliyor, yenile } = useTalepler(userId);
+  const [secili, sec] = useState<string | null>(null);
+  const talep = liste.find((kayit) => kayit.id === secili);
+  return <section className="workspace-panel space-y-4 p-5">
+    <h2 className="text-lg font-bold">Şikâyetlerim</h2>
+    {bekliyor ? <p>Yükleniyor…</p> : <TalepListesi liste={liste} secili={secili} sec={sec} />}
+    {talep && <TalepSohbet key={talep.id} talep={talep} onDegisti={yenile} />}
+  </section>;
 }
