@@ -52,7 +52,7 @@ function AuthSayfasi() {
   const [mesaj, setMesaj] = useState<{ ok: boolean; t: string } | null>(null);
 
   useEffect(() => {
-    if (hazir && user) void navigate({ to: "/", replace: true });
+    if (hazir && user) void navigate({ to: "/takvim", replace: true });
   }, [hazir, user, navigate]);
 
   useEffect(() => {
@@ -83,7 +83,7 @@ function AuthSayfasi() {
         const { error } = await supabase.auth.signUp({
           email,
           password: sifre,
-          options: { emailRedirectTo: window.location.origin, data: { ogrenci_no: no.trim() } },
+          options: { emailRedirectTo: `${window.location.origin}/auth?ekran=giris`, data: { ogrenci_no: no.trim() } },
         });
         if (error) throw error;
         setMesaj({ ok: true, t: "Kayıt alındı! E-postana gelen onay bağlantısına tıkla, sonra giriş yap." });
@@ -104,7 +104,7 @@ function AuthSayfasi() {
   const google = async () => {
     setMesaj(null);
     hatirlamaAyarla();
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/auth?ekran=giris` });
     if (r.error) setMesaj({ ok: false, t: "Google ile giriş yapılamadı." });
   };
 

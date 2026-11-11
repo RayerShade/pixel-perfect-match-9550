@@ -9,16 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAyarlarRouteImport } from './routes/_authenticated/ayarlar'
 import { Route as AuthenticatedDerslerRouteImport } from './routes/_authenticated/dersler'
 import { Route as AuthenticatedDestekRouteImport } from './routes/_authenticated/destek'
 import { Route as AuthenticatedSecmelilerRouteImport } from './routes/_authenticated/secmeliler'
 import { Route as AuthenticatedSunucuRouteImport } from './routes/_authenticated/sunucu'
+import { Route as AuthenticatedTakvimRouteImport } from './routes/_authenticated/takvim'
 import { Route as AuthenticatedYemekRouteImport } from './routes/_authenticated/yemek'
 import { Route as ApiHesabimiSilRouteImport } from './routes/api/hesabimi-sil'
 import { Route as ApiAppleCalendarBaslatRouteImport } from './routes/api/apple-calendar/baslat'
@@ -31,6 +32,11 @@ import { Route as ApiTakvimIcsRouteImport } from './routes/api/takvim.ics'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -44,11 +50,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
@@ -78,6 +79,11 @@ const AuthenticatedSecmelilerRoute = AuthenticatedSecmelilerRouteImport.update({
 const AuthenticatedSunucuRoute = AuthenticatedSunucuRouteImport.update({
   id: '/sunucu',
   path: '/sunucu',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTakvimRoute = AuthenticatedTakvimRouteImport.update({
+  id: '/takvim',
+  path: '/takvim',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedYemekRoute = AuthenticatedYemekRouteImport.update({
@@ -139,7 +145,7 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/destek': typeof AuthenticatedDestekRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/sunucu': typeof AuthenticatedSunucuRoute
+  '/takvim': typeof AuthenticatedTakvimRoute
   '/yemek': typeof AuthenticatedYemekRoute
   '/api/hesabimi-sil': typeof ApiHesabimiSilRoute
   '/api/apple-calendar/baslat': typeof ApiAppleCalendarBaslatRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -169,9 +177,9 @@ export interface FileRoutesByTo {
   '/destek': typeof AuthenticatedDestekRoute
   '/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/sunucu': typeof AuthenticatedSunucuRoute
+  '/takvim': typeof AuthenticatedTakvimRoute
   '/yemek': typeof AuthenticatedYemekRoute
   '/api/hesabimi-sil': typeof ApiHesabimiSilRoute
-  '/': typeof AuthenticatedIndexRoute
   '/api/apple-calendar/baslat': typeof ApiAppleCalendarBaslatRoute
   '/api/google-calendar/baslat': typeof ApiGoogleCalendarBaslatRoute
   '/api/google-calendar/callback': typeof ApiGoogleCalendarCallbackRoute
@@ -184,6 +192,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -193,9 +202,9 @@ export interface FileRoutesById {
   '/_authenticated/destek': typeof AuthenticatedDestekRoute
   '/_authenticated/secmeliler': typeof AuthenticatedSecmelilerRoute
   '/_authenticated/sunucu': typeof AuthenticatedSunucuRoute
+  '/_authenticated/takvim': typeof AuthenticatedTakvimRoute
   '/_authenticated/yemek': typeof AuthenticatedYemekRoute
   '/api/hesabimi-sil': typeof ApiHesabimiSilRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/apple-calendar/baslat': typeof ApiAppleCalendarBaslatRoute
   '/api/google-calendar/baslat': typeof ApiGoogleCalendarBaslatRoute
   '/api/google-calendar/callback': typeof ApiGoogleCalendarCallbackRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/destek'
     | '/secmeliler'
     | '/sunucu'
+    | '/takvim'
     | '/yemek'
     | '/api/hesabimi-sil'
     | '/api/apple-calendar/baslat'
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/auth'
     | '/reset-password'
     | '/admin'
@@ -239,9 +250,9 @@ export interface FileRouteTypes {
     | '/destek'
     | '/secmeliler'
     | '/sunucu'
+    | '/takvim'
     | '/yemek'
     | '/api/hesabimi-sil'
-    | '/'
     | '/api/apple-calendar/baslat'
     | '/api/google-calendar/baslat'
     | '/api/google-calendar/callback'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
   id:
     | '__root__'
+    | '/'
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
@@ -262,9 +274,9 @@ export interface FileRouteTypes {
     | '/_authenticated/destek'
     | '/_authenticated/secmeliler'
     | '/_authenticated/sunucu'
+    | '/_authenticated/takvim'
     | '/_authenticated/yemek'
     | '/api/hesabimi-sil'
-    | '/_authenticated/'
     | '/api/apple-calendar/baslat'
     | '/api/google-calendar/baslat'
     | '/api/google-calendar/callback'
@@ -277,6 +289,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -294,6 +307,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -314,13 +334,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
@@ -362,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/sunucu'
       fullPath: '/sunucu'
       preLoaderRoute: typeof AuthenticatedSunucuRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/takvim': {
+      id: '/_authenticated/takvim'
+      path: '/takvim'
+      fullPath: '/takvim'
+      preLoaderRoute: typeof AuthenticatedTakvimRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/yemek': {
@@ -451,8 +471,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDestekRoute: typeof AuthenticatedDestekRoute
   AuthenticatedSecmelilerRoute: typeof AuthenticatedSecmelilerRoute
   AuthenticatedSunucuRoute: typeof AuthenticatedSunucuRoute
+  AuthenticatedTakvimRoute: typeof AuthenticatedTakvimRoute
   AuthenticatedYemekRoute: typeof AuthenticatedYemekRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -462,14 +482,15 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDestekRoute: AuthenticatedDestekRoute,
   AuthenticatedSecmelilerRoute: AuthenticatedSecmelilerRoute,
   AuthenticatedSunucuRoute: AuthenticatedSunucuRoute,
+  AuthenticatedTakvimRoute: AuthenticatedTakvimRoute,
   AuthenticatedYemekRoute: AuthenticatedYemekRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,

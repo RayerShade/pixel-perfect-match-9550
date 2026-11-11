@@ -13,7 +13,7 @@ import { useAyarlar } from "@/lib/store";
 import { CalendarDays, BookOpen, Settings, LifeBuoy, LogOut, ShieldCheck, Loader2, Info, UtensilsCrossed, GraduationCap, Search } from "lucide-react";
 
 const NAV = [
-  { to: "/", label: "Takvim", icon: CalendarDays },
+  { to: "/takvim", label: "Takvim", icon: CalendarDays },
   { to: "/dersler", label: "Dersler", icon: BookOpen },
   { to: "/yemek", label: "Yemek", icon: UtensilsCrossed },
   { to: "/destek", label: "Destek", icon: LifeBuoy },
@@ -74,7 +74,7 @@ export function AppShell({
                 key={to}
                 to={to}
                 data-tur={`nav-${to}`}
-                activeOptions={{ exact: to === "/" }}
+                activeOptions={{ exact: to === "/takvim" }}
                 className="ui-control flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground data-[status=active]:bg-surface data-[status=active]:text-primary data-[status=active]:shadow-sm"
               >
                 <Icon className="h-4 w-4" />
@@ -149,7 +149,7 @@ export function AppShell({
               key={to}
               to={to}
               data-tur={`nav-${to}`}
-              activeOptions={{ exact: to === "/" }}
+              activeOptions={{ exact: to === "/takvim" }}
               className="flex min-w-0 flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-bold text-muted-foreground data-[status=active]:bg-teorik-soft data-[status=active]:text-teorik"
             >
               <Icon className="h-4.5 w-4.5" />

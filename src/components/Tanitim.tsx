@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 import { useLocation } from "@tanstack/react-router";
 import { useAyarlar } from "@/lib/store";
 
-type Sayfa = "/" | "/dersler" | "/yemek" | "/destek" | "/ayarlar";
+type Sayfa = "/takvim" | "/dersler" | "/yemek" | "/destek" | "/ayarlar";
 type Adim = { sayfa: Sayfa; hedef: string; baslik: string; metin: string; gerekli?: boolean };
 
 const ADIMLAR: Adim[] = [
-  { sayfa: "/", hedef: "nav-/", baslik: "Takvim", metin: "Haftalık ders programını burada görürsün. Derse dokunarak saat, amfi ve hoca ayrıntılarını açabilir; geçmiş derslere katıldığını işaretleyebilirsin." },
-  { sayfa: "/", hedef: "ekle", baslik: "Kendi dersini ekle", metin: "+ düğmesiyle istediğin gün ve saate kişisel ders ekleyebilir; haftalık, iki haftada bir ya da aylık tekrarlatabilirsin." },
-  { sayfa: "/", hedef: "pdf", baslik: "PDF indir", metin: "Görüntülediğin gün, hafta veya ayın programını yazdırmaya hazır PDF olarak indirebilirsin." },
-  { sayfa: "/", hedef: "zil", baslik: "Bildirimler", metin: "Duyurular ve program değişiklikleri burada görünür." },
-  { sayfa: "/", hedef: "nav-/dersler", baslik: "Dersler", gerekli: true, metin: "Derslerin ve uygulamaların dilimlere göre listelenir." },
+  { sayfa: "/takvim", hedef: "nav-/takvim", baslik: "Takvim", metin: "Haftalık ders programını burada görürsün. Derse dokunarak saat, amfi ve hoca ayrıntılarını açabilir; geçmiş derslere katıldığını işaretleyebilirsin." },
+  { sayfa: "/takvim", hedef: "ekle", baslik: "Kendi dersini ekle", metin: "+ düğmesiyle istediğin gün ve saate kişisel ders ekleyebilir; haftalık, iki haftada bir ya da aylık tekrarlatabilirsin." },
+  { sayfa: "/takvim", hedef: "pdf", baslik: "PDF indir", metin: "Görüntülediğin gün, hafta veya ayın programını yazdırmaya hazır PDF olarak indirebilirsin." },
+  { sayfa: "/takvim", hedef: "zil", baslik: "Bildirimler", metin: "Duyurular ve program değişiklikleri burada görünür." },
+  { sayfa: "/takvim", hedef: "nav-/dersler", baslik: "Dersler", gerekli: true, metin: "Derslerin ve uygulamaların dilimlere göre listelenir." },
   { sayfa: "/dersler", hedef: "dilim", baslik: "Dilim ayrıntıları", gerekli: true, metin: "Bir dilime dokunarak ana dalları, teorikleri ve uygulamaları açabilirsin. Devamsızlık hesabı dilimin toplamı üzerinden yapılır; telafi katılımını da burada işaretlersin." },
   { sayfa: "/dersler", hedef: "nav-/yemek", baslik: "Yemek", gerekli: true, metin: "Kahvaltı, öğle ve akşam menülerini ve servis saatlerini buradan görürsün." },
   { sayfa: "/yemek", hedef: "nav-/destek", baslik: "Destek", gerekli: true, metin: "Şikâyetini veya önerini görsel ekleyerek ekibe iletebilirsin. Gönderimler yanıtlanmaz ve geçmişte görünmez." },

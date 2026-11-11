@@ -33,7 +33,7 @@ function SifreYenile() {
     const { error } = await supabase.auth.updateUser({ password: sifre });
     if (error) return setMesaj({ ok: false, t: error.message });
     setMesaj({ ok: true, t: "Şifren güncellendi." });
-    setTimeout(() => void navigate({ to: "/" }), 1000);
+    setTimeout(() => void navigate({ to: "/takvim" }), 1000);
   };
 
   return (
