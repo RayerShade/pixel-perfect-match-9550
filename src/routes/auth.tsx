@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
+import { Karsilama } from "@/components/Karsilama";
 import { CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -8,11 +9,15 @@ import { NumaraBilgi, useNumaraSorgu } from "@/components/NumaraBilgi";
 import { okulEpostasiMi, okulEpostasiZorunluMu } from "@/lib/okul-epostasi";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>): { ekran?: "giris" | "kayit" | "sifre" } => {
+    const ekran = search["ekran"];
+    return ekran === "giris" || ekran === "kayit" || ekran === "sifre" ? { ekran } : {};
+  },
   head: () => ({
     meta: [
-      { title: "Giriş Yap — Tıp Ders Programı" },
+      { title: "İTF Takvim — İstanbul Tıp Fakültesi" },
       { name: "description", content: "Ders programı hesabına giriş yap veya yeni hesap oluştur." },
-      { property: "og:title", content: "Giriş Yap — Tıp Ders Programı" },
+      { property: "og:title", content: "İTF Takvim — İstanbul Tıp Fakültesi" },
       { property: "og:description", content: "Kendi haftalık takvimine erişmek için giriş yap." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -35,7 +40,9 @@ function AuthSayfasi() {
     sessionStorage.setItem("ders-takvim:oturum", "1");
   };
   const { user, hazir } = useAuth();
-  const [mod, setMod] = useState<Mod>("giris");
+  const { ekran } = Route.useSearch();
+  const mod = ekran ?? "giris";
+  const setMod = (ekran: Mod) => { void navigate({ to: "/auth", search: { ekran } }); };
   const [okulZorunlu, setOkulZorunlu] = useState(OKUL_EPOSTASI_ZORUNLU);
   const [email, setEmail] = useState("");
   const [sifre, setSifre] = useState("");
@@ -100,6 +107,8 @@ function AuthSayfasi() {
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
     if (r.error) setMesaj({ ok: false, t: "Google ile giriş yapılamadı." });
   };
+
+  if (!ekran && !mesaj) return <Karsilama />;
 
   const girdi = "mt-1 min-h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring";
 
