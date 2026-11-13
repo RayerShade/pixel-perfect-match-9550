@@ -138,6 +138,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
+    document.documentElement.classList.remove("dark");
+    delete document.documentElement.dataset["gorunum"];
+    localStorage.removeItem("itf-gorunum");
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch((error) => console.warn("PWA service worker yüklenemedi", error));
     }

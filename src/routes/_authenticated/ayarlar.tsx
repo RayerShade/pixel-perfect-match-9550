@@ -1,4 +1,3 @@
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -6,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { useDonemler } from "@/components/DonemSecici";
 import { DIL_ETIKET } from "@/lib/program";
 import { useAyarlar, useSecmeliler, useYuklenenVeri, type Ayarlar } from "@/lib/store";
-import { donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
+import { secmeliGruplari, donemBilgisi, ogrenciBul, onlineDersAdlari } from "@/lib/schedule-data";
 import { SecmeliSecici } from "@/components/SecmeliSecici";
 import { PwaKurulum } from "@/components/PwaKurulum";
 import { useAuth } from "@/lib/auth";
@@ -34,8 +33,10 @@ export const Route = createFileRoute("/_authenticated/ayarlar")({
 function Ayarlar() {
   const { ayarlar, guncelle } = useAyarlar();
   const { cikis } = useAuth();
-  const { secili } = useSecmeliler();
+  const secimler = useSecmeliler();
+  const { secili } = secimler;
   const { veri } = useYuklenenVeri();
+  const dersTercihleri = secmeliGruplari(veri).filter(d => secili.includes(d.id));
   const onlineDersler = onlineDersAdlari(veri);
   const ogrenci = ogrenciBul(veri, ayarlar.ogrenciNo ?? "", ayarlar.grupElle);
   const dersAyar = ayarlar.onlineDersAyarlari ?? {};
@@ -46,14 +47,6 @@ function Ayarlar() {
   const donemAdi = donemler.find((d) => d.id === ayarlar.donemId)?.ad ?? "";
   const dilEtiket = ayarlar.dil ? DIL_ETIKET[ayarlar.dil] : "";
   const [temaAcik, setTemaAcik] = useState(false);
-  const [tema, setTema] = useState("clinical");
-  useEffect(() => { setTema(document.documentElement.dataset["gorunum"] || "clinical"); }, []);
-  function temaSec(deger: string) {
-    setTema(deger);
-    document.documentElement.dataset["gorunum"] = deger;
-    document.documentElement.classList.toggle("dark", deger === "night");
-    localStorage.setItem("itf-gorunum", deger);
-  }
   const [secmeliAcik, setSecmeliAcik] = useState(false);
   // Ad, grup ve dönem yüklenen dosyalardan gelir; bulununca tercih olarak da kaydedilir.
   useEffect(() => {
@@ -69,9 +62,11 @@ function Ayarlar() {
     ["gizle", "Gizle"],
   ] as const;
 
+  if (temaAcik) return <AppShell baslik="Takvim Görünümü" basligiIcerikte><div className="appearance-page"> <div className="appearance-heading"><button onClick={()=>setTemaAcik(false)}>← Ayarlara dön</button><h1>Takvim Görünümü ve Arayüz Teması</h1><p>Haftalık takvimin saat aralığını düzenle ve ders bloklarını önizle.</p></div><div className="theme-columns"><section><h3>Arayüz teması</h3><p className="light-theme"><b>✓</b> Açık</p><h3 className="mt-4">Izgara ve saat aralığı</h3><div className="time-range">{(["gunBaslangic", "gunBitis"] as const).map(key => <label key={key}>{key === "gunBaslangic" ? "Başlangıç" : "Bitiş"}<select value={ayarlar[key]} onChange={e => guncelle({[key]: Number(e.target.value)})}>{Array.from({length:25}, (_,i) => i).filter(h => key === "gunBaslangic" ? h < ayarlar.gunBitis : h > ayarlar.gunBaslangic).map(h => <option key={h} value={h}>{String(h).padStart(2,"0")}:00</option>)}</select></label>)}</div></section><section><h3>Canlı takvim önizlemesi</h3><p className="mb-3 text-xs text-muted-foreground">{ayarlar.gunBaslangic}:00 – {ayarlar.gunBitis}:00 · Örnek hafta</p><div className="preview-grid">{["Pzt","Sal","Çar","Per","Cum"].map(g=><b key={g}>{g}</b>)}<span>Teorik</span><span>Uygulama</span><span>Seçmeli</span></div></section></div></div></AppShell>;
+  if (secmeliAcik) return <AppShell baslik="Seçmeli Dersler" basligiIcerikte><section className="elective-page"><div className="elective-heading"><button onClick={()=>setSecmeliAcik(false)} className="picker-close">Kapat ×</button><h1>Seçmeli dersler</h1><p>Her gruptan bir ders seçebilirsin. Seçimin kişisel takvimine yansır.</p></div><div className="elective-body"><SecmeliSecici secimler={secimler} /></div><footer><span>{secili.length} ders seçili</span><button onClick={() => setSecmeliAcik(false)}>Seçimi tamamla</button></footer></section></AppShell>;
   return (
     <AppShell baslik="Hesap ve Uygulama Ayarları" aciklama="Öğrenci profili, ders tercihleri ve kişisel takvim görünümü.">
-      <div className="st-settings">        <Dialog open={secmeliAcik} onOpenChange={setSecmeliAcik}><DialogContent className="elective-dialog"><div className="elective-heading"><small>Öğrenci işleri / Müfredat</small><DialogTitle>Seçmeli dersler</DialogTitle><DialogDescription>Her gruptan bir ders seçebilirsin. Seçimin kişisel takvimine yansır.</DialogDescription></div><div className="elective-body"><SecmeliSecici /></div><footer><span>{secili.length} ders seçili</span><button onClick={() => setSecmeliAcik(false)}>Seçimi tamamla</button></footer></DialogContent></Dialog>
+      <div className="st-settings">
         <section data-tur="ogrenci-bilgi" className="workspace-panel p-4">
           <div className="st-profile"><span>{(ad || ayarlar.ogrenciAdi || "Ö").charAt(0)}</span><div><small>Öğrenci profili</small><h2>{ad || ayarlar.ogrenciAdi || "Öğrenci Bilgileri"}</h2></div></div>
           <div className="mt-3 space-y-3">
@@ -121,12 +116,12 @@ function Ayarlar() {
           </div>
         </section>
 
-        <section className="workspace-panel st-elective"><span className="st-tag">Müfredat</span><h2>Seçmeli Ders Yönetimi</h2><p>Programında {secili.length} seçmeli ders seçili.</p>          <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="mt-4 w-full rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">Seçmeli derslerini seç</button></section>
+        <section className="workspace-panel st-elective"><span className="st-tag">Müfredat</span><h2>Seçmeli Ders Yönetimi</h2><p>Programında {secili.length} seçmeli ders seçili.</p><ul className="chosen-electives">{dersTercihleri.map(d=><li key={d.id}><small>{d.grup}. Seçmeli Grubu</small><b>{d.ad}</b><span>{d.saat} · {d.amfi}</span></li>)}</ul>          <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="mt-4 w-full rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">Seçmeli derslerini seç</button></section>
         <section data-tur="takvim-gorunum" className="ui-surface rounded-2xl border border-border bg-surface p-4">
-          <h2 className="text-lg font-bold">Görünüm ve Tema</h2>
-          <button type="button" className="theme-sample" onClick={() => setTemaAcik(true)}><span>Görünüm ve tema ayarlarını aç ↗</span><i/><i/><i/></button>
-          <Dialog open={temaAcik} onOpenChange={setTemaAcik}><DialogContent className="theme-editor"><DialogTitle>Takvim Görünümü ve Arayüz Teması</DialogTitle><DialogDescription>Uygulamanın renklerini seç ve takvim üzerinde önizle.</DialogDescription><div className="theme-columns"><section><h3>Arayüz teması</h3>{([["clinical","Clinical Clarity"],["night","Nöbet modu"],["contrast","Yüksek kontrast"],["sepia","Sıcak sepya"]] as const).map(([id,ad])=><button data-theme-option={id} key={id} type="button" aria-pressed={tema===id} onClick={()=>temaSec(id)}>{ad}</button>)}<h3 className="mt-4">Izgara ve saat aralığı</h3><div className="time-range">{(["gunBaslangic", "gunBitis"] as const).map(key => <label key={key}>{key === "gunBaslangic" ? "Başlangıç" : "Bitiş"}<select value={ayarlar[key]} onChange={e => guncelle({[key]: Number(e.target.value)})}>{Array.from({length:25}, (_,i) => i).filter(h => key === "gunBaslangic" ? h < ayarlar.gunBitis : h > ayarlar.gunBaslangic).map(h => <option key={h} value={h}>{String(h).padStart(2,"0")}:00</option>)}</select></label>)}</div></section><section><h3>Canlı takvim önizlemesi</h3><p className="mb-3 text-xs text-muted-foreground">{ayarlar.gunBaslangic}:00 – {ayarlar.gunBitis}:00 · Örnek hafta</p><div className="preview-grid">{["Pzt","Sal","Çar","Per","Cum"].map(g=><b key={g}>{g}</b>)}<span>Teorik</span><span>Uygulama</span><span>Seçmeli</span></div></section></div></DialogContent></Dialog>
-          <label className="mt-3 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">Görünüm &amp; Tema</h2>
+          <button type="button" className="theme-sample" onClick={() => setTemaAcik(true)}><span>Açık · Takvim görünümünü düzenle ↗</span><i/><i/><i/></button>
+
+          <h3 className="mt-5 border-t border-border pt-4 font-semibold">Ders Görünürlük Kuralları</h3><label className="mt-3 flex items-center justify-between gap-3">
             <span className="text-sm">Hafta sonunu göster</span>
             <input
               type="checkbox"

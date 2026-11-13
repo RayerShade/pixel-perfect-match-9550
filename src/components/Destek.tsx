@@ -38,7 +38,7 @@ export function TalepTuruSecici({ sec }: { sec: (tur: Talep["tur"] | "ders") => 
   return (
     <section className="support-choices">
       <p className="text-sm font-semibold text-primary">Görüşünü ilet</p>
-      <h2 className="mt-1 text-xl font-bold">Ne göndermek istiyorsun?</h2>
+      <h1 className="mt-1 text-2xl font-bold">Ne göndermek istiyorsun?</h1>
       <p className="mt-1 text-sm text-muted-foreground">Şikâyet ve öneriler değerlendirme ekibine iletilir. Şikâyetlerine gelen yanıtları burada takip edebilirsin. Öneriler tek yönlüdür.</p>
       <div className="mt-5 grid gap-3 md:grid-cols-3">
         <button onClick={() => sec("destek")} className="group rounded-xl border border-border p-4 text-left transition hover:border-primary hover:bg-primary/5">

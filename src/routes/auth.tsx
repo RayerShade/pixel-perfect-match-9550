@@ -132,8 +132,8 @@ function AuthSayfasi() {
         {mod !== "sifre" ? (
           <>
 
-            <button onClick={google} className="min-h-11 w-full rounded-xl border border-border bg-background py-2 text-sm font-semibold hover:bg-accent">
-              Google ile devam et
+            <button onClick={google} className="google-signin min-h-11 w-full rounded-xl border border-border py-2 text-sm font-semibold hover:bg-accent">
+              {mod === "giris" ? "Google ile Giriş Yap" : "Google ile Kayıt Ol"}
             </button>
             <div className="my-4 flex items-center gap-3 text-[11px] text-muted-foreground">
               <span className="h-px flex-1 bg-border" /> veya e-posta ile <span className="h-px flex-1 bg-border" />
@@ -143,7 +143,7 @@ function AuthSayfasi() {
             ) : null}
           </>
         ) : null}
-        <form onSubmit={gonder} className="space-y-3">
+        <form onSubmit={gonder} className={mod === "kayit" ? "register-form space-y-3" : "space-y-3"}>
           {mod === "kayit" ? (
             <>
               <label className="block text-sm font-medium">Öğrenci numarası<input className={girdi} placeholder="Öğrenci numarası" inputMode="numeric" value={no} onChange={(e) => setNo(e.target.value)} required /></label>
@@ -155,24 +155,22 @@ function AuthSayfasi() {
             <div className="password-field"><label className="block text-sm font-medium">Şifre<input className={girdi} type={goster ? "text" : "password"} placeholder="Şifre" minLength={mod === "kayit" ? 6 : undefined} autoComplete={mod === "giris" ? "current-password" : "new-password"} value={sifre} onChange={(e) => setSifre(e.target.value)} required /></label><button type="button" aria-label={goster ? "Şifreyi gizle" : "Şifreyi göster"} onClick={() => setGoster(!goster)}>{goster ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div>
           ) : null}
           {mod === "giris" ? (
-            <label className="flex items-center gap-2 text-sm">
+            <div className="remember-row"><label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={hatirla} onChange={(e) => setHatirla(e.target.checked)} className="h-4 w-4 accent-primary" />
-              Beni hatırla
-            </label>
+              Beni bu cihazda hatırla
+            </label>          <button type="button" onClick={() => { setMod("sifre"); setMesaj(null); }} className="text-xs text-primary hover:underline">
+            Şifreni mi unuttun?
+          </button></div>
           ) : null}
-          {mod === "kayit" && <label className="block text-sm font-medium">Şifre tekrarı<input className={girdi} type={goster ? "text" : "password"} autoComplete="new-password" value={tekrar} onChange={e => setTekrar(e.target.value)} required /></label>}
+          {mod === "kayit" && <label className="confirm-field block text-sm font-medium">Şifre tekrarı<input className={girdi} type={goster ? "text" : "password"} autoComplete="new-password" value={tekrar} onChange={e => setTekrar(e.target.value)} required /></label>}
           <button disabled={bekle} className="min-h-11 w-full rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">
-            {bekle ? "Bekle…" : mod === "giris" ? "Giriş yap" : mod === "kayit" ? "Kayıt ol" : "Bağlantı gönder"}
+            {bekle ? "Bekle…" : mod === "giris" ? "Giriş yap" : mod === "kayit" ? "Kayıt Ol ve Takvimimi Başlat" : "Bağlantı gönder"}
           </button>
         </form>
 
         {mesaj ? <p role={mesaj.ok ? "status" : "alert"} className={`mt-3 text-xs font-medium ${mesaj.ok ? "text-primary" : "text-destructive"}`}>{mesaj.t}</p> : null}
 
-        {mod === "giris" ? (
-          <button onClick={() => { setMod("sifre"); setMesaj(null); }} className="mt-3 text-xs text-muted-foreground hover:underline">
-            Şifreni mi unuttun?
-          </button>
-        ) : mod === "sifre" ? (
+        {mod === "sifre" ? (
           <button onClick={() => { setMod("giris"); setMesaj(null); }} className="mt-3 text-xs text-muted-foreground hover:underline">
             ← Girişe dön
           </button>
@@ -181,6 +179,6 @@ function AuthSayfasi() {
 
         {mod === "giris" && <aside className="auth-note"><ShieldCheck size={20}/><div><b>İÜ OBS şifren gerekmez</b><p>İTF Takvimi bağımsız bir öğrenci projesidir. Bu platform için oluşturduğun şifreyi kullan.</p></div></aside>}
         {mod !== "sifre" && <footer>{mod === "kayit" ? "Zaten hesabın var mı?" : "Hesabın yok mu?"} <button onClick={() => {setMod(mod === "kayit" ? "giris" : "kayit");setMesaj(null);}}>{mod === "kayit" ? "Giriş yap" : "Hesap oluştur"}</button></footer>}
-      </div></main></div>
+      </div></main><footer className="access-footer"><span>İTF Takvimi · Bağımsız Öğrenci Platformu</span><Link to="/gizlilik">Gizlilik ve Şartlar</Link></footer></div>
   );
 }

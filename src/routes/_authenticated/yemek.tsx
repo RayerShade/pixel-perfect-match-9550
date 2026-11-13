@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronLeft, ChevronRight, ExternalLink, UtensilsCrossed } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Sunrise, Sun, Moon, UtensilsCrossed } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { isoDate } from "@/lib/date-utils";
@@ -12,7 +12,11 @@ export const Route = createFileRoute("/_authenticated/yemek")({
   component: Yemek,
 });
 
-const ogunler = [["kahvalti", "Kahvaltı"], ["ogle", "Öğle yemeği"]] as const;
+const ogunler = [
+  ["kahvalti", "Sabah Kahvaltısı", "07:30 – 09:00", Sunrise],
+  ["ogle", "Öğle Yemeği", "11:30 – 14:00", Sun],
+  ["aksam", "Akşam Yemeği", "16:30 – 19:00", Moon],
+] as const;
 type Ogun = typeof ogunler[number][0];
 const AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const gunAdi = (tarih: string) => new Date(`${tarih}T12:00:00`).toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" });
@@ -45,9 +49,9 @@ function Yemek() {
 
 
   return (
-    <AppShell baslik="Yemekhane Menüsü" aciklama="İÜ SKS kaynağından güncel menü">
-      <section className="meal-board workspace-panel p-4 md:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <AppShell baslik="Yemekhane Menüsü" basligiIcerikte>
+      <section className="meal-heading"><div><small>İstanbul Üniversitesi</small><h1>Yemekhane Menüsü</h1><p>İstanbul Tıp Fakültesi Çapa Yerleşkesi Öğrenci Yemekhanesi</p></div>
+        <div className="meal-controls">
           <div className="flex items-center gap-2">
             <UtensilsCrossed className="h-5 w-5 text-primary" />
             <h2 className="text-base font-bold">{AYLAR[ay - 1]} {yil}</h2>
@@ -60,21 +64,24 @@ function Yemek() {
         </div>
 
       </section>
+      <div className="service-hours">{ogunler.map(([id,ad,saat,Ikon]) => <div key={id}><Ikon size={20}/><span>{ad}<b>{saat}</b></span></div>)}</div>
       <section className="st-meal-hero">
         <header><div><h2>Günün Menüsü</h2><p>{bugun && gunAdi(bugun)}</p></div><UtensilsCrossed aria-hidden="true" /></header>
-        <div className="st-meals">{ogunler.map(([id,ad]) => {
+        <div className="st-meals">{ogunler.map(([id,ad,saat,Ikon]) => {
           const yemekler = bugunKaydi ? satirlar(bugunKaydi,id) : [];
-          return <article key={id}><h3>{ad}</h3>{yemekler.length ? <ul>{yemekler.map((x,i)=><li key={i}>{x}</li>)}</ul> : <p>{bugunQ.isLoading ? "Yükleniyor…" : bugunQ.isError ? "Menü alınamadı." : "Menü yayımlanmadı."}</p>}</article>;
+          return <article key={id}><div className="meal-title"><Ikon size={18}/><h3>{ad}</h3></div><small>{saat}</small>{yemekler.length ? <ul>{yemekler.map((x,i)=><li key={i}>{x}</li>)}</ul> : <p>{bugunQ.isLoading ? "Yükleniyor…" : bugunQ.isError ? "Menü alınamadı." : "Menü yayımlanmadı."}</p>}</article>;
         })}</div>
+        <p className="dinner-note">Akşam için öğle menüsü gösterilir.</p>
       </section>
-      <section className="st-month"><h2>Aylık Menü Takvimi</h2>
-        <div className="mt-4 grid grid-cols-3 rounded-2xl bg-accent/70 p-1.5 text-xs font-semibold">
+      <section className="st-month"><header className="month-heading"><div><h2>Aylık Menü Takvimi</h2><p>{AYLAR[ay - 1]} {yil} · Gün gün yemek listesi</p></div>
+        <div className="mt-4 grid grid-cols-4 rounded-2xl bg-accent/70 p-1.5 text-xs font-semibold">
           {([["hepsi","Tüm öğünler"], ...ogunler] as const).map(([id, ad]) => (
             <button key={id} aria-pressed={ogun === id} onClick={() => setOgun(id)} className={`rounded-lg px-2 py-2 ${ogun === id ? "bg-surface shadow-sm text-foreground" : "text-muted-foreground"}`}>
               <span className="block">{ad}</span>
             </button>
           ))}
         </div>
+        </header>
         {q.isLoading ? <p className="py-10 text-center text-sm text-muted-foreground">Yemek listesi yükleniyor…</p> : null}
         {q.isError ? <p className="py-10 text-center text-sm text-destructive">SKS yemek listesi şu an alınamadı. <button className="rounded-lg border border-border px-3 py-2 text-foreground" disabled={q.isFetching} onClick={() => void q.refetch()}>Tekrar dene</button></p> : null}
         {!q.isLoading && !q.isError && !liste.length ? <p className="py-10 text-center text-sm text-muted-foreground">Bu ay için yayınlanmış {ogun === "kahvalti" ? "kahvaltı" : "yemek"} listesi yok.</p> : null}
@@ -94,7 +101,7 @@ function Yemek() {
                   {buGunMu ? <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Bugün</span> : null}
                   {gecti ? <span className="shrink-0 text-[10px] font-normal normal-case text-muted-foreground">geçti</span> : null}
                 </h3>
-                {ogunler.filter(([id]) => ogun === "hepsi" || ogun === id).map(([id, ad]) => <div className="meal-slot" key={id}><b>{ad}</b><p>{satirlar(gun,id).join(", ") || "Menü yayımlanmadı."}</p></div>)}
+                {ogunler.filter(([id]) => ogun === "hepsi" || ogun === id).map(([id, ad,saat,Ikon]) => <div className="meal-slot" key={id}><b><Ikon size={13}/> {ad} · {saat}</b><p>{satirlar(gun,id).join(", ") || "Menü yayımlanmadı."}</p></div>)}
               </article>
             );
           })}

@@ -418,13 +418,11 @@ body { font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 .rail-brand{display:flex;align-items:center;gap:.7rem;margin-bottom:1.25rem}.rail-brand small{display:block;color:var(--muted-foreground);font-size:.72rem}
 @media(min-width:80rem){.app-frame:has(.admin-rail){padding-left:18rem}.app-frame:has(.admin-rail) .app-content{max-width:none}.app-frame:has(.admin-rail) .clinical-nav{grid-template-columns:auto minmax(0,1fr) auto}.app-frame:has(.admin-rail) .student-tabs{justify-self:center}.app-frame:has(.admin-rail) .student-tabs a{padding-inline:.55rem}.app-frame:has(.admin-rail) .clinical-nav>div:first-child{display:none}.app-frame:has(.admin-rail) .clinical-nav{grid-template-columns:1fr auto}.app-frame .admin-rail{position:fixed;inset:0 auto 0 0;width:18rem;height:100dvh;max-height:100dvh;z-index:35;border-radius:0;padding:1.3rem 1rem;background:var(--surface)}.app-frame div:has(>.admin-rail){display:block}}
 
-:root[data-gorunum=sepia]:not(.dark){--background:#faf3e7;--surface:#fffaf1;--accent:#f1e7d6;--foreground:#493624;--primary:#835723}
-:root[data-gorunum=contrast]:not(.dark){--background:white;--foreground:black;--muted-foreground:#242424;--border:#444;--primary:#00268c}
 .theme-sample{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;width:100%;padding:1rem;margin:1rem 0;background:var(--accent);border-radius:.8rem;text-align:left}.theme-sample span{grid-column:1/-1;font-weight:650;font-size:.85rem}.theme-sample i,.preview-grid span{border-left:3px solid var(--teorik);background:var(--teorik-soft);border-radius:.3rem;padding:.65rem}.theme-sample i:nth-last-child(2),.preview-grid span:nth-last-child(2){background:var(--pratik-soft);border-color:var(--pratik)}.theme-sample i:last-child,.preview-grid span:last-child{background:var(--secmeli-soft);border-color:var(--secmeli)}
 .theme-editor{max-width:58rem}.theme-columns{display:grid;gap:1rem}.theme-columns section{border:1px solid var(--border);border-radius:.8rem;padding:1rem}.theme-columns h3{font-weight:bold;margin-bottom:1rem}.theme-columns button{padding:.75rem;border:1px solid var(--border);border-radius:.6rem;margin:.2rem}.theme-columns button[aria-pressed=true]{border-color:var(--primary);color:var(--primary)}.preview-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem;font-size:.7rem;min-height:8rem;background:repeating-linear-gradient(0deg,transparent 0 2rem,var(--border) 2rem calc(2rem + 1px))}.preview-grid span{align-self:start;padding:.3rem}.preview-grid span:last-child{grid-column:5}@media(min-width:48rem){.theme-columns{grid-template-columns:5fr 7fr}}
 
 /* Clinical Clarity surfaces and navigation */
-:root:not(.dark):not([data-gorunum=contrast]):not([data-gorunum=sepia]) {
+:root:not(.dark) {
   --background:#f8f7ff; --surface:#fff; --card:#fff; --foreground:#191b23;
   --primary:#2563eb; --muted-foreground:#525a71; --border:#e3e4ef;
   --input:#d9dcea; --accent:#f1f2fc; --radius:.5rem;
@@ -473,7 +471,6 @@ body { font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 .support-choices {padding:.5rem 0}.support-choices .group {min-height:8.5rem;padding:1.3rem}.support-choices svg {padding:.45rem;width:2.4rem;height:2.4rem;border-radius:.65rem;background:var(--accent)}
 .elective-heading {background:var(--surface);border-bottom:1px solid var(--border)}.elective-body {background:var(--background)}.elective-block h3 {font-size:1rem}
 .theme-editor {width:min(94vw,62rem);max-height:90dvh;overflow-y:auto}.theme-columns button {display:block;width:100%;text-align:left}
-.theme-columns button:before {content:"";display:inline-block;width:1rem;height:1rem;border-radius:50%;background:#2563eb;vertical-align:middle;margin-right:.6rem}.theme-columns [data-theme-option=night]:before {background:#172033}.theme-columns [data-theme-option=contrast]:before {background:#000}.theme-columns [data-theme-option=sepia]:before {background:#b78952}
 .time-range {display:flex;gap:1rem}.time-range label {font-size:.8rem}.time-range select {display:block;padding:.4rem;background:var(--accent)}
 .auth-sheet {border:1px solid var(--border);border-radius:1rem}.auth-back {margin-left:auto;display:flex;align-items:center;gap:.45rem;font-size:.8rem}
 .auth-sheet input:not([type=checkbox]) {background:var(--accent);border:1px solid transparent;border-radius:.5rem}
@@ -485,3 +482,60 @@ body { font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 @media(min-width:68rem){.st-calendar{grid-template-columns:minmax(14rem,1fr) minmax(0,3.5fr)}.st-brief{grid-template-columns:1fr}.st-calendar>div:nth-child(2){grid-row:1;grid-column:2}}
 @media(max-width:75rem){.platform-label,.context-pill{display:none}}
 @media(max-width:44rem){.sample-layout,.st-meals{grid-template-columns:1fr}.sample-layout aside{order:2}.sample-scroll{padding:.5rem}.welcome-heading>div:last-child{gap:.5rem}.clinical-footer{align-items:start}.course-summary{display:grid;gap:.35rem}.auth-page>header{padding-inline:1rem}}
+/* Layout measurements from the Stitch screen exports. */
+:root {color-scheme:light}
+:root:not(.dark) {--background:#faf8ff;--foreground:#0f172a;--accent:#f3f3fe;--muted-foreground:#64748b}
+.clinical-header {background:#faf8fff5}
+.clinical-nav,.app-content {max-width:80rem}
+.app-content {padding-block:1.5rem}
+.app-content:has(.schedule-workspace),.clinical-header:has(+ .app-content .schedule-workspace) .clinical-nav {max-width:90rem}
+.brand-name {font-size:1.2rem}.medical-mark {width:2.25rem;height:2.25rem;border-radius:.5rem}
+.student-tabs {background:var(--accent);padding:.25rem;border-radius:.75rem}.student-tabs a {padding:.4rem .75rem}
+.header-date {display:none}.context-pill {max-width:11rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clinical-footer {background:#f3f3fe}.page-intro__title {font-size:1.5rem;line-height:2rem}
+.schedule-toolbar,.service-hours>div {background:white;border-radius:1rem;box-shadow:0 1px 4px #0f172a0c}
+.schedule-toolbar {padding:clamp(1rem,2vw,1.5rem)}
+.schedule-toolbar-row,.schedule-period,.date-stepper,.schedule-filter-row,.schedule-actions,.next-heading,.meal-title,.month-heading,.service-hours>div,.meal-slot b,.light-theme {display:flex;align-items:center;gap:.75rem}
+.schedule-toolbar-row,.schedule-filter-row,.month-heading,.next-heading {justify-content:space-between}
+.schedule-toolbar-row,.schedule-period,.schedule-filter-row,.month-heading,.schedule-actions {flex-wrap:wrap}
+.schedule-period h1 {font-size:1.5rem;line-height:2rem;font-weight:650;letter-spacing:-.025em}
+.schedule-period h1:before {content:"";display:inline-block;width:.6rem;height:.6rem;background:#059669;border-radius:50%;margin-right:.6rem;vertical-align:middle}
+.date-stepper,.today-button {background:var(--accent);border-radius:.65rem;padding:.25rem}.date-stepper {gap:.25rem;max-width:100%}.date-stepper button {border:0}.date-stepper h2 {margin:0;padding:0 .5rem;font-size:.9rem}
+.today-button {padding:.5rem .8rem;font-size:.8rem;font-weight:600}.schedule-toolbar [data-tur=pdf] {order:1}
+.schedule-filter-row {margin-top:1.15rem}.course-filters {margin:0;gap:.4rem}.course-filters button {font-size:.7rem;background:var(--accent);border:0;padding:.32rem .7rem}.course-filters span,.next-heading b,.block-label {text-transform:uppercase;letter-spacing:.08em;font-size:.68rem}
+.sync-label,.schedule-total {color:var(--muted-foreground);font-size:.72rem}.st-calendar {margin-top:1.5rem;gap:1.5rem}.st-brief {gap:1.25rem}
+.st-next,.st-brief>aside,.st-calendar>div:nth-child(2) {border:0;background:white;box-shadow:0 1px 4px #0f172a0c;border-radius:1rem;padding:1.25rem}
+.next-heading {margin-bottom:.8rem;color:var(--muted-foreground)}.next-heading small {display:flex;align-items:center;gap:.25rem;color:#047857;background:#ecfdf5;padding:.2rem .5rem;border-radius:2rem}
+.next-details {padding:.8rem;background:var(--accent);border-radius:.75rem;margin-top:.75rem}.next-details span {display:flex;align-items:center;gap:.5rem;margin:.3rem 0}.next-details svg {width:1rem;height:1rem;color:var(--primary)}
+.st-brief ol button {background:var(--accent)}.week-matrix {overflow:hidden}.week-matrix>div:first-child {padding:.6rem 0}.week-matrix>div:first-child p:first-child {text-transform:uppercase;letter-spacing:.06em;font-size:.62rem}.week-matrix .relative.grid>div:nth-child(even){background-color:#fafaff}
+.week-matrix [data-event-type] {border-inline-start-width:3px;background:white;box-shadow:0 1px 4px #11182712}
+.week-matrix [data-event-type=pratik] {background:#ecfdf5;border-color:#059669}.week-matrix [data-event-type=secmeli] {background:#fffbeb;border-color:#d97706}.week-matrix [data-event-type=teorik] {border-color:#2563eb}
+.schedule-total,.schedule-actions {padding-top:.85rem;margin-top:1rem;border-top:1px solid var(--border)}.schedule-actions {justify-content:space-between}.schedule-actions>div {margin:0}
+.service-hours {display:grid;gap:1rem;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:1rem}
+.service-hours>div {padding:.75rem 1rem;border-radius:.65rem}.service-hours span {color:var(--muted-foreground);font-size:.75rem}.service-hours b {display:block;color:var(--foreground);font-size:.9rem}
+.service-hours svg,.meal-title svg,.meal-slot svg {color:#c07809}.service-hours>div:last-child svg,.st-meals article:last-child svg,.meal-slot:last-child svg {color:#586394}
+.st-meals {grid-template-columns:repeat(3,minmax(0,1fr))}.st-meals article {background:var(--accent)}.st-meals article:nth-child(2){background:#f4f6ff}.st-meal-hero {border:0}.st-meal-hero header {border-bottom:1px solid var(--border);padding-bottom:1rem}.meal-title {gap:.45rem}.meal-title h3 {font-size:1rem}.st-meals small,.dinner-note,.month-heading p {font-size:.75rem;color:var(--muted-foreground)}.dinner-note {margin-top:.8rem}
+.month-heading>div:last-child {margin:0}.month-heading button[aria-pressed=true] {background:var(--primary);color:white}
+.meal-slot {font-size:.75rem}.meal-slot b {gap:.3rem}.st-month article {border:0;box-shadow:0 1px 4px #0f172a0c}
+.course-index .workspace-toolbar,.course-summary {border:0}.course-summary {background:var(--accent)}.course-index .st-module>div:first-child {background:white}
+.st-support #sorular {counter-reset:faq}.st-support details {counter-increment:faq}.st-support summary::before {content:counter(faq,decimal-leading-zero);margin-right:.65rem;padding:.2rem .35rem;background:var(--accent);color:var(--primary);font-size:.72rem;border-radius:.3rem}
+.light-theme {padding:1rem;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:.8rem;font-weight:600}.light-theme b {background:#2563eb;color:white;border-radius:50%;padding:0 .28rem}
+.theme-editor {max-width:68rem;background:var(--background)}.theme-columns section {background:white}.preview-grid {min-height:15rem;margin-top:.75rem;border:1px solid var(--border);padding:.5rem}.preview-grid span:nth-last-child(2){align-self:center}.preview-grid span:last-child{align-self:end}
+.elective-heading {background:var(--accent)}.block-label {display:inline-block;background:#fffbeb;color:#92400e;border-radius:1rem;padding:.15rem .55rem;margin-bottom:.3rem}
+.st-profile>span {background:#2563eb;color:white}.st-elective {border-top:3px solid #f59e0b}
+.auth-page {display:flex;flex-direction:column}.auth-stage {flex:1;min-height:unset;padding-block:3rem}.auth-note {text-align:left}.access-footer {display:flex;justify-content:space-between;gap:1rem;padding:1rem 4vw;color:var(--muted-foreground);font-size:.72rem}.auth-register {max-width:38rem}
+.account-avatar {display:grid;place-items:center;flex:none;width:2.4rem;height:2.4rem;border-radius:.75rem;background:#eaf0ff;color:#1e40af;font-weight:700}
+.account-stats {padding:0 1rem 1rem;gap:.75rem}.account-stats button {border:1px solid var(--border);border-radius:.75rem}.registration-chart {background:repeating-linear-gradient(to top,transparent 0 34px,#e2e8f0 35px)}
+.term-manager>div:first-child {border:0}.term-manager button[aria-pressed=true]{background:#2563eb;color:white}.curriculum-editor .grid.sm\:grid-cols-3>div {background:#f8fafc}
+@media(min-width:80rem) {.header-date {display:inline-block;background:var(--accent);padding:.4rem .6rem;border-radius:.5rem;font-size:.72rem;white-space:nowrap}.clinical-nav {display:flex;justify-content:space-between}.st-calendar{grid-template-columns:minmax(0,3fr) minmax(0,9fr)}}
+@media(max-width:47.99rem){.service-hours {gap:.4rem}.service-hours>div {align-items:start;flex-direction:column;padding:.65rem;gap:.3rem}.st-meals {grid-template-columns:1fr}.date-stepper h2{white-space:normal}.st-calendar>div:nth-child(2){padding:.65rem;min-width:0}.schedule-period h1{width:100%}.month-heading>div:last-child{width:100%}.course-summary strong{white-space:normal}}
+.appearance-page .appearance-heading,.meal-heading {margin-bottom:1.5rem}
+.appearance-heading h1,.meal-heading h1 {font-size:clamp(1.5rem,2.5vw,2rem);font-weight:700;letter-spacing:-.025em}
+.appearance-heading p,.meal-heading p,.elective-heading p {font-size:.88rem;color:var(--muted-foreground)}
+.appearance-heading button {margin-bottom:1rem;color:var(--primary);font-size:.83rem}.appearance-page .theme-columns {gap:1.5rem}.appearance-page .theme-columns section {padding:1.4rem}
+.elective-page {max-width:56rem;margin:auto;background:white;border-radius:1rem;overflow:hidden;box-shadow:var(--shadow-card)}
+.elective-page h1 {font-weight:650;font-size:1.5rem}.picker-close {float:right;background:white;border-radius:.5rem;padding:.5rem .8rem;font-size:.8rem}
+.elective-page footer {display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding:1rem 1.5rem;font-size:.83rem}.elective-page footer button {background:var(--primary);color:white;padding:.65rem 1rem;border-radius:.55rem}
+.meal-heading,.meal-controls,.remember-row {display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}.meal-controls {padding:.65rem;background:white;border-radius:.7rem}.meal-heading small,.chosen-electives small {font-size:.7rem;color:var(--teorik);font-weight:600}
+.chosen-electives li {margin-top:.65rem;padding:.75rem;background:#fffbeb;border-radius:.55rem}.chosen-electives b,.chosen-electives span {display:block;font-size:.82rem}.chosen-electives span{color:var(--muted-foreground)}
+@media(min-width:36rem){.register-form {display:grid;grid-template-columns:1fr 1fr;gap:.85rem}.register-form>* {grid-column:1/-1;margin:0}.register-form>.password-field,.register-form>.confirm-field {grid-column:span 1}}
