@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
@@ -118,7 +118,7 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
       </nav>
       <div className="grid gap-4 md:grid-cols-[16rem_minmax(0,1fr)] lg:gap-7">
         <aside className="admin-rail ui-surface hidden h-fit rounded-2xl border border-border bg-surface p-2 md:block">
-          <div className="px-2 py-2"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Bölümler</p></div>
+          <Link to="/" aria-label="İTF Takvim ana sayfası" className="rail-brand"><span>İTF</span><div><b>İTF Takvim</b><small>Yönetim merkezi</small></div></Link>
           {SEKME_GRUPLARI.map((grup) => <div key={grup.baslik} className="mb-3 last:mb-0"><p className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">{grup.baslik}</p><div className="space-y-0.5">{grup.ids.map((id) => { const item = SEKMELER.find((x) => x.id === id)!; const Ikon = item.ikon; return <button key={id} onClick={() => setSekme(id)} className={`ui-control flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs font-bold ${sekme === id ? "bg-teorik-soft text-teorik shadow-none" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Ikon className="h-4 w-4" />{item.ad}</button>; })}</div></div>)}
         </aside>
         <main className="min-w-0 space-y-4">
