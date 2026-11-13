@@ -12,14 +12,15 @@ export const Route = createFileRoute("/_authenticated/yemek")({
   component: Yemek,
 });
 
-type Ogun = "kahvalti" | "ogle" | "aksam";
+const ogunler = [["kahvalti", "Kahvaltı"], ["ogle", "Öğle yemeği"]] as const;
+type Ogun = typeof ogunler[number][0];
 const AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const gunAdi = (tarih: string) => new Date(`${tarih}T12:00:00`).toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" });
 const satirlar = (gun: YemekGunu, ogun: Ogun) => (ogun === "kahvalti" ? gun.kahvalti : gun.ogle)?.split(/\n|,/).map((x) => x.trim()).filter(Boolean) ?? [];
 
 function Yemek() {
   const [imlec, setImlec] = useState(() => new Date());
-  const [ogun, setOgun] = useState<Ogun>("ogle");
+  const [ogun, setOgun] = useState<Ogun | "hepsi">("hepsi");
   const [gecmisiGoster, setGecmisiGoster] = useState(false);
   const getir = useServerFn(yemekListesiGetir);
   const yil = imlec.getFullYear(), ay = imlec.getMonth() + 1;
@@ -34,7 +35,7 @@ function Yemek() {
     queryFn: () => getir({ data: bugununAyi }),
     staleTime: 20 * 60_000,
   });
-  const liste = (q.data?.gunler ?? []).filter((gun) => satirlar(gun, ogun).length);
+  const liste = (q.data?.gunler ?? []).filter((gun) => ogun === "hepsi" ? ogunler.some(([id]) => satirlar(gun, id).length) : satirlar(gun, ogun).length);
   const [bugun, setBugun] = useState("");
   useEffect(() => setBugun(isoDate(new Date())), []);
   const buAy = yil === bugununAyi.yil && ay === bugununAyi.ay;
@@ -61,20 +62,16 @@ function Yemek() {
       </section>
       <section className="st-meal-hero">
         <header><div><h2>Günün Menüsü</h2><p>{bugun && gunAdi(bugun)}</p></div><UtensilsCrossed aria-hidden="true" /></header>
-        <div className="st-meals">{([["kahvalti","Kahvaltı","07:30–09:00"],["ogle","Öğle Yemeği","11:00–14:00"],["aksam","Akşam Yemeği","16:00–18:00"]] as const).map(([id,ad,saat]) => {
+        <div className="st-meals">{ogunler.map(([id,ad]) => {
           const yemekler = bugunKaydi ? satirlar(bugunKaydi,id) : [];
-          return <article key={id}><small>{saat}</small><h3>{ad}</h3>{yemekler.length ? <ul>{yemekler.map((x,i)=><li key={i}>{x}</li>)}</ul> : <p>{bugunQ.isLoading ? "Yükleniyor…" : bugunQ.isError ? "Menü alınamadı." : "Menü yayımlanmadı."}</p>}</article>;
+          return <article key={id}><h3>{ad}</h3>{yemekler.length ? <ul>{yemekler.map((x,i)=><li key={i}>{x}</li>)}</ul> : <p>{bugunQ.isLoading ? "Yükleniyor…" : bugunQ.isError ? "Menü alınamadı." : "Menü yayımlanmadı."}</p>}</article>;
         })}</div>
       </section>
       <section className="st-month"><h2>Aylık Menü Takvimi</h2>
         <div className="mt-4 grid grid-cols-3 rounded-2xl bg-accent/70 p-1.5 text-xs font-semibold">
-          {([
-            ["kahvalti", "Kahvaltı", "07:30–09:00"],
-            ["ogle", "Öğle", "11:00–14:00"],
-            ["aksam", "Akşam", "16:00–18:00"],
-          ] as const).map(([id, ad, saat]) => (
+          {([["hepsi","Tüm öğünler"], ...ogunler] as const).map(([id, ad]) => (
             <button key={id} aria-pressed={ogun === id} onClick={() => setOgun(id)} className={`rounded-lg px-2 py-2 ${ogun === id ? "bg-surface shadow-sm text-foreground" : "text-muted-foreground"}`}>
-              <span className="block">{ad}</span><span className="mt-0.5 block text-[10px] font-normal opacity-75">{saat}</span>
+              <span className="block">{ad}</span>
             </button>
           ))}
         </div>
@@ -97,7 +94,7 @@ function Yemek() {
                   {buGunMu ? <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Bugün</span> : null}
                   {gecti ? <span className="shrink-0 text-[10px] font-normal normal-case text-muted-foreground">geçti</span> : null}
                 </h3>
-                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">{satirlar(gun, ogun).map((satir, i) => <li key={i}>• {satir}</li>)}</ul>
+                {ogunler.filter(([id]) => ogun === "hepsi" || ogun === id).map(([id, ad]) => <div className="meal-slot" key={id}><b>{ad}</b><p>{satirlar(gun,id).join(", ") || "Menü yayımlanmadı."}</p></div>)}
               </article>
             );
           })}

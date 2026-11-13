@@ -47,10 +47,10 @@ function Ayarlar() {
   const dilEtiket = ayarlar.dil ? DIL_ETIKET[ayarlar.dil] : "";
   const [temaAcik, setTemaAcik] = useState(false);
   const [tema, setTema] = useState("clinical");
-  useEffect(() => { setTema(document.documentElement.dataset.gorunum || "clinical"); }, []);
+  useEffect(() => { setTema(document.documentElement.dataset["gorunum"] || "clinical"); }, []);
   function temaSec(deger: string) {
     setTema(deger);
-    document.documentElement.dataset.gorunum = deger;
+    document.documentElement.dataset["gorunum"] = deger;
     document.documentElement.classList.toggle("dark", deger === "night");
     localStorage.setItem("itf-gorunum", deger);
   }
@@ -70,7 +70,7 @@ function Ayarlar() {
   ] as const;
 
   return (
-    <AppShell baslik="Hesap ve Uygulama Ayarları" aciklama="Uygulama tercihleri">
+    <AppShell baslik="Hesap ve Uygulama Ayarları" aciklama="Öğrenci profili, ders tercihleri ve kişisel takvim görünümü.">
       <div className="st-settings">        <Dialog open={secmeliAcik} onOpenChange={setSecmeliAcik}><DialogContent className="elective-dialog"><div className="elective-heading"><small>Öğrenci işleri / Müfredat</small><DialogTitle>Seçmeli dersler</DialogTitle><DialogDescription>Her gruptan bir ders seçebilirsin. Seçimin kişisel takvimine yansır.</DialogDescription></div><div className="elective-body"><SecmeliSecici /></div><footer><span>{secili.length} ders seçili</span><button onClick={() => setSecmeliAcik(false)}>Seçimi tamamla</button></footer></DialogContent></Dialog>
         <section data-tur="ogrenci-bilgi" className="workspace-panel p-4">
           <div className="st-profile"><span>{(ad || ayarlar.ogrenciAdi || "Ö").charAt(0)}</span><div><small>Öğrenci profili</small><h2>{ad || ayarlar.ogrenciAdi || "Öğrenci Bilgileri"}</h2></div></div>
@@ -125,7 +125,7 @@ function Ayarlar() {
         <section data-tur="takvim-gorunum" className="ui-surface rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-lg font-bold">Görünüm ve Tema</h2>
           <button type="button" className="theme-sample" onClick={() => setTemaAcik(true)}><span>Görünüm ve tema ayarlarını aç ↗</span><i/><i/><i/></button>
-          <Dialog open={temaAcik} onOpenChange={setTemaAcik}><DialogContent className="theme-editor"><DialogTitle>Takvim Görünümü ve Arayüz Teması</DialogTitle><DialogDescription>Uygulamanın renklerini seç ve takvim üzerinde önizle.</DialogDescription><div className="theme-columns"><section><h3>Arayüz teması</h3>{[["clinical","Clinical Clarity"],["night","Nöbet modu"],["contrast","Yüksek kontrast"],["sepia","Sıcak sepya"]].map(([id,ad])=><button key={id} type="button" aria-pressed={tema===id} onClick={()=>temaSec(id)}>{ad}</button>)}</section><section><h3>Canlı takvim önizlemesi</h3><div className="preview-grid">{["Pzt","Sal","Çar","Per","Cum"].map(g=><b key={g}>{g}</b>)}<span>Teorik</span><span>Uygulama</span><span>Seçmeli</span></div></section></div></DialogContent></Dialog>
+          <Dialog open={temaAcik} onOpenChange={setTemaAcik}><DialogContent className="theme-editor"><DialogTitle>Takvim Görünümü ve Arayüz Teması</DialogTitle><DialogDescription>Uygulamanın renklerini seç ve takvim üzerinde önizle.</DialogDescription><div className="theme-columns"><section><h3>Arayüz teması</h3>{([["clinical","Clinical Clarity"],["night","Nöbet modu"],["contrast","Yüksek kontrast"],["sepia","Sıcak sepya"]] as const).map(([id,ad])=><button data-theme-option={id} key={id} type="button" aria-pressed={tema===id} onClick={()=>temaSec(id)}>{ad}</button>)}<h3 className="mt-4">Izgara ve saat aralığı</h3><div className="time-range">{(["gunBaslangic", "gunBitis"] as const).map(key => <label key={key}>{key === "gunBaslangic" ? "Başlangıç" : "Bitiş"}<select value={ayarlar[key]} onChange={e => guncelle({[key]: Number(e.target.value)})}>{Array.from({length:25}, (_,i) => i).filter(h => key === "gunBaslangic" ? h < ayarlar.gunBitis : h > ayarlar.gunBaslangic).map(h => <option key={h} value={h}>{String(h).padStart(2,"0")}:00</option>)}</select></label>)}</div></section><section><h3>Canlı takvim önizlemesi</h3><p className="mb-3 text-xs text-muted-foreground">{ayarlar.gunBaslangic}:00 – {ayarlar.gunBitis}:00 · Örnek hafta</p><div className="preview-grid">{["Pzt","Sal","Çar","Per","Cum"].map(g=><b key={g}>{g}</b>)}<span>Teorik</span><span>Uygulama</span><span>Seçmeli</span></div></section></div></DialogContent></Dialog>
           <label className="mt-3 flex items-center justify-between gap-3">
             <span className="text-sm">Hafta sonunu göster</span>
             <input

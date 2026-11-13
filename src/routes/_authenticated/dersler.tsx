@@ -128,7 +128,7 @@ function Dersler() {
   }).filter((sonuc) => sonuc.dallar.length);
 
   return (
-    <AppShell baslik="Dersler ve Devam Takibi" aciklama="Dilim ve anabilim dalına göre · devam takibi">
+    <AppShell baslik="Dersler ve Devam Takibi" aciklama={["İstanbul Tıp Fakültesi", ayarlar.donem, ayarlar.grup].filter(Boolean).join(" · ")}>
       <div className="course-index space-y-4">
         <div className="workspace-toolbar"><Search aria-hidden="true" size={18} /><input
           type="search" aria-label="Derslerde ara"
@@ -137,7 +137,7 @@ function Dersler() {
           placeholder="Dilim, anabilim dalı, konu veya hoca ara…"
           className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none"
         /></div>
-        <p className="px-1 text-[11px] text-muted-foreground">
+        <p className="course-summary"><strong>{agac.length} ders grubu</strong>
           Geçmiş derslere katıldığını işaretleyebilir; dilim başlıklarında katılımını ve yapılan devamsızlık sayını görebilirsin.
         </p>
         {!agac.length ? (
@@ -156,7 +156,7 @@ function Dersler() {
           return (
             <section key={dl.ad} data-tur="dilim" className={`workspace-panel st-module overflow-hidden ${dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? "st-independent" : ""}`}>
               <div className="flex items-center gap-2 p-4">
-                <button onClick={() => ac(dl.ad)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                <button aria-expanded={acikDl} onClick={() => ac(dl.ad)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${acikDl ? "rotate-180" : ""}`} />
                   <div className="st-module-title min-w-0">
                     <p className="flex items-center gap-2 font-bold">

@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { AnaSayfaLogosu } from "@/components/Marka";
-import { Karsilama } from "@/components/Karsilama";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
@@ -46,6 +46,8 @@ function AuthSayfasi() {
   const [okulZorunlu, setOkulZorunlu] = useState(OKUL_EPOSTASI_ZORUNLU);
   const [email, setEmail] = useState("");
   const [sifre, setSifre] = useState("");
+  const [tekrar, setTekrar] = useState("");
+  const [goster, setGoster] = useState(false);
   const [no, setNo] = useState("");
   const sorgu = useNumaraSorgu(no);
   const [bekle, setBekle] = useState(false);
@@ -77,6 +79,7 @@ function AuthSayfasi() {
         const { error } = await supabase.auth.signInWithPassword({ email, password: sifre });
         if (error) throw new Error(error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı." : error.message);
       } else if (mod === "kayit") {
+        if (sifre !== tekrar) throw new Error("Şifreler eşleşmiyor.");
         if (okulZorunlu && !okulEpostasiMi(email)) throw new Error("Sadece @ogr.iu.edu.tr uzantılı İÜ öğrenci e-postasıyla kayıt olunabilir.");
         if (!no.trim()) throw new Error("Öğrenci numarası gerekli.");
         if (sorgu.sonuc?.kayitli) throw new Error("Bu numara zaten başka bir hesaba kayıtlı.");
@@ -108,20 +111,20 @@ function AuthSayfasi() {
     if (r.error) setMesaj({ ok: false, t: "Google ile giriş yapılamadı." });
   };
 
-  if (!ekran && !mesaj) return <Karsilama />;
+
 
   const girdi = "mt-1 min-h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring";
 
   return (
-    <div className="auth-page"><header><AnaSayfaLogosu /><b>İTF Takvim</b><span>İstanbul Tıp Fakültesi</span></header><main className="auth-stage">
+    <div className="auth-page"><header><AnaSayfaLogosu /><b>İTF Takvim</b><small className="platform-label">Bağımsız Öğrenci Platformu</small><Link to="/" className="auth-back"><ArrowLeft size={15}/> Ana sayfaya dön</Link></header><main className="auth-stage">
       <div className={mod === "kayit" ? "auth-sheet auth-register" : "auth-sheet"}>
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
           <AnaSayfaLogosu />
           <div>
-            <p className="text-xs font-semibold text-muted-foreground">İstanbul Tıp Fakültesi</p>
+            {mod === "kayit" && <small className="registration-label">Yeni öğrenci kaydı</small>}
             <h1 className="text-2xl font-bold tracking-tight">{mod === "kayit" ? "Hesabını Oluştur, Takvimini Cebine Al" : mod === "giris" ? "İTF Takvim’e Giriş Yap" : "Şifreni sıfırla"}</h1>
             <p className="text-xs text-muted-foreground">
-              {mod === "giris" ? "Hesabına giriş yap" : mod === "kayit" ? "Yeni hesap oluştur" : "Şifreni sıfırla"}
+              {mod === "giris" ? "Dönemine, grubuna ve seçmelilerine göre hazırlanmış kişisel ders programına eriş." : mod === "kayit" ? "Öğrenci numaranla dönem ve pratik grubuna uygun takvimini oluştur." : "Şifreni sıfırla"}
             </p>
           </div>
         </div>
@@ -133,7 +136,7 @@ function AuthSayfasi() {
               Google ile devam et
             </button>
             <div className="my-4 flex items-center gap-3 text-[11px] text-muted-foreground">
-              <span className="h-px flex-1 bg-border" /> veya <span className="h-px flex-1 bg-border" />
+              <span className="h-px flex-1 bg-border" /> veya e-posta ile <span className="h-px flex-1 bg-border" />
             </div>
             {mod === "kayit" ? (
               <p className="mt-2 text-[11px] text-muted-foreground">Google ile girersen öğrenci numaran ilk girişte sorulur.</p>
@@ -149,7 +152,7 @@ function AuthSayfasi() {
           ) : null}
           <label className="block text-sm font-medium">E-posta<input className={girdi} type="email" placeholder="E-posta" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
           {mod !== "sifre" ? (
-            <label className="block text-sm font-medium">Şifre<input className={girdi} type="password" placeholder="Şifre" minLength={mod === "kayit" ? 6 : undefined} autoComplete={mod === "giris" ? "current-password" : "new-password"} value={sifre} onChange={(e) => setSifre(e.target.value)} required /></label>
+            <div className="password-field"><label className="block text-sm font-medium">Şifre<input className={girdi} type={goster ? "text" : "password"} placeholder="Şifre" minLength={mod === "kayit" ? 6 : undefined} autoComplete={mod === "giris" ? "current-password" : "new-password"} value={sifre} onChange={(e) => setSifre(e.target.value)} required /></label><button type="button" aria-label={goster ? "Şifreyi gizle" : "Şifreyi göster"} onClick={() => setGoster(!goster)}>{goster ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div>
           ) : null}
           {mod === "giris" ? (
             <label className="flex items-center gap-2 text-sm">
@@ -157,6 +160,7 @@ function AuthSayfasi() {
               Beni hatırla
             </label>
           ) : null}
+          {mod === "kayit" && <label className="block text-sm font-medium">Şifre tekrarı<input className={girdi} type={goster ? "text" : "password"} autoComplete="new-password" value={tekrar} onChange={e => setTekrar(e.target.value)} required /></label>}
           <button disabled={bekle} className="min-h-11 w-full rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">
             {bekle ? "Bekle…" : mod === "giris" ? "Giriş yap" : mod === "kayit" ? "Kayıt ol" : "Bağlantı gönder"}
           </button>
@@ -175,6 +179,7 @@ function AuthSayfasi() {
         ) : null}
 
 
+        {mod === "giris" && <aside className="auth-note"><ShieldCheck size={20}/><div><b>İÜ OBS şifren gerekmez</b><p>İTF Takvimi bağımsız bir öğrenci projesidir. Bu platform için oluşturduğun şifreyi kullan.</p></div></aside>}
         {mod !== "sifre" && <footer>{mod === "kayit" ? "Zaten hesabın var mı?" : "Hesabın yok mu?"} <button onClick={() => {setMod(mod === "kayit" ? "giris" : "kayit");setMesaj(null);}}>{mod === "kayit" ? "Giriş yap" : "Hesap oluştur"}</button></footer>}
       </div></main></div>
   );
