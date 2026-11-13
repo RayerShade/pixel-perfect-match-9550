@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -46,35 +45,6 @@ function Ayarlar() {
   const donemAdi = donemler.find((d) => d.id === ayarlar.donemId)?.ad ?? "";
   const dilEtiket = ayarlar.dil ? DIL_ETIKET[ayarlar.dil] : "";
   const [secmeliAcik, setSecmeliAcik] = useState(false);
-  const [googleEsitleniyor, setGoogleEsitleniyor] = useState(false);
-  const [takvimToken, setTakvimToken] = useState<string>(() => ayarlar.takvimAbonelikToken ?? "");
-  const takvimUrl = takvimToken && typeof window !== "undefined" ? `${window.location.origin}/api/takvim.ics?t=${takvimToken}` : "";
-  const googleEsitle = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) { toast.error("Oturum bulunamadı."); return; }
-    setGoogleEsitleniyor(true);
-    try { const r = await fetch("/api/google-calendar/esitle", { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` } }); const v = await r.json() as { adet?: number; error?: string }; if (!r.ok) throw new Error(v.error); toast.success(`${v.adet ?? 0} etkinlik Google Calendar ile eşitlendi.`); } catch (e) { toast.error(e instanceof Error ? e.message : "Eşitleme başarısız."); } finally { setGoogleEsitleniyor(false); }
-  };
-
-  const takvimBagla = async (tip: "google" | "apple") => {
-    if (tip === "google") {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { toast.error("Google Calendar bağlamak için oturum gerekli."); return; }
-      const yanit = await fetch("/api/google-calendar/baslat", { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` } });
-      const veri = await yanit.json() as { url?: string; error?: string };
-      if (!yanit.ok || !veri.url) { toast.error(veri.error ?? "Google bağlantısı başlatılamadı."); return; }
-      window.location.assign(veri.url);
-      return;
-    }
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) { toast.error("Apple Calendar bağlamak için oturum gerekli."); return; }
-    const yanit = await fetch("/api/apple-calendar/baslat", { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` } });
-    const veri = await yanit.json() as { url?: string; token?: string; error?: string };
-    if (!yanit.ok || !veri.url) { toast.error(veri.error ?? "Apple bağlantısı başlatılamadı."); return; }
-    if (veri.token) { setTakvimToken(veri.token); guncelle({ takvimAbonelikToken: veri.token }); }
-    window.location.assign(veri.url);
-  };
-
   // Ad, grup ve dönem yüklenen dosyalardan gelir; bulununca tercih olarak da kaydedilir.
   useEffect(() => {
     const patch: Partial<Ayarlar> = {};
@@ -91,7 +61,7 @@ function Ayarlar() {
 
   return (
     <AppShell baslik="Ayarlar" aciklama="Uygulama tercihleri">
-      <div className="space-y-5">        {secmeliAcik ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label="Seçmeli dersler"><div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/80 bg-surface p-5 shadow-xl"><div className="mb-4 flex items-center gap-3"><div className="min-w-0 flex-1"><h2 className="text-lg font-bold">Seçmeli dersler</h2><p className="text-xs text-muted-foreground">Her gruptan bir ders seçebilirsin; seçimin takvimine otomatik eklenir.</p></div><button onClick={() => setSecmeliAcik(false)} className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-accent">Kapat</button></div><SecmeliSecici /></div></div> : null}
+      <div className="settings-layout">        {secmeliAcik ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label="Seçmeli dersler"><div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/80 bg-surface p-5 shadow-xl"><div className="mb-4 flex items-center gap-3"><div className="min-w-0 flex-1"><h2 className="text-lg font-bold">Seçmeli dersler</h2><p className="text-xs text-muted-foreground">Her gruptan bir ders seçebilirsin; seçimin takvimine otomatik eklenir.</p></div><button onClick={() => setSecmeliAcik(false)} className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-accent">Kapat</button></div><SecmeliSecici /></div></div> : null}
         <section data-tur="ogrenci-bilgi" className="workspace-panel p-4">
           <h2 className="text-sm font-bold">Öğrenci Bilgileri</h2>
           <div className="mt-3 space-y-3">
@@ -232,7 +202,6 @@ function Ayarlar() {
           <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="mt-4 w-full rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">Seçmeli derslerini seç</button>
         </section>
 
-        <section className="ui-surface overflow-hidden rounded-3xl border border-border bg-surface"><div className="border-b border-border bg-gradient-to-br from-primary/10 via-transparent to-altin/10 px-5 py-5"><p className="text-xs font-extrabold uppercase tracking-[.14em] text-primary">İTF Takvim</p><h2 className="mt-1 text-lg font-bold">Takvim uygulamana ekle</h2><p className="mt-1 max-w-xl text-sm text-muted-foreground">Programın, uygulamaların ve amfi değişikliklerin kullandığın takvimde otomatik güncel kalır.</p></div><div className="grid gap-3 p-4 sm:grid-cols-2"><button type="button" onClick={() => void takvimBagla("google")} className="group flex min-h-24 items-center gap-3 rounded-2xl bg-[#202124] p-4 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#303134]"><span aria-hidden="true" className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-white text-base font-extrabold text-[#4285F4] before:absolute before:inset-x-0 before:top-0 before:h-2 before:bg-[#EA4335] after:absolute after:bottom-1 after:left-1 h-0.5 after:w-2 after:rounded-full after:bg-[#34A853]">31</span><span><span className="block text-[11px] text-white/65">Google Calendar’a</span><span className="block text-base font-bold">Google Calendar’a bağlan</span></span></button><button type="button" onClick={() => void takvimBagla("apple")} className="group flex min-h-24 items-center gap-3 rounded-2xl bg-black p-4 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-800"><span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-xl bg-white text-black"><CalendarDays className="h-6 w-6" strokeWidth={2.25} /></span><span><span className="block text-[11px] text-white/65">Apple Calendar’a</span><span className="block text-base font-bold">Takvimi ekle</span></span></button></div><div className="flex items-center justify-between gap-3 px-5 pb-4 text-[11px] text-muted-foreground"><div className="flex items-center gap-3"><span>Apple bağlantısı kişiye özeldir; burada gösterilmez.</span><button type="button" className="font-semibold text-primary hover:underline disabled:opacity-50" disabled={googleEsitleniyor} onClick={() => void googleEsitle()}>{googleEsitleniyor ? "Eşitleniyor…" : "Google’ı şimdi eşitle"}</button></div>{takvimToken ? <button type="button" className="font-semibold text-primary hover:underline" onClick={() => { const t = crypto.randomUUID().replace(/-/g, ""); setTakvimToken(t); guncelle({ takvimAbonelikToken: t }); toast.success("Yeni bağlantı oluşturuldu; eski bağlantı geçersizdir."); }}>Bağlantıyı yenile</button> : null}</div></section>
 
         <PwaKurulum />
 

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { SinifUygulamaTablosu } from "@/components/SinifUygulamaTablosu";
 import { AppShell } from "@/components/AppShell";
 import { ogrenciBul, type DersOlayi } from "@/lib/schedule-data";
@@ -129,8 +129,8 @@ function Dersler() {
 
   return (
     <AppShell baslik="Dersler" aciklama="Dilim ve anabilim dalına göre · devam takibi">
-      <div className="space-y-5">
-        <div className="workspace-toolbar"><input
+      <div className="course-index space-y-4">
+        <div className="workspace-toolbar"><Search aria-hidden="true" size={18} /><input
           type="search" aria-label="Derslerde ara"
           value={arama}
           onChange={(e) => setArama(e.target.value)}

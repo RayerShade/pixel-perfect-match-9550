@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
+import { AnaSayfaLogosu } from "@/components/Marka";
 import { Karsilama } from "@/components/Karsilama";
-import { CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
@@ -113,12 +113,10 @@ function AuthSayfasi() {
   const girdi = "mt-1 min-h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring";
 
   return (
-    <div className="grid min-h-screen place-items-center bg-background px-4 py-10">
-      <div className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-sm">
+    <div className="auth-canvas grid min-h-screen place-items-center px-4 py-10">
+      <div className="workspace-panel w-full max-w-md p-6 sm:p-9">
         <div className="mb-5 flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <CalendarDays className="h-5 w-5" />
-          </div>
+          <AnaSayfaLogosu />
           <div>
             <p className="text-xs font-semibold text-muted-foreground">İstanbul Tıp Fakültesi</p>
             <h1 className="text-2xl font-bold tracking-tight">İTF Takvim</h1>

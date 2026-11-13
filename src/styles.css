@@ -360,3 +360,36 @@
   .workspace-toolbar { border-radius: 1rem; }
   .workspace-kpi { min-width: calc(50% - .4rem); flex: 1; }
 }
+
+/* Clinical Clarity: shared foundations for student and management views. */
+:root:not(.dark) {
+  --background:#f8fafc; --foreground:#0f172a; --surface:#fff; --card:#fff;
+  --primary:#1d4ed8; --primary-foreground:#fff; --ring:#2563eb; --accent:#eff4fa;
+  --border:#dde5ee; --input:#cbd5e1; --muted-foreground:#526279;
+  --teorik:#1d4ed8; --teorik-soft:#eff6ff; --pratik:#047857; --pratik-soft:#ecfdf5;
+  --secmeli:#92400e; --secmeli-soft:#fffbeb;
+  --shadow-card:0 1px 3px rgb(15 23 42 / 5%),0 8px 24px -14px rgb(15 23 42 / 12%);
+}
+body { font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background-image:none; }
+.clinical-header {background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 1px 8px rgb(15 23 42 / 4%);}
+.app-content {max-width:88rem;}
+.page-intro {padding:.6rem 0 1.1rem;margin:0;}
+.page-intro__title {font-size:clamp(1.55rem,2.2vw,2rem);letter-spacing:-.035em;}
+.workspace-panel,.workspace-kpi,.workspace-toolbar {border-radius:1rem;backdrop-filter:none;}
+.workspace-toolbar {background:var(--surface);color:var(--muted-foreground);}
+.ui-control {border-radius:.65rem;}
+.course-index [data-tur=dilim] {border-inline-start:3px solid var(--teorik);}
+.course-index [data-tur=dilim] > div:first-child {padding:1.1rem;}
+.meal-today {border-inline-start:4px solid var(--pratik);background:var(--pratik-soft);}
+.meal-board article {background:var(--surface);box-shadow:var(--shadow-card);}
+.support-layout,.settings-layout {display:grid;gap:1.25rem;align-items:start;}
+.auth-canvas {background:linear-gradient(150deg,var(--teorik-soft),var(--background) 50%,var(--accent));}
+@media(min-width:64rem) {
+  .app-content {padding-inline:2rem;}
+  .support-layout {grid-template-columns:minmax(0,1.5fr) minmax(18rem,1fr);}
+  .support-layout > * {grid-column:1;}
+  .support-layout > .support-tools {grid-column:2;grid-row:1;}
+  .support-layout > #sorular {grid-column:2;grid-row:2 / span 2;}
+  .settings-layout {max-width:68rem;margin-inline:auto;}
+  .admin-rail {position:sticky;top:5.5rem;max-height:calc(100dvh - 7rem);overflow:auto;}
+}
