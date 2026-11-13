@@ -121,13 +121,13 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
           <Link to="/" aria-label="İTF Takvim ana sayfası" className="rail-brand"><span>İTF</span><div><b>İTF Takvim</b><small>Yönetim merkezi</small></div></Link>
           {SEKME_GRUPLARI.map((grup) => <div key={grup.baslik} className="mb-3 last:mb-0"><p className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">{grup.baslik}</p><div className="space-y-0.5">{grup.ids.map((id) => { const item = SEKMELER.find((x) => x.id === id)!; const Ikon = item.ikon; return <button key={id} onClick={() => setSekme(id)} className={`ui-control flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs font-bold ${sekme === id ? "bg-teorik-soft text-teorik shadow-none" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Ikon className="h-4 w-4" />{item.ad}</button>; })}</div></div>)}
         </aside>
-        <main className="min-w-0 space-y-4">
-          <section className="ui-surface flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface p-4">
+        <div className="min-w-0 space-y-4">
+          <section className="console-heading">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-primary"><I className="h-5 w-5" /></div>
             <div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Süper admin</p><h2 className="text-lg font-bold">{sekme === "ozet" ? "Komuta Merkezi ve Sistem Sağlığı" : sekme === "kullanicilar" ? "Kullanıcılar ve Öğrenci Hesap Merkezi" : aktifSekme.ad}</h2></div>
           </section>
           {icerik}
-        </main>
+        </div>
       </div>
     </AppShell>
   );
@@ -145,21 +145,20 @@ function Ozet({ git }: { git: (s: Sekme) => void }) {
   const f = useServerFn(sunucuOzet);
   const q = useQuery({ queryKey: ["sunucu-ozet"], queryFn: () => f() });
   const d = q.data;
-  const kutular: [string, number | undefined, Sekme][] = [
-    ["Toplam hesap", d?.toplam, "kullanicilar"], ["Onaylı", d?.onayli, "kullanicilar"], ["Yasaklı", d?.yasakli, "kullanicilar"],
-    ["Google ile", d?.google, "kullanicilar"], ["Son 24 saat aktif", d?.aktif24, "kullanicilar"], ["Son 7 gün aktif", d?.aktif7, "kullanicilar"],
-    ["Admin", d?.admin, "kullanicilar"], ["Yıllık program yüklü", d?.yillikYuklu, "veri"], ["Öğrenci listesi yüklü", d?.ogrenciYuklu, "veri"],
-    ["Seçmeli seçmiş", d?.secmeliSecen, "veri"],
+  const kutular: [string, number | undefined, Sekme, string][] = [
+    ["Toplam hesap", d?.toplam, "kullanicilar", d ? d.onayli + " onaylı · " + d.yasakli + " yasaklı · " + d.admin + " admin" : ""],
+    ["Aktif kullanıcılar", d?.aktif7, "kullanicilar", d ? "Son 7 gün · Bugün " + d.aktif24 + " aktif" : ""],
+    ["Yıllık programlar", d?.yillikYuklu, "veri", d ? d.ogrenciYuklu + " öğrenci listesi yüklü" : ""],
+    ["Seçmeli tercihleri", d?.secmeliSecen, "veri", "Seçmeli ders seçen öğrenci"],
   ];
   const enCok = Math.max(1, ...(d?.kayit14 ?? [0]));
   return (
     <>
       {q.error ? <p className="text-destructive">{String(q.error)}</p> : null}
       <div className="st-admin-stats grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {kutular.map(([ad, v, s]) => (
+        {kutular.map(([ad, v, s, bilgi]) => (
           <button key={ad} onClick={() => git(s)} className="rounded-xl border border-border bg-card p-3 text-left shadow-sm hover:border-primary">
-            <div className="text-2xl font-bold tabular-nums">{q.isLoading ? "…" : v ?? 0}</div>
-            <div className="text-xs text-muted-foreground">{ad}</div>
+            <b className="text-sm">{ad}</b><strong className="my-2 block text-3xl tabular-nums">{q.isLoading ? "…" : v ?? "—"}</strong><span className="text-xs text-muted-foreground">{bilgi}</span>
           </button>
         ))}
       </div>

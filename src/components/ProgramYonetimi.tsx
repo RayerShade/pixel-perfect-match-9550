@@ -247,7 +247,7 @@ export function ProgramYonetimi() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-surface p-4">
-        <h3 className="text-sm font-bold">Dönemler</h3>
+        <h3 className="text-lg font-bold">Dönemler ve ders programı</h3>
         <div className="mt-2 flex flex-wrap gap-2">
           {donemler.map((d) => (
             <button
@@ -313,7 +313,7 @@ export function ProgramYonetimi() {
       </div>
 
       {donem ? (
-        <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
+        <div className="curriculum-editor space-y-3 rounded-2xl border border-border bg-surface p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-bold">{donem.ad} programı</h3>
             <div className="flex rounded-lg border border-border p-0.5">

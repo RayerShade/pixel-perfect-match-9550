@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { MapPinned, ArrowLeft, ImagePlus, Lightbulb, Megaphone, RefreshCw, Send, X } from "lucide-react";
+import { CalendarClock, ArrowLeft, ImagePlus, Lightbulb, Megaphone, RefreshCw, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -34,29 +34,29 @@ async function ekYukle(dosya: File, talepId: string, userId: string) {
   if (error) { await supabase.storage.from("destek-ekleri").remove([yol]); throw new Error("Görsel kaydedilemedi."); }
 }
 
-export function TalepTuruSecici({ sec }: { sec: (tur: Talep["tur"]) => void }) {
+export function TalepTuruSecici({ sec }: { sec: (tur: Talep["tur"] | "ders") => void }) {
   return (
-    <section className="rounded-2xl border border-border bg-surface p-5 shadow-card">
+    <section className="support-choices">
       <p className="text-sm font-semibold text-primary">Görüşünü ilet</p>
       <h2 className="mt-1 text-xl font-bold">Ne göndermek istiyorsun?</h2>
       <p className="mt-1 text-sm text-muted-foreground">Şikâyet ve öneriler değerlendirme ekibine iletilir. Şikâyetlerine gelen yanıtları burada takip edebilirsin. Öneriler tek yönlüdür.</p>
       <div className="mt-5 grid gap-3 md:grid-cols-3">
         <button onClick={() => sec("destek")} className="group rounded-xl border border-border p-4 text-left transition hover:border-primary hover:bg-primary/5">
-          <Megaphone className="h-6 w-6 text-primary" /><b className="mt-3 block">Şikâyet gönder</b>
+          <Megaphone className="h-6 w-6 text-primary" /><b className="mt-3 block">Hata bildir</b>
           <span className="mt-1 block text-xs text-muted-foreground">Bir sorun veya aksaklığı ekibe bildir.</span>
         </button>
         <button onClick={() => sec("oneri")} className="group rounded-xl border border-border p-4 text-left transition hover:border-amber-500 hover:bg-amber-500/5">
           <Lightbulb className="h-6 w-6 text-amber-500" /><b className="mt-3 block">Öneri gönder</b>
           <span className="mt-1 block text-xs text-muted-foreground">Geliştirme fikrini ekibe ilet.</span>
         </button>
-        <a href="#kampus" className="group rounded-xl border border-border p-4 text-left hover:border-pratik hover:bg-pratik-soft"><MapPinned className="h-6 w-6 text-pratik" /><b className="mt-3 block">Dersim nerede?</b><span className="mt-1 block text-xs text-muted-foreground">Çapa yerleşkesinde amfini bul.</span></a>
+        <button onClick={() => sec("ders")} className="group rounded-xl border border-border p-4 text-left hover:border-pratik hover:bg-pratik-soft"><CalendarClock className="h-6 w-6 text-pratik" /><b className="mt-3 block">Ders değişikliği bildir</b><span className="mt-1 block text-xs text-muted-foreground">Dersin değişen saatini, tarihini veya amfisini ilet.</span></button>
       </div>
     </section>
   );
 }
 
-export function YeniTalep({ tur, onOlustu, vazgec }: { tur: Talep["tur"]; onOlustu: () => void; vazgec: () => void }) {
-  const [konu, setKonu] = useState("");
+export function YeniTalep({ tur, onOlustu, vazgec, ilkKonu = "" }: { ilkKonu?: string; tur: Talep["tur"]; onOlustu: () => void; vazgec: () => void }) {
+  const [konu, setKonu] = useState(ilkKonu);
   const [metin, setMetin] = useState("");
   const [ek, setEk] = useState<File | null>(null);
   const [bekle, setBekle] = useState(false);

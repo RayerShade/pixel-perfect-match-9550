@@ -1,4 +1,4 @@
-import type { DersOlayi } from "@/lib/schedule-data";
+import { DERS_TURU_ETIKET, type DersOlayi } from "@/lib/schedule-data";
 import {
   GUN_KISA,
   GUN_UZUN,
@@ -59,6 +59,7 @@ function Blok({
 }) {
   return (
     <button
+      data-event-type={olay.ders.courseType}
       onClick={() => onSec(olay)}
       className={`flex h-full w-full flex-col overflow-hidden rounded-lg px-1.5 py-1 text-left transition-shadow hover:shadow-card ${TUR_SINIFI[olay.ders.courseType]}`}
       aria-label={`${olay.ders.courseName}${olay.amfi ? `, ${olay.amfi}` : ""}`}
@@ -75,7 +76,7 @@ function Blok({
       </span>
       {!kompakt ? (
         <span className="mt-auto truncate text-[10px] opacity-70">
-          {olay.ders.startTime} – {olay.ders.endTime}
+          {DERS_TURU_ETIKET[olay.ders.courseType]} · {olay.ders.startTime} – {olay.ders.endTime}
         </span>
       ) : null}
     </button>
@@ -111,7 +112,7 @@ function Izgara({
           className="grid border-b border-border/70"
           style={{ gridTemplateColumns: `48px repeat(${gunler.length}, minmax(0,1fr))` }}
         >
-          <div />
+          <div className="grid place-items-center text-[10px] font-semibold text-muted-foreground">SAAT</div>
           {gunler.map((g) => {
             const aktif = sameDay(g, bugun);
             return (

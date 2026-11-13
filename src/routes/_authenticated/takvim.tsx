@@ -15,6 +15,7 @@ import {
   onlineFiltrele,
   ogrenciBul,
   type DersOlayi,
+  type DersTuru,
 } from "@/lib/schedule-data";
 import { addDays, isoDate, formatLong, sameDay, startOfWeek, weekLabel, AYLAR, GUN_KISA } from "@/lib/date-utils";
 import { useAyarlar, useManuelAmfiler, useSecmeliler, useYuklenenVeri } from "@/lib/store";
@@ -79,7 +80,8 @@ function Takvim() {
   );
   const { veri } = useYuklenenVeri();
   const ogrenci = useMemo(() => ogrenciBul(veri, ayarlar.ogrenciNo ?? "", ayarlar.grupElle), [veri, ayarlar.ogrenciNo, ayarlar.grupElle]);
-  const olaylar = useMemo(
+  const [tur, setTur] = useState<DersTuru | "hepsi">("hepsi");
+  const tumOlaylar = useMemo(
     () =>
       kisiselUygula(
         onlineFiltrele(
@@ -96,6 +98,7 @@ function Takvim() {
     [gorunum, imlec, monday, secmeliler, manuel, veri, ogrenci, ayarlar],
   );
 
+  const olaylar = tur === "hepsi" ? tumOlaylar : tumOlaylar.filter(o => o.ders.courseType === tur);
   const bekleyen = olaylar.filter((o) => o.amfi === null).length;
   const { katilim, ayarla } = useKatilim();
   const isaretle = (liste: DersOlayi[]) => {
@@ -144,16 +147,11 @@ function Takvim() {
   );
   const saatSimdi = new Date().toLocaleTimeString("tr-TR", {hour:"2-digit",minute:"2-digit"});
   const siradaki = bugununOlaylari.find(o => o.ders.startTime >= saatSimdi);
-  const baslayan = bugununOlaylari.filter(o => o.ders.startTime <= saatSimdi);
-  const katilan = baslayan.filter(o => katilim[o.key]).length;
-  const gununPlaniGorunsun = gorunum === "ay"
-    || (gorunum === "gun" && !sameDay(imlec, bugun))
-    || (gorunum === "hafta" && !sameDay(monday, startOfWeek(bugun)));
-  const sinavlar = useMemo(() => olaylar.filter((o) => o.ders.courseType === "sinav").sort((a, b) => a.date.getTime() - b.date.getTime() || a.ders.startTime.localeCompare(b.ders.startTime)), [olaylar]);
+  const sinavlar = useMemo(() => tumOlaylar.filter((o) => o.ders.courseType === "sinav").sort((a, b) => a.date.getTime() - b.date.getTime() || a.ders.startTime.localeCompare(b.ders.startTime)), [tumOlaylar]);
 
   return (
-    <AppShell baslik="Ders Takvimi" aciklama={ayarlar.donem}>
-      <div className="workspace-panel p-3 md:p-6">
+    <AppShell baslik={gorunum === "hafta" ? "Haftalık Program" : gorunum === "ay" ? "Aylık Program" : "Günlük Program"}>
+      <div className="schedule-workspace">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-1">
             <button
@@ -173,7 +171,7 @@ function Takvim() {
             <h2 className="ml-2 min-w-0 flex-1 truncate text-base font-bold">{baslik}</h2>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button onClick={() => setOnemliAcik(true)} className="ui-control flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent sm:py-1.5 sm:text-xs" title="Sınavlar ve önemli tarihler"><CalendarDays className="h-4 w-4" /><span className="hidden sm:inline">Önemli tarihler</span></button>
             <button
               disabled={pdfHazirlaniyor}
@@ -204,7 +202,7 @@ function Takvim() {
               className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-accent disabled:opacity-50 sm:py-1.5 sm:text-xs"
             >
               <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">{pdfHazirlaniyor ? "Hazırlanıyor…" : "PDF"}</span>
+              <span className="hidden sm:inline">{pdfHazirlaniyor ? "Hazırlanıyor…" : "PDF indir"}</span>
             </button>
             <button
               onClick={() => setImlec(new Date())}
@@ -236,7 +234,8 @@ function Takvim() {
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 rounded-2xl bg-accent/60 px-3 py-2.5 text-[11px] text-muted-foreground">
+        <div className="course-filters" aria-label="Ders türüne göre filtrele"><span>Filtrele</span><button aria-pressed={tur === "hepsi"} onClick={() => setTur("hepsi")}>Tüm dersler</button>{(Object.keys(DERS_TURU_ETIKET) as DersTuru[]).map(key => <button key={key} aria-pressed={tur === key} onClick={() => setTur(key)}><i className={TUR_NOKTA[key]} />{DERS_TURU_ETIKET[key]}</button>)}</div>
+        <div className="schedule-sync mt-3 flex flex-wrap gap-x-4 gap-y-1 rounded-2xl bg-accent/60 px-3 py-2.5 text-[11px] text-muted-foreground">
           <span><strong className="font-semibold text-foreground">Amfi bilgisi:</strong> {guncellemeZamani(veri.guncellemeler?.amfi)}</span>
           <span><strong className="font-semibold text-foreground">Ders programı:</strong> {guncellemeZamani(veri.guncellemeler?.program)}</span>
         </div>
@@ -252,7 +251,7 @@ function Takvim() {
         {gorunum === "hafta" ? (
           <div className="mt-3 flex justify-end">
             <button onClick={() => isaretle(olaylar)} className="ui-control rounded-xl border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">
-              Tüm haftaya girdim olarak işaretle / kaldır
+              Görünen derslerin katılımını değiştir
             </button>
           </div>
         ) : null}
@@ -270,7 +269,11 @@ function Takvim() {
         <div className="st-calendar">
           <div className="st-brief">
             <section className="st-next"><CalendarDays aria-hidden="true" /><p>Sıradaki ders</p>{siradaki ? <button onClick={() => setSecili(siradaki)}><strong>{siradaki.ders.courseName}</strong><span>{siradaki.ders.startTime} · {siradaki.amfi || "Amfi bekleniyor"}</span></button> : <strong>Bugün başka ders yok</strong>}</section>
-            <section className="st-attend"><h3>Bugünkü katılım</h3><div className="st-ring" style={{background: `conic-gradient(var(--pratik) ${baslayan.length ? katilan/baslayan.length*360 : 0}deg,var(--accent) 0)`}}><b>{katilan}/{baslayan.length}</b></div><p>Başlayan derslere katılım</p></section>
+          <aside className="rounded-2xl border border-border bg-surface p-3">
+            <div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-teorik-soft text-teorik"><CalendarDays className="h-4 w-4" /></span><div><p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">Bugünün dersleri</p><h3 className="text-sm font-bold">{formatLong(bugun)}</h3></div></div>
+            {bugununOlaylari.length ? <ol className="mt-3 space-y-2">{bugununOlaylari.map((o) => <li key={o.key}><button onClick={() => setSecili(o)} className="flex w-full gap-2 rounded-xl p-2 text-left transition hover:bg-accent"><span className="w-10 shrink-0 pt-0.5 text-[10px] font-bold text-muted-foreground">{o.ders.startTime}</span><span className="min-w-0 flex-1 border-l-2 border-teorik pl-2"><span className="block truncate text-xs font-bold">{o.ders.courseName}</span><span className="mt-0.5 block truncate text-[10px] text-muted-foreground">{o.amfi ?? "Amfi bekleniyor"}</span></span></button></li>)}</ol> : <div className="mt-4 rounded-xl bg-accent/60 p-3 text-center"><Clock3 className="mx-auto h-4 w-4 text-muted-foreground" /><p className="mt-2 text-xs font-semibold">Bugün ders yok</p><p className="mt-1 text-[10px] text-muted-foreground">Bugünün ders programı burada görünür.</p></div>}
+          </aside>
+
           </div>
           <div
             className="min-w-0 rounded-2xl border border-border/70 bg-background/30 p-2 sm:p-3"
@@ -287,12 +290,9 @@ function Takvim() {
             {gorunum === "ay" ? <AyGorunumu ay={imlec} olaylar={olaylar} bugun={bugun} onGunSec={(g) => { setImlec(g); setGorunum("gun"); }} /> : null}
           </div>
 
-          {gununPlaniGorunsun ? <>
-          <aside className="rounded-2xl border border-border bg-surface p-3">
-            <div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-teorik-soft text-teorik"><CalendarDays className="h-4 w-4" /></span><div><p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">Bugünün planı</p><h3 className="text-sm font-bold">{formatLong(bugun)}</h3></div></div>
-            {bugununOlaylari.length ? <ol className="mt-3 space-y-2">{bugununOlaylari.map((o) => <li key={o.key}><button onClick={() => setSecili(o)} className="flex w-full gap-2 rounded-xl p-2 text-left transition hover:bg-accent"><span className="w-10 shrink-0 pt-0.5 text-[10px] font-bold text-muted-foreground">{o.ders.startTime}</span><span className="min-w-0 flex-1 border-l-2 border-teorik pl-2"><span className="block truncate text-xs font-bold">{o.ders.courseName}</span><span className="mt-0.5 block truncate text-[10px] text-muted-foreground">{o.amfi ?? "Amfi bekleniyor"}</span></span></button></li>)}</ol> : <div className="mt-4 rounded-xl bg-accent/60 p-3 text-center"><Clock3 className="mx-auto h-4 w-4 text-muted-foreground" /><p className="mt-2 text-xs font-semibold">Bugün ders yok</p><p className="mt-1 text-[10px] text-muted-foreground">Bugünün ders programı burada görünür.</p></div>}
-          </aside>
-          </> : null}
+
+
+
         </div>
         <div className="mt-4 flex flex-wrap gap-3 border-t border-border/70 pt-3">
           {Object.entries(DERS_TURU_ETIKET).map(([k, v]) => (

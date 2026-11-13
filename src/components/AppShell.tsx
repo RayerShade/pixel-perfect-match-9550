@@ -35,7 +35,7 @@ export function AppShell({
   useEffect(() => {
     const tema = localStorage.getItem("itf-gorunum");
     if (tema) {
-      document.documentElement.dataset.gorunum = tema;
+      document.documentElement.dataset["gorunum"] = tema;
       document.documentElement.classList.toggle("dark", tema === "night");
     }
   }, []);
@@ -64,7 +64,7 @@ export function AppShell({
           <div className="flex min-w-0 items-center gap-3">
             <AnaSayfaLogosu />
             <div className="min-w-0">
-              <span className="brand-name">İTF Takvim</span>
+              <span className="brand-name">İTF Takvimi</span><span className="platform-label">Bağımsız Öğrenci Platformu</span>
             </div>
           </div>
 
@@ -84,6 +84,7 @@ export function AppShell({
           </nav>
 
           <div className="flex items-center justify-end gap-1.5">
+            {user && <Link to="/ayarlar" className="context-pill">{[ayarlar.donem, ayarlar.grup].filter(Boolean).join(" / ") || "Öğrenci profili"}</Link>}
             <button onClick={() => setHizliAcik(true)} aria-label="Hızlı gezinme" title="Hızlı gezinme (Ctrl / ⌘ K)" className="ui-control grid h-9 w-9 place-items-center rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground"><Search className="h-4 w-4" /></button>
             {isAdmin ? (
               <Link
@@ -123,11 +124,12 @@ export function AppShell({
 
       <main id="ana-icerik" tabIndex={-1} className="app-content mx-auto px-3 py-4 md:px-4 md:py-6">
         {!anaSayfa && <section className="page-intro">
-          <h2 className="page-intro__title">{baslik}</h2>
+          <h1 className="page-intro__title">{baslik}</h1>
           {aciklama ? <p className="page-intro__description">{aciklama}</p> : null}
         </section>}
         {children}
       </main>
+      {!anaSayfa && <footer className="clinical-footer"><div><b>İTF Takvimi</b><p>İstanbul Tıp Fakültesi bağımsız öğrenci platformu</p></div><nav><Link to="/destek">Destek</Link><Link to="/gizlilik">Gizlilik</Link><Link to="/kullanim-sartlari">Kullanım şartları</Link></nav></footer>}
       <CommandDialog open={hizliAcik} onOpenChange={setHizliAcik}>
         <DialogTitle className="sr-only">Hızlı gezinme</DialogTitle>
         <DialogDescription className="sr-only">Bir sayfa ara. Ok tuşlarıyla seç ve Enter ile aç.</DialogDescription>
