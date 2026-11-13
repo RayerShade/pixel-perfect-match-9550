@@ -113,8 +113,8 @@ function AuthSayfasi() {
   const girdi = "mt-1 min-h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring";
 
   return (
-    <div className="auth-canvas grid min-h-screen place-items-center px-4 py-10">
-      <div className="workspace-panel w-full max-w-md p-6 sm:p-9">
+    <div className="auth-page"><header><AnaSayfaLogosu /><b>İTF Takvim</b><span>İstanbul Tıp Fakültesi</span></header><main className="auth-stage">
+      <div className={mod === "kayit" ? "auth-sheet auth-register" : "auth-sheet"}>
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
           <AnaSayfaLogosu />
           <div>
@@ -127,28 +127,14 @@ function AuthSayfasi() {
         </div>
 
         {mod !== "sifre" ? (
-          <div className="mb-4 grid grid-cols-2 rounded-lg bg-accent p-1 text-sm font-semibold">
-            {(["giris", "kayit"] as const).map((m) => (
-              <button
-                key={m}
-                aria-pressed={mod === m}
-                onClick={() => { setMod(m); setMesaj(null); }}
-                className={`rounded-md py-1.5 ${mod === m ? "bg-surface shadow-sm" : "text-muted-foreground"}`}
-              >
-                {m === "giris" ? "Giriş" : "Kayıt ol"}
-              </button>
-            ))}
-          </div>
-        ) : null}
-
-        {mod !== "sifre" ? (
           <>
-            <div className="my-4 flex items-center gap-3 text-[11px] text-muted-foreground">
-              <span className="h-px flex-1 bg-border" /> veya <span className="h-px flex-1 bg-border" />
-            </div>
+
             <button onClick={google} className="min-h-11 w-full rounded-xl border border-border bg-background py-2 text-sm font-semibold hover:bg-accent">
               Google ile devam et
             </button>
+            <div className="my-4 flex items-center gap-3 text-[11px] text-muted-foreground">
+              <span className="h-px flex-1 bg-border" /> veya <span className="h-px flex-1 bg-border" />
+            </div>
             {mod === "kayit" ? (
               <p className="mt-2 text-[11px] text-muted-foreground">Google ile girersen öğrenci numaran ilk girişte sorulur.</p>
             ) : null}
@@ -189,7 +175,7 @@ function AuthSayfasi() {
         ) : null}
 
 
-      </div>
-    </div>
+        {mod !== "sifre" && <footer>{mod === "kayit" ? "Zaten hesabın var mı?" : "Hesabın yok mu?"} <button onClick={() => {setMod(mod === "kayit" ? "giris" : "kayit");setMesaj(null);}}>{mod === "kayit" ? "Giriş yap" : "Hesap oluştur"}</button></footer>}
+      </div></main></div>
   );
 }

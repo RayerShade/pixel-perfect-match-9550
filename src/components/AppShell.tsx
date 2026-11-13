@@ -32,6 +32,13 @@ export function AppShell({
   const turGoster = hazir && user && profil && !eksik && ayarlar.bilgilendirmeGordu && !ayarlar.turGordu;
   const ad = profil?.ad_soyad?.trim() || user?.email || "Öğrenci";
   const basHarf = ad.charAt(0).toLocaleUpperCase("tr-TR");
+  useEffect(() => {
+    const tema = localStorage.getItem("itf-gorunum");
+    if (tema) {
+      document.documentElement.dataset.gorunum = tema;
+      document.documentElement.classList.toggle("dark", tema === "night");
+    }
+  }, []);
   const navigate = useNavigate();
   const [hizliAcik, setHizliAcik] = useState(false);
   useEffect(() => {
@@ -57,19 +64,18 @@ export function AppShell({
           <div className="flex min-w-0 items-center gap-3">
             <AnaSayfaLogosu />
             <div className="min-w-0">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-teorik">İTF Takvim</p>
-              <h1 className="truncate text-sm font-extrabold tracking-tight md:text-base">{baslik}</h1>
+              <span className="brand-name">İTF Takvim</span>
             </div>
           </div>
 
-          <nav className="hidden items-center rounded-2xl bg-accent/70 p-1 xl:flex">
+          <nav className="student-tabs hidden items-center gap-1 xl:flex">
             {NAV.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}
                 data-tur={`nav-${to}`}
                 activeOptions={{ exact: true }}
-                className="ui-control flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground data-[status=active]:bg-surface data-[status=active]:text-primary data-[status=active]:shadow-sm"
+                className="ui-control flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground data-[status=active]:bg-primary data-[status=active]:text-primary-foreground data-[status=active]:shadow-sm"
               >
                 <Icon className="h-4 w-4" />
                 {label}
