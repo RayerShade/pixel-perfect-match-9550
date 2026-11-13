@@ -142,6 +142,10 @@ function Takvim() {
     },
     [bugun, secmeliler, manuel, veri, ogrenci, ayarlar],
   );
+  const saatSimdi = new Date().toLocaleTimeString("tr-TR", {hour:"2-digit",minute:"2-digit"});
+  const siradaki = bugununOlaylari.find(o => o.ders.startTime >= saatSimdi);
+  const baslayan = bugununOlaylari.filter(o => o.ders.startTime <= saatSimdi);
+  const katilan = baslayan.filter(o => katilim[o.key]).length;
   const gununPlaniGorunsun = gorunum === "ay"
     || (gorunum === "gun" && !sameDay(imlec, bugun))
     || (gorunum === "hafta" && !sameDay(monday, startOfWeek(bugun)));
@@ -263,7 +267,11 @@ function Takvim() {
           })}
         </div> : null}
 
-        <div className={`mt-4 grid gap-4 ${gununPlaniGorunsun ? "xl:grid-cols-[minmax(0,1fr)_18rem]" : ""}`}>
+        <div className="st-calendar">
+          <div className="st-brief">
+            <section className="st-next"><CalendarDays aria-hidden="true" /><p>Sıradaki ders</p>{siradaki ? <button onClick={() => setSecili(siradaki)}><strong>{siradaki.ders.courseName}</strong><span>{siradaki.ders.startTime} · {siradaki.amfi || "Amfi bekleniyor"}</span></button> : <strong>Bugün başka ders yok</strong>}</section>
+            <section className="st-attend"><h3>Bugünkü katılım</h3><div className="st-ring" style={{background: `conic-gradient(var(--pratik) ${baslayan.length ? katilan/baslayan.length*360 : 0}deg,var(--accent) 0)`}}><b>{katilan}/{baslayan.length}</b></div><p>Başlayan derslere katılım</p></section>
+          </div>
           <div
             className="min-w-0 rounded-2xl border border-border/70 bg-background/30 p-2 sm:p-3"
             onTouchStart={(e) => { const t = e.touches[0]; if (t) dokunma.current = { x: t.clientX, y: t.clientY }; }}

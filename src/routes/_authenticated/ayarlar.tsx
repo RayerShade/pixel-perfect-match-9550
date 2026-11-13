@@ -60,10 +60,10 @@ function Ayarlar() {
   ] as const;
 
   return (
-    <AppShell baslik="Ayarlar" aciklama="Uygulama tercihleri">
-      <div className="settings-layout">        {secmeliAcik ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label="Seçmeli dersler"><div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/80 bg-surface p-5 shadow-xl"><div className="mb-4 flex items-center gap-3"><div className="min-w-0 flex-1"><h2 className="text-lg font-bold">Seçmeli dersler</h2><p className="text-xs text-muted-foreground">Her gruptan bir ders seçebilirsin; seçimin takvimine otomatik eklenir.</p></div><button onClick={() => setSecmeliAcik(false)} className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-accent">Kapat</button></div><SecmeliSecici /></div></div> : null}
+    <AppShell baslik="Hesap ve Uygulama Ayarları" aciklama="Uygulama tercihleri">
+      <div className="st-settings">        {secmeliAcik ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label="Seçmeli dersler"><div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl border border-white/80 bg-surface p-5 shadow-xl"><div className="mb-4 flex items-center gap-3"><div className="min-w-0 flex-1"><h2 className="text-lg font-bold">Seçmeli dersler</h2><p className="text-xs text-muted-foreground">Her gruptan bir ders seçebilirsin; seçimin takvimine otomatik eklenir.</p></div><button onClick={() => setSecmeliAcik(false)} className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-accent">Kapat</button></div><SecmeliSecici /></div></div> : null}
         <section data-tur="ogrenci-bilgi" className="workspace-panel p-4">
-          <h2 className="text-sm font-bold">Öğrenci Bilgileri</h2>
+          <div className="st-profile"><span>{(ad || ayarlar.ogrenciAdi || "Ö").charAt(0)}</span><div><small>Öğrenci profili</small><h2>{ad || ayarlar.ogrenciAdi || "Öğrenci Bilgileri"}</h2></div></div>
           <div className="mt-3 space-y-3">
             <div>
               <span className="text-xs text-muted-foreground">Dönem ve dil</span>
@@ -111,6 +111,7 @@ function Ayarlar() {
           </div>
         </section>
 
+        <section className="workspace-panel st-elective"><span className="st-tag">Müfredat</span><h2>Seçmeli Ders Yönetimi</h2><p>Programında {secili.length} seçmeli ders seçili.</p>          <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="mt-4 w-full rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">Seçmeli derslerini seç</button></section>
         <section data-tur="takvim-gorunum" className="ui-surface rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-bold">Takvim Görünümü</h2>
           <label className="mt-3 flex items-center justify-between gap-3">
@@ -199,7 +200,7 @@ function Ayarlar() {
               className="h-5 w-5 shrink-0 accent-[var(--teorik)]"
             />
           </label>
-          <button type="button" data-tur="secmeli-ayarlari" onClick={() => setSecmeliAcik(true)} className="mt-4 w-full rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">Seçmeli derslerini seç</button>
+
         </section>
 
 
