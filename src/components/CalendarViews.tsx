@@ -107,7 +107,7 @@ function Izgara({
 
   return (
     <div className="overflow-x-auto no-scrollbar">
-      <div className="min-w-[640px]">
+      <div className="week-matrix min-w-[640px]">
         <div
           className="grid border-b border-border/70"
           style={{ gridTemplateColumns: `48px repeat(${gunler.length}, minmax(0,1fr))` }}
@@ -118,14 +118,14 @@ function Izgara({
             return (
               <div key={isoDate(g)} className="px-1 pb-2 text-center">
                 <p className="text-[11px] font-medium text-muted-foreground">
-                  {gunler.length > 3 ? GUN_KISA[(g.getDay() + 6) % 7] : GUN_UZUN[(g.getDay() + 6) % 7]}
+                  {GUN_UZUN[(g.getDay() + 6) % 7]}
                 </p>
                 <p
-                  className={`mx-auto mt-1 grid h-7 w-7 place-items-center rounded-full text-sm font-bold ${
+                  className={`mx-auto mt-1 grid h-7 w-fit px-2 place-items-center rounded-lg text-sm font-bold ${
                     aktif ? "bg-bugun text-primary-foreground" : "text-foreground"
                   }`}
                 >
-                  {g.getDate()}
+                  {g.getDate()} {AYLAR[g.getMonth()]?.slice(0,3)}
                 </p>
                 {onGunIsaretle && olaylar.some((o) => sameDay(o.date, g)) ? (
                   <button
@@ -152,7 +152,7 @@ function Izgara({
             {saatler.map((s, i) => (
               <div
                 key={s}
-                className="absolute right-2 -translate-y-1/2 text-[10px] text-muted-foreground"
+                className="absolute right-2 pt-1 text-[10px] text-muted-foreground"
                 style={{ top: i * SAAT_YUKSEKLIGI }}
               >
                 {String(s).padStart(2, "0")}:00

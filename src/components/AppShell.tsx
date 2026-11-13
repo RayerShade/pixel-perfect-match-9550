@@ -19,11 +19,13 @@ export function AppShell({
   aciklama,
   children,
   anaSayfa = false,
+  basligiIcerikte = false,
 }: {
   baslik: string;
   aciklama?: string;
   children: ReactNode;
   anaSayfa?: boolean;
+  basligiIcerikte?: boolean;
 }) {
   const { user, isAdmin, profil, hazir, cikis } = useAuth();
   const { ayarlar } = useAyarlar();
@@ -32,13 +34,7 @@ export function AppShell({
   const turGoster = hazir && user && profil && !eksik && ayarlar.bilgilendirmeGordu && !ayarlar.turGordu;
   const ad = profil?.ad_soyad?.trim() || user?.email || "Öğrenci";
   const basHarf = ad.charAt(0).toLocaleUpperCase("tr-TR");
-  useEffect(() => {
-    const tema = localStorage.getItem("itf-gorunum");
-    if (tema) {
-      document.documentElement.dataset["gorunum"] = tema;
-      document.documentElement.classList.toggle("dark", tema === "night");
-    }
-  }, []);
+
   const navigate = useNavigate();
   const [hizliAcik, setHizliAcik] = useState(false);
   useEffect(() => {
@@ -84,6 +80,7 @@ export function AppShell({
           </nav>
 
           <div className="flex items-center justify-end gap-1.5">
+            {user && <span className="header-date">{new Date().toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul",day:"numeric",month:"long",weekday:"long"})}</span>}
             {user && <Link to="/ayarlar" className="context-pill">{[ayarlar.donem, ayarlar.grup].filter(Boolean).join(" / ") || "Öğrenci profili"}</Link>}
             <button onClick={() => setHizliAcik(true)} aria-label="Hızlı gezinme" title="Hızlı gezinme (Ctrl / ⌘ K)" className="ui-control grid h-9 w-9 place-items-center rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground"><Search className="h-4 w-4" /></button>
             {isAdmin ? (
@@ -123,7 +120,7 @@ export function AppShell({
       {user && <DuyuruBandi />}
 
       <main id="ana-icerik" tabIndex={-1} className="app-content mx-auto px-3 py-4 md:px-4 md:py-6">
-        {!anaSayfa && <section className="page-intro">
+        {!anaSayfa && !basligiIcerikte && <section className="page-intro">
           <h1 className="page-intro__title">{baslik}</h1>
           {aciklama ? <p className="page-intro__description">{aciklama}</p> : null}
         </section>}

@@ -4,8 +4,8 @@ import { DERSLER, SECMELILER, secmeliGruplari, secmeliSaatleri, secmeliVeriVar }
 import { GUN_UZUN } from "@/lib/date-utils";
 import { useAyarlar, useSecmeliler, useYuklenenVeri } from "@/lib/store";
 
-export function SecmeliSecici() {
-  const { secili, gizli, toggle, grupSec, gizle, goster } = useSecmeliler();
+export function SecmeliSecici({ secimler }: { secimler: ReturnType<typeof useSecmeliler> }) {
+  const { secili, gizli, toggle, grupSec, gizle, goster } = secimler;
   const { veri } = useYuklenenVeri();
   const { ayarlar, guncelle } = useAyarlar();
   const [arama, setArama] = useState("");
@@ -24,7 +24,7 @@ export function SecmeliSecici() {
       const bulunan = hepsi.filter(d => eslesir(d.ad));
       if (!bulunan.length && arama.trim()) return null;
       return <section key={saat} className={"elective-block " + (grupGizli ? "opacity-60" : "")}>
-        <div className="mb-2 flex items-center gap-2"><div className="min-w-0 flex-1"><h3 className="font-bold">{grup}. Seçmeli · {saat}</h3><p className="text-xs text-muted-foreground">{grupGizli ? "Takvimde gizli" : secilen ? "Seçildi: " + secilen.ad : "Henüz seçilmedi"}</p></div>
+        <div className="mb-2 flex items-center gap-2"><div className="min-w-0 flex-1"><small className="block-label">{grup}. Blok</small><h3 className="font-bold">{grup}. Seçmeli · {saat}</h3><p className="text-xs text-muted-foreground">{grupGizli ? "Takvimde gizli" : secilen ? "Seçildi: " + secilen.ad : "Henüz seçilmedi"}</p></div>
           <button onClick={() => grupGizleToggle(grup)} aria-label="Grubu takvimde göster veya gizle" className="rounded-lg border border-border p-2 hover:bg-accent">{grupGizli ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">{bulunan.map((d) => { const aktif = secili.includes(d.id); return <button key={d.id} aria-pressed={aktif} onClick={() => grupSec(d.id, ids)} className={`grid grid-cols-[auto_minmax(0,1fr)] gap-2 rounded-xl border p-4 text-left ${aktif ? "border-secmeli bg-secmeli-soft" : "border-border hover:bg-accent"}`}><span className={`grid h-5 w-5 place-items-center rounded-full border ${aktif ? "border-secmeli bg-secmeli text-primary-foreground" : "border-border"}`}>{aktif ? <Check className="h-3 w-3" /> : null}</span><span className="min-w-0"><b className="block truncate text-sm">{d.ad}</b><span className="block truncate text-xs text-muted-foreground">{d.amfi}</span></span></button>; })}</div>
       </section>;

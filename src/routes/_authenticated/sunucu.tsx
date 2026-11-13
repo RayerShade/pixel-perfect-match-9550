@@ -104,9 +104,9 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
   const I = aktifSekme.ikon;
   const icerik = sekme === "ozet" ? <Ozet git={setSekme} /> : sekme === "kullanicilar" ? <Kullanicilar /> : sekme === "destek" ? <DestekYonetim /> : sekme === "ortak" ? <OrtakYonetim /> : sekme === "donem" ? <ProgramYonetimi /> : sekme === "veri" ? <Veri /> : sekme === "dosyalar" ? <Dosyalar /> : sekme === "kontrol" ? <SheetsKontroller /> : sekme === "duyuru" ? <Duyuru /> : sekme === "gecmis" ? <IslemGecmisi /> : <Yedek />;
   return (
-    <AppShell baslik="Yönetim" aciklama="Sistem, akademik veri ve iletişim araçlarını yönet.">
+    <AppShell baslik="Yönetim Konsolu" basligiIcerikte>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3">
-        <div className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Crown className="h-4 w-4" /></span><div><p className="text-xs font-bold">Süper admin görünümü</p><p className="text-[11px] text-muted-foreground">Tüm yönetim araçları açık.</p></div></div>
+        <div className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Crown className="h-4 w-4" /></span><div><p className="text-xs font-bold">Yönetim Konsolu</p><p className="text-[11px] text-muted-foreground"><Link to="/takvim">Öğrenci görünümüne dön →</Link></p></div></div>
         {adminGorunumuneDon ? <div role="group" aria-label="Yönetim görünümü" className="relative grid grid-cols-2 rounded-xl bg-accent p-1">
           <span aria-hidden="true" className="absolute inset-y-1 w-[calc(50%-0.25rem)] translate-x-[calc(100%+0.25rem)] rounded-lg bg-primary shadow-sm" />
           <button onClick={adminGorunumuneDon} className="relative z-10 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" />Admin</button>
@@ -124,7 +124,7 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
         <div className="min-w-0 space-y-4">
           <section className="console-heading">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-primary"><I className="h-5 w-5" /></div>
-            <div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Süper admin</p><h2 className="text-lg font-bold">{sekme === "ozet" ? "Komuta Merkezi ve Sistem Sağlığı" : sekme === "kullanicilar" ? "Kullanıcılar ve Öğrenci Hesap Merkezi" : aktifSekme.ad}</h2></div>
+            <div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Süper admin</p><h1 className="text-2xl font-bold">{sekme === "ozet" ? "Komuta Merkezi ve Sistem Sağlığı" : sekme === "kullanicilar" ? "Kullanıcılar ve Öğrenci Hesap Merkezi" : sekme === "donem" ? "Dönemler ve Ders Programı Editörü" : aktifSekme.ad}</h1></div>
           </section>
           {icerik}
         </div>
@@ -164,7 +164,7 @@ function Ozet({ git }: { git: (s: Sekme) => void }) {
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Kart baslik="Son 14 günde yeni kayıtlar" sag={<button className={btn} onClick={() => void q.refetch()}><RefreshCw className="h-3 w-3" />yenile</button>}>
-          <div className="flex h-44 items-end gap-2">
+          <div className="registration-chart flex h-44 items-end gap-2">
             {(d?.kayit14 ?? []).map((n, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1" title={`${13 - i} gün önce: ${n}`}>
                 <span className="text-[10px] text-muted-foreground">{n || ""}</span>
@@ -315,7 +315,7 @@ function Kullanicilar() {
             <button className={btn} onClick={yenile}><RefreshCw className="h-3.5 w-3.5" />Yenile</button>
           </div>
         </div>
-        <div className="grid grid-cols-2 border-t border-border sm:grid-cols-4">
+        <div className="account-stats grid grid-cols-2 sm:grid-cols-4">
           {([
             ["Toplam hesap", sayilar.toplam, "hepsi"],
             ["Onay bekleyen", sayilar.onaysiz, "onaysiz"],
@@ -365,7 +365,7 @@ function Kullanicilar() {
             {liste.length ? liste.map((u) => {
               const p = profMap.get(u.id); const adm = adminler.has(u.id); const aktif = secili?.id === u.id;
               return <button key={u.id} aria-pressed={aktif} onClick={() => { setSeciliId(u.id); setDuz(null); }} className={"w-full px-4 py-3 text-left transition-colors hover:bg-accent/70 " + (aktif ? "bg-primary/10" : "")}>
-                <div className="flex items-start gap-2"><span className={"mt-1 h-2 w-2 shrink-0 rounded-full " + (u.yasakli ? "bg-destructive" : !u.onayli ? "bg-altin" : "bg-emerald-500")} /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{p?.ad_soyad || "(Adsız kullanıcı)"}</p><p className="truncate text-xs text-muted-foreground">{u.email}</p><div className="mt-1 flex flex-wrap gap-1">{adm ? <span className="rounded bg-altin/15 px-1.5 py-0.5 text-[10px] font-bold text-altin">ADMİN</span> : null}{superler.has(u.id) || u.email.toLowerCase() === "cerandeniz435@gmail.com" ? <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">SÜPER</span> : null}<span className="text-[10px] text-muted-foreground">{once(u.sonGiris)}</span></div></div></div>
+                <div className="flex items-start gap-2"><span className="account-avatar" title={u.yasakli ? "Yasaklı" : u.onayli ? "Onaylı" : "Onay bekliyor"}>{(p?.ad_soyad || u.email).split(/\s+/).slice(0,2).map(part=>part.charAt(0)).join("").toLocaleUpperCase("tr-TR")}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{p?.ad_soyad || "(Adsız kullanıcı)"}</p><p className="truncate text-xs text-muted-foreground">{u.email}</p><div className="mt-1 flex flex-wrap gap-1">{adm ? <span className="rounded bg-altin/15 px-1.5 py-0.5 text-[10px] font-bold text-altin">ADMİN</span> : null}{superler.has(u.id) || u.email.toLowerCase() === "cerandeniz435@gmail.com" ? <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">SÜPER</span> : null}<span className="text-[10px] text-muted-foreground">{once(u.sonGiris)}</span></div></div></div>
               </button>;
             }) : <p className="p-6 text-center text-sm text-muted-foreground">Bu filtrede kullanıcı yok.</p>}
           </div>

@@ -24,12 +24,12 @@ function DestekSayfasi() {
   const { user } = useAuth();
   const [akim, setAkim] = useState<Talep["tur"] | "ders" | null>(null);
   return (
-    <AppShell baslik="Destek ve Kampüs Rehberi">
+    <AppShell baslik="Destek ve Kampüs Rehberi" basligiIcerikte>
       <div className="st-support pb-12">
         {akim ? <YeniTalep tur={akim === "ders" ? "destek" : akim} ilkKonu={akim === "ders" ? "Ders değişikliği: " : ""} onOlustu={() => setAkim(null)} vazgec={() => setAkim(null)} /> : <TalepTuruSecici sec={setAkim} />}
         {!akim && user && <Sikayetlerim key={user.id} userId={user.id} />}
         <section id="kampus" className="scroll-mt-24 workspace-panel st-campus grid content-start gap-3 p-5"><h2>Çapa Yerleşkesi Krokisi</h2><img alt="Çapa yerleşkesi" src={krokiUrl} className="h-44 w-full rounded-xl object-cover object-[50%_35%]" /><KrokiTusu /><TanitimTusu /></section>
-        <section id="sorular" className="workspace-panel space-y-4 p-5"><h2 className="text-xl font-bold tracking-tight">Sık sorulan sorular</h2>
+        <section id="sorular" className="workspace-panel space-y-4 p-5"><small>Kılavuz &amp; Bilgi Tabanı</small><h2 className="text-xl font-bold tracking-tight">Sıkça Sorulan Sorular</h2>
           <div className="divide-y divide-border">{[
             ["İTF Takvim ücretli mi?", "Hayır. Uygulamanın tüm öğrenci özelliklerini ücretsiz kullanabilirsin. Projeye katkıda bulunmak tamamen isteğe bağlı."],
             ["Bu resmi fakülte takvimi mi?", "İTF Takvim öğrenciler tarafından geliştirilen bağımsız bir projedir. Saat veya derslik konusunda farklılık varsa fakültenin güncel duyurusunu esas al."],

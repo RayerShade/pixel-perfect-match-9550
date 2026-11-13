@@ -56,12 +56,12 @@ export function formatShort(d: Date): string {
   return `${d.getDate()} ${AYLAR[d.getMonth()]!.slice(0, 3)}`;
 }
 
-export function weekLabel(monday: Date): string {
-  const sunday = addDays(monday, 6);
-  if (monday.getMonth() === sunday.getMonth()) {
-    return `${monday.getDate()} – ${sunday.getDate()} ${AYLAR[monday.getMonth()]} ${monday.getFullYear()}`;
+export function weekLabel(monday: Date, includeWeekend = true): string {
+  const lastDay = addDays(monday, includeWeekend ? 6 : 4);
+  if (monday.getMonth() === lastDay.getMonth()) {
+    return `${monday.getDate()} – ${lastDay.getDate()} ${AYLAR[monday.getMonth()]} ${monday.getFullYear()}`;
   }
-  return `${formatShort(monday)} – ${formatShort(sunday)} ${sunday.getFullYear()}`;
+  return `${formatShort(monday)} – ${formatShort(lastDay)} ${lastDay.getFullYear()}`;
 }
 
 export function toMinutes(hhmm: string): number {

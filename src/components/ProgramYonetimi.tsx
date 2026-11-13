@@ -245,13 +245,14 @@ export function ProgramYonetimi() {
   const donem = donemler.find((d) => d.id === donemId);
 
   return (
-    <div className="space-y-4">
+    <div className="term-manager space-y-4">
       <div className="rounded-2xl border border-border bg-surface p-4">
         <h3 className="text-lg font-bold">Dönemler ve ders programı</h3>
         <div className="mt-2 flex flex-wrap gap-2">
           {donemler.map((d) => (
             <button
               key={d.id}
+              aria-pressed={donemId === d.id}
               onClick={() => setDonemId(d.id)}
               className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${d.id === donemId ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}
             >

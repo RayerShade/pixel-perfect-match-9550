@@ -106,12 +106,14 @@ function Dersler() {
   const { manuel } = useManuelAmfiler();
   const { katilim, ayarla } = useKatilim();
   const [arama, setArama] = useState("");
-  const [acik, setAcik] = useState<Set<string>>(new Set());
-  const ac = (k: string) => setAcik((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; });
+  const [tercih, setAcik] = useState<Set<string> | null>(null);
 
   const ogrenci = useMemo(() => ogrenciBul(veri, ayarlar.ogrenciNo ?? "", ayarlar.grupElle), [veri, ayarlar.ogrenciNo, ayarlar.grupElle]);
   const olaylar = useMemo(() => tumOlaylar(veri, secili, manuel, ogrenci, ayarlar), [veri, secili, manuel, ogrenci, ayarlar]);
   const agac = useMemo(() => agacKur(olaylar), [olaylar]);
+  const ilk = agac[0];
+  const acik = tercih ?? new Set(ilk ? [ilk.ad, ...[...ilk.dallar.values()].slice(0,1).map(d => [ilk.ad,d.tur,d.ad].join("|"))] : []);
+  const ac = (k: string) => { const next = new Set(acik); if (next.has(k)) next.delete(k); else next.add(k); setAcik(next); };
   const devam = useMemo(() => devamHesapla(olaylar, katilim), [olaylar, katilim]);
   const devamBul = (dilim: string, tur: OlayTuru, dal?: string) => devam.find((x) => x.dilim === dilim && x.tur === tur && (!dal || x.dal === dal));
   const q = aramaAnahtari(arama);
@@ -160,7 +162,7 @@ function Dersler() {
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${acikDl ? "rotate-180" : ""}`} />
                   <div className="st-module-title min-w-0">
                     <p className="flex items-center gap-2 font-bold">
-                      <span className="truncate">{dl.ad}</span>
+                      <span>{dl.ad}</span>
                     </p>
                     <DilimSatiri os={dilimOlaylari(dl, "ders").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="ders" devam={dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? undefined : devamBul(dl.ad, "ders")} />
                     <DilimSatiri os={dilimOlaylari(dl, "uygulama").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="uygulama" devam={dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? undefined : devamBul(dl.ad, "uygulama")} />
