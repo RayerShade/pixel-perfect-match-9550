@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, ImagePlus, Lightbulb, Megaphone, RefreshCw, Send, X } from "lucide-react";
+import { MapPinned, ArrowLeft, ImagePlus, Lightbulb, Megaphone, RefreshCw, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -40,7 +40,7 @@ export function TalepTuruSecici({ sec }: { sec: (tur: Talep["tur"]) => void }) {
       <p className="text-sm font-semibold text-primary">Görüşünü ilet</p>
       <h2 className="mt-1 text-xl font-bold">Ne göndermek istiyorsun?</h2>
       <p className="mt-1 text-sm text-muted-foreground">Şikâyet ve öneriler değerlendirme ekibine iletilir. Şikâyetlerine gelen yanıtları burada takip edebilirsin. Öneriler tek yönlüdür.</p>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
         <button onClick={() => sec("destek")} className="group rounded-xl border border-border p-4 text-left transition hover:border-primary hover:bg-primary/5">
           <Megaphone className="h-6 w-6 text-primary" /><b className="mt-3 block">Şikâyet gönder</b>
           <span className="mt-1 block text-xs text-muted-foreground">Bir sorun veya aksaklığı ekibe bildir.</span>
@@ -49,6 +49,7 @@ export function TalepTuruSecici({ sec }: { sec: (tur: Talep["tur"]) => void }) {
           <Lightbulb className="h-6 w-6 text-amber-500" /><b className="mt-3 block">Öneri gönder</b>
           <span className="mt-1 block text-xs text-muted-foreground">Geliştirme fikrini ekibe ilet.</span>
         </button>
+        <a href="#kampus" className="group rounded-xl border border-border p-4 text-left hover:border-pratik hover:bg-pratik-soft"><MapPinned className="h-6 w-6 text-pratik" /><b className="mt-3 block">Dersim nerede?</b><span className="mt-1 block text-xs text-muted-foreground">Çapa yerleşkesinde amfini bul.</span></a>
       </div>
     </section>
   );

@@ -66,7 +66,7 @@ function DilimSatiri({ os, katilim, tur, devam }: { os: DersOlayi[]; katilim: Re
   const ad = tur === "uygulama" ? "Uygulama" : "Teorik";
   const girdi = devam?.girilen ?? girilen;
   const kullanilan = devam ? devam.izinliDevamsizlik - devam.kalanHak : Math.max(0, yapilan.length - girilen);
-  return <span className="block text-[11px] text-muted-foreground">{ad}: {girdi}/{yapilan.length} ({os.length}) girildi{devam?.toplam ? <span className="ml-1 font-semibold">· Yapılan devamsızlık: {kullanilan}/{devam.izinliDevamsizlik}</span> : null}</span>;
+  return <span className="st-stat">{ad}: {girdi}/{yapilan.length} ({os.length}) girildi{devam?.toplam ? <span className="ml-1 font-semibold">· Yapılan devamsızlık: {kullanilan}/{devam.izinliDevamsizlik}</span> : null}</span>;
 }
 function dilimOlaylari(dl: Dilim, tur: OlayTuru) {
   return [...dl.dallar.values()].filter((d) => d.tur === tur).flatMap((d) => [...d.konular.values()].flat());
@@ -128,7 +128,7 @@ function Dersler() {
   }).filter((sonuc) => sonuc.dallar.length);
 
   return (
-    <AppShell baslik="Dersler" aciklama="Dilim ve anabilim dalına göre · devam takibi">
+    <AppShell baslik="Dersler ve Devam Takibi" aciklama="Dilim ve anabilim dalına göre · devam takibi">
       <div className="course-index space-y-4">
         <div className="workspace-toolbar"><Search aria-hidden="true" size={18} /><input
           type="search" aria-label="Derslerde ara"
@@ -154,11 +154,11 @@ function Dersler() {
           const acikDl = acik.has(dl.ad) || Boolean(q);
           let sonTur: string | null = null;
           return (
-            <section key={dl.ad} data-tur="dilim" className="workspace-panel overflow-hidden">
+            <section key={dl.ad} data-tur="dilim" className={`workspace-panel st-module overflow-hidden ${dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? "st-independent" : ""}`}>
               <div className="flex items-center gap-2 p-4">
                 <button onClick={() => ac(dl.ad)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${acikDl ? "rotate-180" : ""}`} />
-                  <div className="min-w-0">
+                  <div className="st-module-title min-w-0">
                     <p className="flex items-center gap-2 font-bold">
                       <span className="truncate">{dl.ad}</span>
                     </p>

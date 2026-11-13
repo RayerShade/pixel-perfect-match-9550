@@ -115,11 +115,11 @@ function AuthSayfasi() {
   return (
     <div className="auth-canvas grid min-h-screen place-items-center px-4 py-10">
       <div className="workspace-panel w-full max-w-md p-6 sm:p-9">
-        <div className="mb-5 flex items-center gap-3">
+        <div className="mb-6 flex flex-col items-center gap-3 text-center">
           <AnaSayfaLogosu />
           <div>
             <p className="text-xs font-semibold text-muted-foreground">İstanbul Tıp Fakültesi</p>
-            <h1 className="text-2xl font-bold tracking-tight">İTF Takvim</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{mod === "kayit" ? "Hesabını Oluştur, Takvimini Cebine Al" : mod === "giris" ? "İTF Takvim’e Giriş Yap" : "Şifreni sıfırla"}</h1>
             <p className="text-xs text-muted-foreground">
               {mod === "giris" ? "Hesabına giriş yap" : mod === "kayit" ? "Yeni hesap oluştur" : "Şifreni sıfırla"}
             </p>
@@ -141,6 +141,19 @@ function AuthSayfasi() {
           </div>
         ) : null}
 
+        {mod !== "sifre" ? (
+          <>
+            <div className="my-4 flex items-center gap-3 text-[11px] text-muted-foreground">
+              <span className="h-px flex-1 bg-border" /> veya <span className="h-px flex-1 bg-border" />
+            </div>
+            <button onClick={google} className="min-h-11 w-full rounded-xl border border-border bg-background py-2 text-sm font-semibold hover:bg-accent">
+              Google ile devam et
+            </button>
+            {mod === "kayit" ? (
+              <p className="mt-2 text-[11px] text-muted-foreground">Google ile girersen öğrenci numaran ilk girişte sorulur.</p>
+            ) : null}
+          </>
+        ) : null}
         <form onSubmit={gonder} className="space-y-3">
           {mod === "kayit" ? (
             <>
@@ -175,19 +188,7 @@ function AuthSayfasi() {
           </button>
         ) : null}
 
-        {mod !== "sifre" ? (
-          <>
-            <div className="my-4 flex items-center gap-3 text-[11px] text-muted-foreground">
-              <span className="h-px flex-1 bg-border" /> veya <span className="h-px flex-1 bg-border" />
-            </div>
-            <button onClick={google} className="min-h-11 w-full rounded-xl border border-border bg-background py-2 text-sm font-semibold hover:bg-accent">
-              Google ile devam et
-            </button>
-            {mod === "kayit" ? (
-              <p className="mt-2 text-[11px] text-muted-foreground">Google ile girersen öğrenci numaran ilk girişte sorulur.</p>
-            ) : null}
-          </>
-        ) : null}
+
       </div>
     </div>
   );

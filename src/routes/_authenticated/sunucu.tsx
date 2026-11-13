@@ -116,7 +116,7 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
       <nav aria-label="Süper admin bölümleri" className="mb-4 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-1.5 no-scrollbar md:hidden">
         {SEKMELER.map(({ id, ad, ikon: Ikon }) => <button key={id} onClick={() => setSekme(id)} className={`ui-control flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold ${sekme === id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface text-muted-foreground"}`}><Ikon className="h-3.5 w-3.5" />{ad}</button>)}
       </nav>
-      <div className="grid gap-4 md:grid-cols-[14rem_minmax(0,1fr)] lg:gap-7">
+      <div className="grid gap-4 md:grid-cols-[16rem_minmax(0,1fr)] lg:gap-7">
         <aside className="admin-rail ui-surface hidden h-fit rounded-2xl border border-border bg-surface p-2 md:block">
           <div className="px-2 py-2"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Bölümler</p></div>
           {SEKME_GRUPLARI.map((grup) => <div key={grup.baslik} className="mb-3 last:mb-0"><p className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">{grup.baslik}</p><div className="space-y-0.5">{grup.ids.map((id) => { const item = SEKMELER.find((x) => x.id === id)!; const Ikon = item.ikon; return <button key={id} onClick={() => setSekme(id)} className={`ui-control flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs font-bold ${sekme === id ? "bg-teorik-soft text-teorik shadow-none" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Ikon className="h-4 w-4" />{item.ad}</button>; })}</div></div>)}
@@ -124,7 +124,7 @@ export function SuperYonetim({ adminGorunumuneDon }: { adminGorunumuneDon?: () =
         <main className="min-w-0 space-y-4">
           <section className="ui-surface flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface p-4">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-primary"><I className="h-5 w-5" /></div>
-            <div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Süper admin</p><h2 className="text-lg font-bold">{aktifSekme.ad}</h2></div>
+            <div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Süper admin</p><h2 className="text-lg font-bold">{sekme === "ozet" ? "Komuta Merkezi ve Sistem Sağlığı" : sekme === "kullanicilar" ? "Kullanıcılar ve Öğrenci Hesap Merkezi" : aktifSekme.ad}</h2></div>
           </section>
           {icerik}
         </main>
@@ -155,7 +155,7 @@ function Ozet({ git }: { git: (s: Sekme) => void }) {
   return (
     <>
       {q.error ? <p className="text-destructive">{String(q.error)}</p> : null}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="st-admin-stats grid grid-cols-2 gap-4 lg:grid-cols-4">
         {kutular.map(([ad, v, s]) => (
           <button key={ad} onClick={() => git(s)} className="rounded-xl border border-border bg-card p-3 text-left shadow-sm hover:border-primary">
             <div className="text-2xl font-bold tabular-nums">{q.isLoading ? "…" : v ?? 0}</div>
@@ -165,11 +165,11 @@ function Ozet({ git }: { git: (s: Sekme) => void }) {
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Kart baslik="Son 14 günde yeni kayıtlar" sag={<button className={btn} onClick={() => void q.refetch()}><RefreshCw className="h-3 w-3" />yenile</button>}>
-          <div className="flex h-32 items-end gap-1">
+          <div className="flex h-44 items-end gap-2">
             {(d?.kayit14 ?? []).map((n, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1" title={`${13 - i} gün önce: ${n}`}>
                 <span className="text-[10px] text-muted-foreground">{n || ""}</span>
-                <div className="w-full rounded-t bg-primary" style={{ height: `${(n / enCok) * 100}%`, minHeight: 2 }} />
+                <div className="w-full rounded-t bg-primary" style={{ height: `${(n / enCok) * 140}px`, minHeight: 2 }} />
               </div>
             ))}
           </div>

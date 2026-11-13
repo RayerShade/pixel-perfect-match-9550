@@ -41,10 +41,10 @@ function Yemek() {
   const gecmisSayisi = buAy && bugun ? liste.filter((gun) => gun.tarih < bugun).length : 0;
   const gorunenGunler = gecmisSayisi && !gecmisiGoster ? liste.filter((gun) => gun.tarih >= bugun) : liste;
   const bugunKaydi = (bugunQ.data?.gunler ?? []).find((gun) => gun.tarih === bugun);
-  const bugunSatirlar = bugunKaydi ? satirlar(bugunKaydi, ogun) : [];
+
 
   return (
-    <AppShell baslik="Yemek Listesi" aciklama="İÜ SKS kaynağından güncel menü">
+    <AppShell baslik="Yemekhane Menüsü" aciklama="İÜ SKS kaynağından güncel menü">
       <section className="meal-board workspace-panel p-4 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -58,6 +58,15 @@ function Yemek() {
           </div>
         </div>
 
+      </section>
+      <section className="st-meal-hero">
+        <header><div><h2>Günün Menüsü</h2><p>{bugun && gunAdi(bugun)}</p></div><UtensilsCrossed aria-hidden="true" /></header>
+        <div className="st-meals">{([["kahvalti","Kahvaltı","07:30–09:00"],["ogle","Öğle Yemeği","11:00–14:00"],["aksam","Akşam Yemeği","16:00–18:00"]] as const).map(([id,ad,saat]) => {
+          const yemekler = bugunKaydi ? satirlar(bugunKaydi,id) : [];
+          return <article key={id}><small>{saat}</small><h3>{ad}</h3>{yemekler.length ? <ul>{yemekler.map((x,i)=><li key={i}>{x}</li>)}</ul> : <p>{bugunQ.isLoading ? "Yükleniyor…" : bugunQ.isError ? "Menü alınamadı." : "Menü yayımlanmadı."}</p>}</article>;
+        })}</div>
+      </section>
+      <section className="st-month"><h2>Aylık Menü Takvimi</h2>
         <div className="mt-4 grid grid-cols-3 rounded-2xl bg-accent/70 p-1.5 text-xs font-semibold">
           {([
             ["kahvalti", "Kahvaltı", "07:30–09:00"],
@@ -69,19 +78,6 @@ function Yemek() {
             </button>
           ))}
         </div>
-        {!bugunQ.isLoading && !bugunQ.isError && bugun ? (
-          <div className={`meal-today mt-4 rounded-xl border p-5 ${bugunSatirlar.length ? "border-primary/40 bg-primary/5" : "border-border bg-accent/40"}`}>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Bugün</span>
-              <h3 className="text-sm font-bold capitalize">{gunAdi(bugun)}</h3>
-            </div>
-            {bugunSatirlar.length ? (
-              <ul className="mt-2 space-y-1 text-xs text-muted-foreground">{bugunSatirlar.map((satir, i) => <li key={i}>• {satir}</li>)}</ul>
-            ) : (
-              <p className="mt-2 text-xs text-muted-foreground">Bugün için yayınlanmış bir {ogun === "kahvalti" ? "kahvaltı" : "yemek"} listesi yok.</p>
-            )}
-          </div>
-        ) : null}
         {q.isLoading ? <p className="py-10 text-center text-sm text-muted-foreground">Yemek listesi yükleniyor…</p> : null}
         {q.isError ? <p className="py-10 text-center text-sm text-destructive">SKS yemek listesi şu an alınamadı. <button className="rounded-lg border border-border px-3 py-2 text-foreground" disabled={q.isFetching} onClick={() => void q.refetch()}>Tekrar dene</button></p> : null}
         {!q.isLoading && !q.isError && !liste.length ? <p className="py-10 text-center text-sm text-muted-foreground">Bu ay için yayınlanmış {ogun === "kahvalti" ? "kahvaltı" : "yemek"} listesi yok.</p> : null}
