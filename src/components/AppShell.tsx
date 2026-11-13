@@ -52,8 +52,8 @@ export function AppShell({
   return (
     <div className="app-frame bg-background pb-24 xl:pb-0">
       <a href="#ana-icerik" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-3 focus:text-primary-foreground">İçeriğe geç</a>
-      <header className="sticky top-0 z-30 px-2 pt-2 md:px-4 md:pt-3">
-        <div className="ui-surface mx-auto grid max-w-[76rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-surface/90 px-3 py-2.5 backdrop-blur-xl xl:grid xl:grid-cols-[1fr_auto_1fr] md:px-4">
+      <header className="clinical-header sticky top-0 z-30">
+        <div className="clinical-nav mx-auto grid max-w-[88rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 xl:grid xl:grid-cols-[1fr_auto_1fr] md:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <AnaSayfaLogosu />
             <div className="min-w-0">
@@ -117,7 +117,6 @@ export function AppShell({
 
       <main id="ana-icerik" tabIndex={-1} className="app-content mx-auto px-3 py-4 md:px-4 md:py-6">
         {!anaSayfa && <section className="page-intro">
-          <p className="page-intro__eyebrow"><span className="h-1.5 w-1.5 rounded-full bg-pratik" /> İTF Takvim</p>
           <h2 className="page-intro__title">{baslik}</h2>
           {aciklama ? <p className="page-intro__description">{aciklama}</p> : null}
         </section>}

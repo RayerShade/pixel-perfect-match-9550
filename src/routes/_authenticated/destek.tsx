@@ -25,10 +25,10 @@ function DestekSayfasi() {
   const [akim, setAkim] = useState<Talep["tur"] | null>(null);
   return (
     <AppShell baslik="Destek" aciklama="Şikâyet veya önerini ilet.">
-      <div className="mx-auto max-w-3xl space-y-5 pb-28">
+      <div className="support-layout pb-12">
         {akim ? <YeniTalep tur={akim} onOlustu={() => setAkim(null)} vazgec={() => setAkim(null)} /> : <TalepTuruSecici sec={setAkim} />}
         {!akim && user && <Sikayetlerim key={user.id} userId={user.id} />}
-        <section className="workspace-panel grid gap-3 p-3 sm:grid-cols-2"><TanitimTusu /><KrokiTusu /></section>
+        <section className="workspace-panel support-tools grid content-start gap-3 p-4"><TanitimTusu /><KrokiTusu /></section>
         <section id="sorular" className="workspace-panel space-y-4 p-5"><h2 className="text-3xl font-bold tracking-tight">Sık sorulan sorular</h2>
           <div className="divide-y divide-border">{[
             ["İTF Takvim ücretli mi?", "Hayır. Uygulamanın tüm öğrenci özelliklerini ücretsiz kullanabilirsin. Projeye katkıda bulunmak tamamen isteğe bağlı."],

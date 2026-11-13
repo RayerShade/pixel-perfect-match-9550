@@ -45,7 +45,7 @@ function Yemek() {
 
   return (
     <AppShell baslik="Yemek Listesi" aciklama="İÜ SKS kaynağından güncel menü">
-      <section className="workspace-panel p-4 md:p-5">
+      <section className="meal-board workspace-panel p-4 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <UtensilsCrossed className="h-5 w-5 text-primary" />
@@ -70,7 +70,7 @@ function Yemek() {
           ))}
         </div>
         {!bugunQ.isLoading && !bugunQ.isError && bugun ? (
-          <div className={`mt-4 rounded-xl border p-3 ${bugunSatirlar.length ? "border-primary/40 bg-primary/5" : "border-border bg-accent/40"}`}>
+          <div className={`meal-today mt-4 rounded-xl border p-5 ${bugunSatirlar.length ? "border-primary/40 bg-primary/5" : "border-border bg-accent/40"}`}>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Bugün</span>
               <h3 className="text-sm font-bold capitalize">{gunAdi(bugun)}</h3>
@@ -90,7 +90,7 @@ function Yemek() {
           {gecmisSayisi > 0 && <button type="button" aria-pressed={gecmisiGoster} onClick={() => setGecmisiGoster(!gecmisiGoster)} className="min-h-10 rounded-xl border border-border px-3 text-xs font-semibold hover:bg-accent">{gecmisiGoster ? "Geçmiş günleri gizle" : `Geçmiş günleri göster (${gecmisSayisi})`}</button>}
         </div>}
         {liste.length > 0 && !gorunenGunler.length && <p className="mt-2 text-sm text-muted-foreground">Bu ay için ileride yayınlanmış menü yok.</p>}
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {gorunenGunler.map((gun) => {
             const buGunMu = !!bugun && gun.tarih === bugun;
             const gecti = !!bugun && gun.tarih < bugun;

@@ -149,7 +149,7 @@ function Takvim() {
 
   return (
     <AppShell baslik="Ders Takvimi" aciklama={ayarlar.donem}>
-      <div className="ui-surface rounded-3xl border border-border bg-surface p-3 md:p-5">
+      <div className="workspace-panel p-3 md:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-1">
             <button
@@ -263,7 +263,7 @@ function Takvim() {
           })}
         </div> : null}
 
-        <div className={`mt-4 grid gap-4 ${gununPlaniGorunsun ? "xl:grid-cols-[minmax(0,1fr)_15.5rem]" : ""}`}>
+        <div className={`mt-4 grid gap-4 ${gununPlaniGorunsun ? "xl:grid-cols-[minmax(0,1fr)_18rem]" : ""}`}>
           <div
             className="min-w-0 rounded-2xl border border-border/70 bg-background/30 p-2 sm:p-3"
             onTouchStart={(e) => { const t = e.touches[0]; if (t) dokunma.current = { x: t.clientX, y: t.clientY }; }}
