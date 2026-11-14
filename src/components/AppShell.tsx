@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { listedenOgrenciAdi } from "@/lib/bulut";
@@ -6,11 +6,9 @@ import { DuyuruBandi } from "@/components/DuyuruBandi";
 import { BildirimZili } from "@/components/Bildirimler";
 import { Tanitim } from "@/components/Tanitim";
 import { NumaraBilgi, useNumaraSorgu } from "@/components/NumaraBilgi";
-import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
-import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 import { useAyarlar } from "@/lib/store";
-import { LogOut, ShieldCheck, Loader2, Info, Search } from "lucide-react";
+import { LogOut, ShieldCheck, Loader2, Info } from "lucide-react";
 
 import { AnaSayfaLogosu, NAV } from "@/components/Marka";
 
@@ -34,23 +32,6 @@ export function AppShell({
   const turGoster = hazir && user && profil && !eksik && ayarlar.bilgilendirmeGordu && !ayarlar.turGordu;
   const ad = profil?.ad_soyad?.trim() || user?.email || "Öğrenci";
   const basHarf = ad.charAt(0).toLocaleUpperCase("tr-TR");
-
-  const navigate = useNavigate();
-  const [hizliAcik, setHizliAcik] = useState(false);
-  useEffect(() => {
-    const kisayol = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setHizliAcik((acik) => !acik);
-      }
-    };
-    window.addEventListener("keydown", kisayol);
-    return () => window.removeEventListener("keydown", kisayol);
-  }, []);
-  const git = (to: (typeof NAV)[number]["to"] | "/admin") => {
-    setHizliAcik(false);
-    void navigate({ to });
-  };
 
   return (
     <div className="app-frame bg-background pb-24 xl:pb-0">
@@ -82,7 +63,6 @@ export function AppShell({
           <div className="flex items-center justify-end gap-1.5">
             {user && <span className="header-date">{new Date().toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul",day:"numeric",month:"long",weekday:"long"})}</span>}
             {user && <Link to="/ayarlar" className="context-pill">{[ayarlar.donem, ayarlar.grup].filter(Boolean).join(" / ") || "Öğrenci profili"}</Link>}
-            <button onClick={() => setHizliAcik(true)} aria-label="Hızlı gezinme" title="Hızlı gezinme (Ctrl / ⌘ K)" className="ui-control grid h-9 w-9 place-items-center rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground"><Search className="h-4 w-4" /></button>
             {isAdmin ? (
               <Link
                 to="/admin"
@@ -127,18 +107,6 @@ export function AppShell({
         {children}
       </main>
       {!anaSayfa && <footer className="clinical-footer"><div><b>İTF Takvimi</b><p>İstanbul Tıp Fakültesi bağımsız öğrenci platformu</p></div><nav><Link to="/destek">Destek</Link><Link to="/gizlilik">Gizlilik</Link><Link to="/kullanim-sartlari">Kullanım şartları</Link></nav></footer>}
-      <CommandDialog open={hizliAcik} onOpenChange={setHizliAcik}>
-        <DialogTitle className="sr-only">Hızlı gezinme</DialogTitle>
-        <DialogDescription className="sr-only">Bir sayfa ara. Ok tuşlarıyla seç ve Enter ile aç.</DialogDescription>
-        <CommandInput placeholder="Nereye gitmek istersin?" />
-        <CommandList>
-          <CommandEmpty>Bu isimde bir sayfa yok.</CommandEmpty>
-          <CommandGroup heading="Sayfalar">
-            {NAV.map(({ to, label, icon: Icon }) => <CommandItem key={to} value={label} onSelect={() => git(to)}><Icon className="mr-3 h-4 w-4" /><span>{label}</span></CommandItem>)}
-          </CommandGroup>
-          {isAdmin ? <CommandGroup heading="Yönetim"><CommandItem value="Admin yönetim paneli" onSelect={() => git("/admin")}><ShieldCheck className="mr-3 h-4 w-4" />Yönetim paneli</CommandItem></CommandGroup> : null}
-        </CommandList>
-      </CommandDialog>
 
       <nav aria-label="Ana gezinme" style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }} className="fixed inset-x-3 z-30 rounded-2xl border border-border bg-surface/95 p-1.5 shadow-[0_12px_36px_oklch(0.2_0.04_250_/_0.18)] backdrop-blur-xl xl:hidden">
         <div className="grid grid-cols-5">
