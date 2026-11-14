@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ChevronDown, Search } from "lucide-react";
+import { BookOpen, Microscope, Monitor, ChevronDown, Search } from "lucide-react";
+import "@/styles/dersler.css";
 import { SinifUygulamaTablosu } from "@/components/SinifUygulamaTablosu";
 import { AppShell } from "@/components/AppShell";
 import { ogrenciBul, type DersOlayi } from "@/lib/schedule-data";
@@ -111,8 +112,8 @@ function Dersler() {
   const ogrenci = useMemo(() => ogrenciBul(veri, ayarlar.ogrenciNo ?? "", ayarlar.grupElle), [veri, ayarlar.ogrenciNo, ayarlar.grupElle]);
   const olaylar = useMemo(() => tumOlaylar(veri, secili, manuel, ogrenci, ayarlar), [veri, secili, manuel, ogrenci, ayarlar]);
   const agac = useMemo(() => agacKur(olaylar), [olaylar]);
-  const ilk = agac[0];
-  const acik = tercih ?? new Set(ilk ? [ilk.ad, ...[...ilk.dallar.values()].slice(0,1).map(d => [ilk.ad,d.tur,d.ad].join("|"))] : []);
+  const ilk = agac.find(dl => { const os = [...dl.dallar.values()].flatMap(d => [...d.konular.values()].flat()); return os.some(o => gecti(o)) && os.some(o => !gecti(o)); }) ?? agac[0];
+  const acik = tercih ?? new Set([...(ilk ? [ilk.ad] : []), ONLINE_DILIM, SECMELI_DILIM]);
   const ac = (k: string) => { const next = new Set(acik); if (next.has(k)) next.delete(k); else next.add(k); setAcik(next); };
   const devam = useMemo(() => devamHesapla(olaylar, katilim), [olaylar, katilim]);
   const devamBul = (dilim: string, tur: OlayTuru, dal?: string) => devam.find((x) => x.dilim === dilim && x.tur === tur && (!dal || x.dal === dal));
@@ -131,17 +132,11 @@ function Dersler() {
 
   return (
     <AppShell baslik="Dersler ve Devam Takibi" aciklama={["İstanbul Tıp Fakültesi", ayarlar.donem, ayarlar.grup].filter(Boolean).join(" · ")}>
-      <div className="course-index space-y-4">
-        <div className="workspace-toolbar"><Search aria-hidden="true" size={18} /><input
-          type="search" aria-label="Derslerde ara"
-          value={arama}
-          onChange={(e) => setArama(e.target.value)}
-          placeholder="Dilim, anabilim dalı, konu veya hoca ara…"
-          className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none"
-        /></div>
-        <p className="course-summary"><strong>{agac.length} ders grubu</strong>
-          Geçmiş derslere katıldığını işaretleyebilir; dilim başlıklarında katılımını ve yapılan devamsızlık sayını görebilirsin.
-        </p>
+      <div className="curriculum-page">
+        <div className="curriculum-search">
+          <div className="curriculum-search-row"><label><Search size={17} aria-hidden="true" /><input type="search" aria-label="Derslerde ara" value={arama} onChange={e => setArama(e.target.value)} placeholder="Dilim, anabilim dalı, konu veya öğretim üyesi ara…" /></label><span>Toplam {agac.filter(d => d.ad !== ONLINE_DILIM && d.ad !== SECMELI_DILIM).length} dilim · {agac.filter(d => d.ad === ONLINE_DILIM || d.ad === SECMELI_DILIM).length} bağımsız alan</span></div>
+          <p>Devamsızlık oranları kişisel takibin için sunulur. Başlamış oturumları işaretleyerek katılımını güncel tutabilirsin.</p>
+        </div>
         {!agac.length ? (
           <p className="rounded-3xl border border-dashed border-border bg-surface/60 p-8 text-center text-sm text-muted-foreground">
             Döneminin yıllık programı yüklendiğinde dersler burada görünür.
@@ -153,25 +148,32 @@ function Dersler() {
         </div>}
         {sonuclar.map(({ dl, dallar }) => {
           const tumu = dallar.flatMap((d) => d.liste.flatMap(([, os]) => os));
+          const bagimsiz = dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM;
           const acikDl = acik.has(dl.ad) || Boolean(q);
+          const tarihler = tumu.map(o => o.date.getTime());
+          const tarihAraligi = `${kisaTarih(new Date(Math.min(...tarihler)))} – ${kisaTarih(new Date(Math.max(...tarihler)))}`;
           let sonTur: string | null = null;
           return (
-            <section key={dl.ad} data-tur="dilim" className={`workspace-panel st-module overflow-hidden ${dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? "st-independent" : ""}`}>
-              <div className="flex items-center gap-2 p-4">
+            <section key={dl.ad} data-tur="dilim" className={`curriculum-module ${bagimsiz ? "curriculum-independent" : ""}`}>
+              <div className="curriculum-module-header">
                 <button aria-expanded={acikDl} onClick={() => ac(dl.ad)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
-                  <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${acikDl ? "rotate-180" : ""}`} />
+                  {bagimsiz ? <Monitor size={18} className="text-primary" /> : <ChevronDown className={`curriculum-chevron ${acikDl ? "rotate-180" : ""}`} />}
                   <div className="st-module-title min-w-0">
                     <p className="flex items-center gap-2 font-bold">
                       <span>{dl.ad}</span>
                     </p>
-                    <DilimSatiri os={dilimOlaylari(dl, "ders").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="ders" devam={dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? undefined : devamBul(dl.ad, "ders")} />
-                    <DilimSatiri os={dilimOlaylari(dl, "uygulama").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="uygulama" devam={dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? undefined : devamBul(dl.ad, "uygulama")} />
+                    <p className="curriculum-subtitle">{bagimsiz ? dl.ad === ONLINE_DILIM ? "Dilim dışı bağımsız uzaktan eğitim dersleri" : "Ayarlar’dan seçtiğin dönem seçmeli dersleri" : tarihAraligi}</p>
                   </div>
                 </button>
-                <TopluTus olaylar={tumu} katilim={katilim} ayarla={ayarla} />
+                {!bagimsiz && <div className="curriculum-totals">
+                    <DilimSatiri os={dilimOlaylari(dl, "ders").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="ders" devam={dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? undefined : devamBul(dl.ad, "ders")} />
+                    <DilimSatiri os={dilimOlaylari(dl, "uygulama").filter((o) => !/telafi|repeat|make[ -]?up/i.test(`${o.ders.courseName} ${o.ders.notes}`))} katilim={katilim} tur="uygulama" devam={dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM ? undefined : devamBul(dl.ad, "uygulama")} />
+
+                </div>}
+                {!bagimsiz && <TopluTus olaylar={tumu} katilim={katilim} ayarla={ayarla} />}
               </div>
               {acikDl ? (
-                <div className="space-y-2 border-t border-border px-3 pb-3 pt-3">
+                <div className="curriculum-module-body">
                   {dallar.map((d) => {
                     const dalKey = `${dl.ad}|${d.tur}|${d.ad}`;
                     const os = d.liste.flatMap(([, x]) => x);
@@ -180,25 +182,25 @@ function Dersler() {
                     sonTur = bolum;
                     return (
                       <div key={dalKey}>
-                        {baslikGoster ? (
-                          <p className="mb-1.5 mt-1 px-1 text-[11px] font-bold uppercase tracking-wide text-primary">
-                            {bolum === "telafi" ? "Telafi uygulamaları" : d.tur === "uygulama" ? "Uygulamalar" : "Teorik dersler"}
+                        {baslikGoster && !bagimsiz ? (
+                          <p className={`curriculum-section-title ${d.tur === "uygulama" ? "is-practical" : ""}`}>
+                            {d.tur === "uygulama" ? <Microscope size={18} /> : <BookOpen size={18} />}{d.tur === "uygulama" ? "Uygulama ve Laboratuvarlar" : "Teorik Dersler"}
                           </p>
                         ) : null}
-                        <div className="rounded-2xl bg-accent/50">
+                        <div className={`curriculum-department ${bagimsiz ? "is-independent" : ""}`}>
                           <div className="flex items-center gap-2 px-3 py-2">
-                            <button onClick={() => ac(dalKey)} className="min-w-0 flex-1 text-left">
+                            <div className="min-w-0 flex-1 text-left">
                               <p className="text-sm font-semibold">{d.ad}</p>
-                              {(dl.ad === ONLINE_DILIM || dl.ad === SECMELI_DILIM) ? <Istatistik olaylar={os} katilim={katilim} devam={devamBul(dl.ad, d.tur, d.ad)} /> : null}
-                            </button>
+                              {bagimsiz ? <Istatistik olaylar={os} katilim={katilim} devam={devamBul(dl.ad, d.tur, d.ad)} /> : null}
+                            </div>
                             <TopluTus olaylar={os} katilim={katilim} ayarla={ayarla} />
                           </div>
-                          {acik.has(dalKey) || q ? (
-                            <ul className="space-y-1 px-2 pb-2">
+
+                            <ul className="curriculum-topics">
                               {d.liste.map(([ad, konuOlaylari]) => (
-                                <li key={ad} className="rounded-xl bg-surface/90 px-3 py-2 shadow-sm">
-                                  <div className="flex items-start gap-2">
-                                    <button onClick={() => ac(`${dalKey}|${ad}`)} className="min-w-0 flex-1 text-left">
+                                <li key={ad} className="curriculum-topic">
+                                  <div className="curriculum-topic-header">
+                                    <button aria-expanded={Boolean(q) || (bagimsiz ? acik.has(`${dalKey}|${ad}`) : !acik.has(`${dalKey}|${ad}`))} onClick={() => ac(`${dalKey}|${ad}`)} className="min-w-0 flex-1 text-left">
                                       <p className="text-sm font-medium">{ad}</p>
                                       <p className="text-[11px] text-muted-foreground">
                                         {[...new Set(konuOlaylari.map((o) => o.ders.instructor).filter(Boolean))].join(", ") || "—"}
@@ -207,14 +209,14 @@ function Dersler() {
                                     </button>
                                     <TopluTus olaylar={konuOlaylari} katilim={katilim} ayarla={ayarla} />
                                   </div>
-                                  {acik.has(`${dalKey}|${ad}`) ? (
-                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                  {(bagimsiz ? acik.has(`${dalKey}|${ad}`) : !acik.has(`${dalKey}|${ad}`)) || q ? (
+                                    <div className="curriculum-sessions">
                                       {[...konuOlaylari].sort((a, b) => a.date.getTime() - b.date.getTime() || a.ders.startTime.localeCompare(b.ders.startTime)).map((o) => {
                                         const gecmis = gecti(o);
                                         return (
-                                          <div key={o.key} className="flex items-center gap-1.5">
+                                          <div key={o.key} className={`curriculum-session ${!gecmis ? "is-future" : ""}`}>
                                           <label
-                                            className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] ${katilim[o.key] ? "border-primary bg-primary/10" : "border-border"} ${gecmis ? "cursor-pointer" : "opacity-50"}`}
+                                            className="curriculum-session-label"
                                           >
                                             <input
                                               type="checkbox"
@@ -223,7 +225,7 @@ function Dersler() {
                                               onChange={(e) => ayarla([o.key], e.target.checked)}
                                               className="accent-primary"
                                             />
-                                            {kisaTarih(o.date)} {o.ders.startTime}
+                                            <span className="curriculum-session-name">{o.ders.courseName}</span><span className="curriculum-session-meta">{kisaTarih(o.date)}, {o.ders.startTime} – {o.ders.endTime}{o.amfi ? ` · ${o.amfi}` : ""}</span><span className={`curriculum-status ${katilim[o.key] ? "is-attended" : ""}`}>{katilim[o.key] ? "Girildi" : gecmis ? "Girilmedi" : "İleri tarih"}</span>
                                           </label>
                                           {d.tur === "uygulama" ? <label className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] ${katilim[`telafi:${o.key}`] ? "border-primary bg-primary/10" : "border-border"}`}><input type="checkbox" checked={Boolean(katilim[`telafi:${o.key}`])} onChange={(e) => ayarla([`telafi:${o.key}`], e.target.checked)} className="accent-primary" />Telafi</label> : null}
                                           </div>
@@ -234,7 +236,6 @@ function Dersler() {
                                 </li>
                               ))}
                             </ul>
-                          ) : null}
                         </div>
                       </div>
                     );
@@ -249,3 +250,6 @@ function Dersler() {
     </AppShell>
   );
 }
+
+
+
